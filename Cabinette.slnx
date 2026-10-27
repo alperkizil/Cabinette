@@ -1,0 +1,21 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Cabinette.App/Cabinette.App.csproj" />
+    <Project Path="src/Cabinette.Core/Cabinette.Core.csproj" />
+    <Project Path="src/Cabinette.Ipc/Cabinette.Ipc.csproj" />
+    <Project Path="src/Cabinette.Mcp/Cabinette.Mcp.csproj" />
+    <Project Path="src/Cabinette.Windows/Cabinette.Windows.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Cabinette.App.Tests/Cabinette.App.Tests.csproj" />
+    <Project Path="tests/Cabinette.Core.Tests/Cabinette.Core.Tests.csproj" />
+    <Project Path="tests/Cabinette.Mcp.TestHelper/Cabinette.Mcp.TestHelper.csproj" />
+    <Project Path="tests/Cabinette.Mcp.Tests/Cabinette.Mcp.Tests.csproj" />
+    <Project Path="tests/Cabinette.Windows.Tests/Cabinette.Windows.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/Cabinette.DevSeed/Cabinette.DevSeed.csproj" />
+    <Project Path="tools/Cabinette.IconGen/Cabinette.IconGen.csproj" />
+    <Project Path="tools/Cabinette.ThreadHarness/Cabinette.ThreadHarness.csproj" />
+  </Folder>
+</Solution>

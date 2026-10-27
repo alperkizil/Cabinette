@@ -1,0 +1,477 @@
+<UserControl x:Class="Cabinette.App.Views.Shell.ChatListPane"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:loc="clr-namespace:Cabinette.App.Localization"
+             xmlns:motion="clr-namespace:Cabinette.App.Views.Motion"
+             xmlns:shell="clr-namespace:Cabinette.App.Views.Shell"
+             xmlns:vm="clr-namespace:Cabinette.App.ViewModels.Shell"
+             Background="{DynamicResource Cab.SidebarBackground}">
+    <!-- DataContext: MainViewModel -->
+    <UserControl.Resources>
+
+        <!-- Chat-list row: avatar, name + time, preview + pin/badge/subcategory chevron. -->
+        <DataTemplate DataType="{x:Type vm:CategoryRowViewModel}">
+            <Grid Height="72" Background="Transparent">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <shell:CategoryAvatar VerticalAlignment="Center" IconKey="{Binding IconKey}" Size="48" Source="{Binding Icon}" />
+                <Grid Grid.Column="1" Margin="14,0,2,0" VerticalAlignment="Center">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock FontSize="15.5"
+                               Foreground="{DynamicResource Cab.TextPrimary}"
+                               Text="{Binding Name}"
+                               TextTrimming="CharacterEllipsis" />
+                    <TextBlock Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center" FontSize="12" Text="{Binding TimeText}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{DynamicResource Cab.TextSecondary}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasUnread}" Value="True">
+                                        <Setter Property="Foreground" Value="{DynamicResource Cab.Accent}" />
+                                        <Setter Property="FontWeight" Value="{DynamicResource Cab.FontWeight.Strong}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <DockPanel Grid.Row="1" Margin="0,3,0,0" LastChildFill="True">
+                        <ui:SymbolIcon Margin="0,0,5,0"
+                                       VerticalAlignment="Center"
+                                       DockPanel.Dock="Left"
+                                       FontSize="15"
+                                       Foreground="{DynamicResource Cab.TextSecondary}"
+                                       Symbol="{Binding PreviewSymbol}"
+                                       Visibility="{Binding HasPreviewSymbol, Converter={StaticResource BoolToVisibility}}" />
+                        <TextBlock VerticalAlignment="Center"
+                                   FontSize="13.5"
+                                   Foreground="{DynamicResource Cab.TextSecondary}"
+                                   Text="{Binding PreviewText}"
+                                   TextTrimming="CharacterEllipsis" />
+                    </DockPanel>
+                    <StackPanel Grid.Row="1" Grid.Column="1" Margin="8,3,0,0" VerticalAlignment="Center" Orientation="Horizontal">
+                        <ui:SymbolIcon Margin="2,0,0,0"
+                                       VerticalAlignment="Center"
+                                       FontSize="16"
+                                       Foreground="{DynamicResource Cab.TextSecondary}"
+                                       Symbol="Pin16"
+                                       Visibility="{Binding IsPinned, Converter={StaticResource BoolToVisibility}}" />
+                        <!-- Unread badge (pops when it appears or grows; see ChatListMotion) -->
+                        <Border x:Name="UnreadBadge"
+                                Height="20"
+                                MinWidth="20"
+                                Margin="6,0,0,0"
+                                Padding="6,0"
+                                Background="{DynamicResource Cab.Accent}"
+                                CornerRadius="10"
+                                Visibility="{Binding HasUnread, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       FontSize="11.5"
+                                       FontWeight="{DynamicResource Cab.FontWeight.Strong}"
+                                       Foreground="{DynamicResource Cab.OnAccent}"
+                                       Text="{Binding UnreadText}" />
+                        </Border>
+                        <ui:SymbolIcon Margin="6,0,-2,0"
+                                       VerticalAlignment="Center"
+                                       FontSize="15"
+                                       Foreground="{DynamicResource Cab.TextSecondary}"
+                                       Symbol="ChevronRight16"
+                                       AutomationProperties.Name="{loc:Loc ChatList_HasSubcategories}" ToolTip="{loc:Loc ChatList_HasSubcategories}"
+                                       Visibility="{Binding HasSubcategories, Converter={StaticResource BoolToVisibility}}" />
+                    </StackPanel>
+                </Grid>
+                <!-- Drop target highlight: grows in with a soft glow, pulses when files are dropped (see DropZone) -->
+                <Grid x:Name="DropHighlight"
+                      Grid.ColumnSpan="2"
+                      Margin="-12,2"
+                      IsHitTestVisible="False"
+                      Visibility="Collapsed"
+                      motion:DropZone.IsActive="{Binding IsDropTarget}">
+                    <Border Background="{DynamicResource Cab.Accent}" CornerRadius="10" Opacity="0.08" />
+                    <Border BorderBrush="{DynamicResource Cab.Accent}" BorderThickness="2" CornerRadius="10" />
+                </Grid>
+            </Grid>
+        </DataTemplate>
+
+        <!-- Search result templates (implicit by type, used by the search list). -->
+        <DataTemplate DataType="{x:Type vm:SearchSectionHeader}">
+            <StackPanel Margin="22,14,20,6">
+                <TextBlock Style="{StaticResource Shell.Text.Section}" Text="{Binding Title}" />
+                <TextBlock Margin="0,2,0,0"
+                           FontSize="12"
+                           Foreground="{DynamicResource Cab.TextSecondary}"
+                           Text="{Binding Note}"
+                           Visibility="{Binding Note, Converter={StaticResource NullToVisibility}}" />
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vm:TagSuggestionViewModel}">
+            <Grid Height="46">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Grid Width="34" Height="34">
+                    <Ellipse Fill="{DynamicResource Cab.TagChipBackground}" />
+                    <ui:SymbolIcon FontSize="17" Foreground="{DynamicResource Cab.TagChipText}" Symbol="Tag20" />
+                </Grid>
+                <TextBlock Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center" FontSize="14.5" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                <TextBlock Grid.Column="2" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource Cab.TextSecondary}" Text="{Binding CountText}" />
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vm:FileResultViewModel}">
+            <Grid Height="64" Background="Transparent">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <!-- Thumbnail, or a glyph tile -->
+                <Grid Width="46" Height="46" VerticalAlignment="Center">
+                    <Border Background="{DynamicResource Cab.HeaderBackground}" CornerRadius="8">
+                        <ui:SymbolIcon FontSize="22" Foreground="{DynamicResource Cab.TextSecondary}" Symbol="{Binding Symbol}" />
+                    </Border>
+                    <Image RenderOptions.BitmapScalingMode="HighQuality"
+                           Source="{Binding Thumbnail}"
+                           Stretch="UniformToFill"
+                           Visibility="{Binding HasThumbnail, Converter={StaticResource BoolToVisibility}}">
+                        <Image.Clip>
+                            <RectangleGeometry RadiusX="8" RadiusY="8" Rect="0,0,46,46" />
+                        </Image.Clip>
+                    </Image>
+                </Grid>
+                <Grid Grid.Column="1" Margin="14,0,2,0" VerticalAlignment="Center">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock FontSize="14.5" Foreground="{DynamicResource Cab.TextPrimary}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource Cab.TextSecondary}" Text="{Binding DateText}" />
+                    <DockPanel Grid.Row="1" Grid.ColumnSpan="2" Margin="0,3,0,0">
+                        <Border Margin="0,0,6,0"
+                                Padding="6,0"
+                                VerticalAlignment="Center"
+                                Background="{DynamicResource Cab.MissingBadgeBackground}"
+                                CornerRadius="4"
+                                DockPanel.Dock="Right"
+                                Visibility="{Binding IsMissing, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock FontSize="11" Foreground="{DynamicResource Cab.MissingBadgeText}" Text="{loc:Loc Search_Missing}" />
+                        </Border>
+                        <ui:SymbolIcon Margin="0,0,4,0"
+                                       DockPanel.Dock="Left"
+                                       FontSize="13"
+                                       Foreground="{DynamicResource Cab.TextSecondary}"
+                                       Symbol="Link16"
+                                       AutomationProperties.Name="{loc:Loc Search_PointerTooltip}" ToolTip="{loc:Loc Search_PointerTooltip}"
+                                       Visibility="{Binding IsPointer, Converter={StaticResource BoolToVisibility}}" />
+                        <TextBlock VerticalAlignment="Center" FontSize="12.5" Foreground="{DynamicResource Cab.TextSecondary}" Text="{Binding Detail}" TextTrimming="CharacterEllipsis" />
+                    </DockPanel>
+                </Grid>
+            </Grid>
+        </DataTemplate>
+
+        <!-- Row container with click / right-click handling (chat list and search results). -->
+        <Style x:Key="ChatRowContainer" TargetType="ListBoxItem" BasedOn="{StaticResource Shell.RowItem}">
+            <EventSetter Event="MouseLeftButtonUp" Handler="OnRowClick" />
+            <EventSetter Event="PreviewMouseRightButtonDown" Handler="OnRowRightButtonDown" />
+            <EventSetter Event="MouseRightButtonUp" Handler="OnRowRightButtonUp" />
+        </Style>
+
+        <shell:SearchItemStyleSelector x:Key="SearchItemStyles"
+                                       HeaderStyle="{StaticResource Shell.HeaderItem}"
+                                       RowStyle="{StaticResource ChatRowContainer}" />
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- ===================================================== header -->
+        <Grid Grid.Row="0" Height="62" Margin="20,2,12,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock VerticalAlignment="Center"
+                       Style="{StaticResource Shell.Text.Title}"
+                       Text="{loc:Loc ChatList_Title}"
+                       TextTrimming="CharacterEllipsis" />
+
+            <StackPanel Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal">
+                <Button Command="{Binding GoHomeCommand}" Style="{StaticResource Shell.IconButton}" AutomationProperties.Name="{loc:Loc ChatList_Home}" ToolTip="{loc:Loc ChatList_Home}">
+                    <ui:SymbolIcon Symbol="Home24" />
+                </Button>
+                <Button Command="{Binding NewCategoryCommand}" Style="{StaticResource Shell.IconButton}" AutomationProperties.Name="{loc:Loc ChatList_NewCategory}" ToolTip="{loc:Loc ChatList_NewCategory}">
+                    <ui:SymbolIcon Symbol="FolderAdd24" />
+                </Button>
+                <Button Command="{Binding AddFilesCommand}" Style="{StaticResource Shell.IconButton}" AutomationProperties.Name="{loc:Loc ChatList_AddFiles}" ToolTip="{loc:Loc ChatList_AddFiles}">
+                    <ui:SymbolIcon Symbol="Add24" />
+                </Button>
+                <Button Command="{Binding ToggleSortCommand}" Style="{StaticResource Shell.IconButton}" AutomationProperties.Name="{Binding SortTooltip}" ToolTip="{Binding SortTooltip}">
+                    <ui:SymbolIcon>
+                        <ui:SymbolIcon.Style>
+                            <Style TargetType="ui:SymbolIcon">
+                                <Setter Property="Symbol" Value="History24" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Sort}" Value="Alphabetical">
+                                        <Setter Property="Symbol" Value="TextSortAscending24" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ui:SymbolIcon.Style>
+                    </ui:SymbolIcon>
+                </Button>
+                <Button Command="{Binding OpenSettingsCommand}" Style="{StaticResource Shell.IconButton}" AutomationProperties.Name="{loc:Loc ChatList_Settings}" ToolTip="{loc:Loc ChatList_Settings}">
+                    <ui:SymbolIcon Symbol="Settings24" />
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- ===================================================== search -->
+        <Grid Grid.Row="1" Margin="14,2,12,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Grid Height="38">
+                <Border x:Name="SearchPill" Background="{DynamicResource Cab.SearchBoxBackground}" CornerRadius="19">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="BorderThickness" Value="0" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsKeyboardFocusWithin, ElementName=SearchBox}" Value="True">
+                                    <Setter Property="BorderBrush" Value="{DynamicResource Cab.Accent}" />
+                                    <Setter Property="BorderThickness" Value="1.5" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                </Border>
+                <!-- Search glyph, or a back arrow that clears the search -->
+                <ui:SymbolIcon Margin="14,0,0,0"
+                               HorizontalAlignment="Left"
+                               VerticalAlignment="Center"
+                               FontSize="17"
+                               Foreground="{DynamicResource Cab.TextSecondary}"
+                               IsHitTestVisible="False"
+                               Symbol="Search20"
+                               Visibility="{Binding Search.IsActive, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}" />
+                <Button Margin="5,0,0,0"
+                        HorizontalAlignment="Left"
+                        Click="OnSearchBackClick"
+                        Style="{StaticResource Shell.SmallIconButton}"
+                        AutomationProperties.Name="{loc:Loc Search_Clear}" ToolTip="{loc:Loc Search_Clear}"
+                        Visibility="{Binding Search.IsActive, Converter={StaticResource BoolToVisibility}}">
+                    <ui:SymbolIcon Foreground="{DynamicResource Cab.Accent}" Symbol="ArrowLeft20" />
+                </Button>
+                <TextBox x:Name="SearchBox"
+                         Margin="42,0,36,0"
+                         FontSize="14"
+                         PreviewKeyDown="OnSearchPreviewKeyDown"
+                         Style="{StaticResource Shell.BareTextBox}"
+                         Tag="{loc:Loc Search_Placeholder}"
+                         Text="{Binding Search.Query, UpdateSourceTrigger=PropertyChanged}" />
+                <Button Margin="0,0,5,0"
+                        HorizontalAlignment="Right"
+                        Command="{Binding Search.ClearCommand}"
+                        Style="{StaticResource Shell.SmallIconButton}"
+                        AutomationProperties.Name="{loc:Loc Search_Clear}" ToolTip="{loc:Loc Search_Clear}"
+                        Visibility="{Binding Search.HasQuery, Converter={StaticResource BoolToVisibility}}">
+                    <ui:SymbolIcon Symbol="Dismiss16" />
+                </Button>
+            </Grid>
+            <ToggleButton Grid.Column="1"
+                          Margin="6,0,0,0"
+                          IsChecked="{Binding IsFilterOpen}"
+                          Style="{StaticResource Shell.IconButton}"
+                          AutomationProperties.Name="{loc:Loc Search_Filter}" ToolTip="{loc:Loc Search_Filter}">
+                <Grid>
+                    <ui:SymbolIcon Symbol="Filter24" />
+                    <Ellipse Width="9"
+                             Height="9"
+                             Margin="0,-2,-3,0"
+                             HorizontalAlignment="Right"
+                             VerticalAlignment="Top"
+                             Fill="{DynamicResource Cab.Accent}"
+                             Stroke="{DynamicResource Cab.SidebarBackground}"
+                             StrokeThickness="1.5"
+                             Visibility="{Binding Search.Filter.IsEmpty, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}" />
+                </Grid>
+            </ToggleButton>
+        </Grid>
+
+        <!-- ===================================================== drilled-in level header -->
+        <Grid x:Name="LevelBar" Grid.Row="2" Margin="6,0,12,6">
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <MultiDataTrigger>
+                            <MultiDataTrigger.Conditions>
+                                <Condition Binding="{Binding ChatList.IsDrilledIn}" Value="True" />
+                                <Condition Binding="{Binding Search.IsActive}" Value="False" />
+                            </MultiDataTrigger.Conditions>
+                            <Setter Property="Visibility" Value="Visible" />
+                        </MultiDataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Button VerticalAlignment="Center"
+                    Command="{Binding GoUpCommand}"
+                    Style="{StaticResource Shell.IconButton}"
+                    AutomationProperties.Name="{loc:Loc ChatList_Back}" ToolTip="{loc:Loc ChatList_Back}">
+                <ui:SymbolIcon Foreground="{DynamicResource Cab.Accent}" Symbol="ArrowLeft24" />
+            </Button>
+            <shell:CategoryAvatar Grid.Column="1"
+                                  Margin="6,0,12,0"
+                                  VerticalAlignment="Center"
+                                  IconKey="{Binding ChatList.LevelHeader.Category.IconKey}"
+                                  Size="40"
+                                  Source="{Binding ChatList.LevelHeader.Icon}" />
+            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                <TextBlock FontSize="16.5"
+                           FontWeight="{DynamicResource Cab.FontWeight.Strong}"
+                           Foreground="{DynamicResource Cab.TextPrimary}"
+                           Text="{Binding ChatList.LevelHeader.Category.Name}"
+                           TextTrimming="CharacterEllipsis" />
+                <TextBlock Margin="0,1,0,0"
+                           FontSize="12.5"
+                           Foreground="{DynamicResource Cab.TextSecondary}"
+                           Text="{Binding ChatList.LevelHeader.LevelSubtitle}"
+                           TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+        </Grid>
+
+        <!-- ===================================================== body -->
+        <Grid x:Name="Body"
+              Grid.Row="3"
+              AllowDrop="True"
+              Background="Transparent"
+              DragEnter="OnDragOver"
+              DragLeave="OnDragLeave"
+              DragOver="OnDragOver"
+              Drop="OnDrop">
+
+            <!-- Chat list (current level) -->
+            <ListBox x:Name="CategoryList"
+                     ItemContainerStyle="{StaticResource ChatRowContainer}"
+                     ItemsSource="{Binding ChatList.Rows}"
+                     KeyDown="OnListKeyDown"
+                     SelectedItem="{Binding ChatList.SelectedRow}"
+                     Style="{StaticResource Shell.ListBox}"
+                     Visibility="{Binding Search.IsActive, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}">
+                <ListBox.RenderTransform>
+                    <TranslateTransform x:Name="LevelShift" />
+                </ListBox.RenderTransform>
+            </ListBox>
+
+            <TextBlock Margin="32,40"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Top"
+                       Style="{StaticResource Shell.Text.Secondary}"
+                       Text="{loc:Loc ChatList_Empty}"
+                       TextAlignment="Center"
+                       Visibility="{Binding ChatList.IsEmpty, Converter={StaticResource BoolToVisibility}}" />
+
+            <!-- Search results -->
+            <ListBox x:Name="SearchList"
+                     ItemContainerStyleSelector="{StaticResource SearchItemStyles}"
+                     ItemsSource="{Binding Search.Results}"
+                     KeyDown="OnListKeyDown"
+                     SelectedItem="{Binding Search.SelectedResult}"
+                     Style="{StaticResource Shell.ListBox}"
+                     Visibility="{Binding Search.IsActive, Converter={StaticResource BoolToVisibility}}" />
+
+            <StackPanel Margin="32,56,32,0"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Top"
+                        IsHitTestVisible="False">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding Search.IsActive}" Value="True" />
+                                    <Condition Binding="{Binding Search.HasNoResults}" Value="True" />
+                                    <Condition Binding="{Binding Search.IsBusy}" Value="False" />
+                                </MultiDataTrigger.Conditions>
+                                <Setter Property="Visibility" Value="Visible" />
+                            </MultiDataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <Grid Width="64" Height="64" HorizontalAlignment="Center">
+                    <Ellipse Fill="{DynamicResource Cab.HeaderBackground}" />
+                    <ui:SymbolIcon FontSize="28" Foreground="{DynamicResource Cab.TextSecondary}" Symbol="SearchInfo24" />
+                </Grid>
+                <TextBlock Margin="0,14,0,0"
+                           Style="{StaticResource Shell.Text.Secondary}"
+                           Text="{Binding Search.NoResultsText}"
+                           TextAlignment="Center" />
+            </StackPanel>
+
+            <!-- Drop on the list background: auto-categorize (animated by DropZone) -->
+            <Grid x:Name="BackgroundDropZone"
+                  Margin="10,0,10,10"
+                  IsHitTestVisible="False"
+                  Visibility="Collapsed"
+                  motion:DropZone.IsActive="{Binding ChatList.IsBackgroundDropTarget}">
+                <Rectangle Fill="{DynamicResource Cab.Accent}" Opacity="0.06" RadiusX="14" RadiusY="14" />
+                <Rectangle RadiusX="14"
+                           RadiusY="14"
+                           Stroke="{DynamicResource Cab.Accent}"
+                           StrokeDashArray="5 4"
+                           StrokeThickness="2"
+                           motion:DropZone.Part="Frame" />
+                <Border Margin="0,0,0,24"
+                        Padding="14,8"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Bottom"
+                        Background="{DynamicResource Cab.Accent}"
+                        CornerRadius="16"
+                        motion:DropZone.Part="Card">
+                    <StackPanel Orientation="Horizontal">
+                        <Grid Margin="0,0,8,0">
+                            <ui:SymbolIcon FontSize="16" Foreground="{DynamicResource Cab.OnAccent}" Symbol="ArrowDownload16" motion:DropZone.Part="Icon" />
+                            <!-- No upload ring here: the "Adding N files" card (NotificationHost) covers this pill a quarter second
+                                 after a drop, so the short "received" pop plays instead (bug hunt of the ring, 2026-10-22). -->
+                        </Grid>
+                        <TextBlock FontSize="13" FontWeight="{DynamicResource Cab.FontWeight.Strong}" Foreground="{DynamicResource Cab.OnAccent}" Text="{loc:Loc ChatList_DropHere}" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Filter flyout -->
+            <shell:FilterFlyout Visibility="{Binding IsFilterOpen, Converter={StaticResource BoolToVisibility}}" />
+
+            <!-- Progress cards + snackbar -->
+            <shell:NotificationHost VerticalAlignment="Bottom" DataContext="{Binding Notifications}" />
+        </Grid>
+    </Grid>
+</UserControl>

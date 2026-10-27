@@ -1,0 +1,54 @@
+<UserControl x:Class="Cabinette.App.Views.Dialogs.ConfirmDialogView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="clr-namespace:Cabinette.App.Localization">
+    <Grid Margin="24,22,24,20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <TextBlock Style="{StaticResource Shell.Text.DialogTitle}" Text="{Binding Title}" />
+        <TextBlock Grid.Row="1"
+                   Margin="0,12,0,0"
+                   Style="{StaticResource Shell.Text.Body}"
+                   Foreground="{DynamicResource Cab.TextSecondary}"
+                   Text="{Binding Message}" />
+        <Border Grid.Row="2"
+                Margin="0,14,0,0"
+                Padding="12,8"
+                Background="{DynamicResource Cab.WindowBackground}"
+                BorderBrush="{DynamicResource Cab.Divider}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Visibility="{Binding HasDetails, Converter={StaticResource BoolToVisibility}}">
+            <ScrollViewer MaxHeight="220" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding Details}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Margin="0,3" FontSize="13" Foreground="{DynamicResource Cab.TextPrimary}" Text="{Binding}" TextWrapping="Wrap" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Border>
+        <StackPanel Grid.Row="3" Margin="0,22,0,0" HorizontalAlignment="Right" Orientation="Horizontal">
+            <Button Margin="0,0,8,0"
+                    Command="{Binding CancelCommand}"
+                    Content="{loc:Loc Common_Cancel}"
+                    Style="{StaticResource Shell.SecondaryButton}"
+                    Visibility="{Binding ShowCancel, Converter={StaticResource BoolToVisibility}}" />
+            <Button MinWidth="96"
+                    Command="{Binding ConfirmCommand}"
+                    Content="{Binding ConfirmText}"
+                    Style="{StaticResource Shell.AccentButton}"
+                    Visibility="{Binding IsDestructive, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}" />
+            <Button MinWidth="96"
+                    Command="{Binding ConfirmCommand}"
+                    Content="{Binding ConfirmText}"
+                    Style="{StaticResource Shell.DangerButton}"
+                    Visibility="{Binding IsDestructive, Converter={StaticResource BoolToVisibility}}" />
+        </StackPanel>
+    </Grid>
+</UserControl>

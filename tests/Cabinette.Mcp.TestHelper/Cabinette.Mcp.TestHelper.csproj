@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    A harmless console child for cabinette-mcp's launcher tests (no window, no files): it sleeps, or it starts a program
+    through cabinette-mcp's DetachedProcessStarter from inside a job object the test made. Never shipped.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Cabinette.Mcp\Cabinette.Mcp.csproj" />
+  </ItemGroup>
+
+</Project>

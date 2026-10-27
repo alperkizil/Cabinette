@@ -1,0 +1,41 @@
+using System.IO;
+using Cabinette.App.Localization;
+using Cabinette.App.Services;
+using Cabinette.App.ViewModels.Shell;
+
+namespace Cabinette.App.Tests;
+
+/// <summary>Verifier (Opus) test for bug-hunt finding F4 of the Fable reviewer: what the UI does before Core is ever asked.</summary>
+public sealed class VerifyOpusReproF4Tests
+{
+    /// <summary>
+    /// App.RunAsync opens the library (creating cabinette.db in the data folder) before the first-run window, so every pick
+    /// that would expose the data folder (%LocalAppData% or the data folder itself) has visible content: first run shows the
+    /// "This folder isn't empty" warning, and the Move vault picker refuses the folder outright.
+    /// </summary>
+    [Fact]
+    public void F4_PicksThatExposeTheDataFolder_GetTheNotEmptyWarning_AndMoveVaultRefusesThem()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "Cabinette.App.Tests", "verify-" + Guid.NewGuid().ToString("N"));
+        var appData = Path.Combine(root, "home", "AppData");
+        var localAppData = Path.Combine(appData, "Local");
+        var dataFolder = Path.Combine(localAppData, "Cabinette");
+        var currentVault = Path.Combine(root, "vault");
+        Directory.CreateDirectory(dataFolder);
+        Directory.CreateDirectory(currentVault);
+        File.SetAttributes(appData, File.GetAttributes(appData) | FileAttributes.Hidden);
+        File.WriteAllText(Path.Combine(dataFolder, "cabinette.db"), "");
+        try
+        {
+            Assert.True(FirstRunViewModel.FolderHasContent(localAppData));
+            Assert.True(FirstRunViewModel.FolderHasContent(dataFolder));
+            Assert.Equal(L.Get("Vault_FolderNotEmpty"), VaultOperationsService.CheckEmptyFolder(localAppData, currentVault));
+            Assert.Equal(L.Get("Vault_FolderNotEmpty"), VaultOperationsService.CheckEmptyFolder(dataFolder, currentVault));
+        }
+        finally
+        {
+            File.SetAttributes(appData, FileAttributes.Directory);
+            VaultOperationsService.DeleteTree(root);
+        }
+    }
+}

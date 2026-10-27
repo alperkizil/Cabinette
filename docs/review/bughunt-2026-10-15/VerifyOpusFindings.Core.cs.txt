@@ -1,0 +1,143 @@
+using System.IO.Compression;
+using Cabinette.Core.Models;
+using Cabinette.Core.Services;
+using Cabinette.Core.Tests.Infrastructure;
+using Cabinette.Core.Vault;
+
+namespace Cabinette.Core.Tests;
+
+/// <summary>
+/// Verifier tests for the Opus findings O5 and O6 (independent check of the repro tests in <see cref="BugHuntOpusReproTests"/>).
+/// Each test asserts the behavior of current main, so a passing test confirms (or bounds) the finding it names.
+/// </summary>
+public sealed class VerifyFableReproTests
+{
+    /// <summary>
+    /// O5, the "quit doesn't wait for adds" part. The app's quit path disposes the library (App.xaml.cs CleanupAsync) and then
+    /// shuts the process down. LibraryService.DisposeAsync only waits for the write lock, which a copy-mode add does not hold
+    /// while it is copying, so it returns while the add's hidden temp file is still being written. In the real app the process
+    /// then exits and nothing ever runs the add's cleanup. (In-process, as here, the add's own finally still removes the file.)
+    /// </summary>
+    [Fact]
+    public async Task O5_LibraryDisposeDuringCopyAdd_ReturnsWhileTheTempFileIsStillOnDisk()
+    {
+        await using var t = await TestLibrary.CreateAsync();
+        var docs = await t.BuiltInAsync("documents");
+        var source = t.CreateFile("big.pdf", new string('x', 64 * 1024));
+        string[] tempFilesWhenDisposed = [];
+        var hiddenWhenDisposed = false;
+        string? targetFolder = null;
+
+        t.Service.DuringAddCopy = folder =>
+        {
+            targetFolder = folder;
+            // What CleanupAsync does at quit: dispose the library. It must not block on the copy.
+            t.Library.DisposeAsync().AsTask().GetAwaiter().GetResult();
+            tempFilesWhenDisposed = Directory.GetFiles(folder, NameRules.CabinetteTempPrefix + "*.tmp");
+            hiddenWhenDisposed = tempFilesWhenDisposed.Length == 1
+                && File.GetAttributes(tempFilesWhenDisposed[0]).HasFlag(FileAttributes.Hidden);
+        };
+
+        try
+        {
+            await t.Library.AddPathsAsync([source], new AddRequest { TargetCategoryId = docs.Id, Mode = ItemMode.Copy });
+        }
+        catch (ObjectDisposedException)
+        {
+            // The add runs into the disposed library after the copy; irrelevant here.
+        }
+
+        // The library shut down with the copy in flight: this is the state the process exits in.
+        Assert.NotNull(targetFolder);
+        Assert.Single(tempFilesWhenDisposed);
+        Assert.True(hiddenWhenDisposed);
+
+        // Only because this process lives on does the add's finally get to delete it; a real quit never reaches that point.
+        Assert.Empty(Directory.GetFiles(targetFolder!, NameRules.CabinetteTempPrefix + "*"));
+    }
+
+    /// <summary>
+    /// O5, bounds. An orphaned temp file is skipped by backup (not in the zip) and by Move vault (left behind in the old vault,
+    /// which the app offers to send to the Recycle Bin), so it only ever wastes space in the vault it was created in.
+    /// </summary>
+    [Fact]
+    public async Task O5_OrphanedTempFile_IsSkippedByBackup_AndStaysInTheOldVaultAfterMove()
+    {
+        await using var t = await TestLibrary.CreateAsync();
+        var video = await t.BuiltInAsync("video");
+        var real = await t.AddOneAsync(video.Id, t.CreateFile("clip.mp4", "real content"));
+        var orphan = t.WriteVaultFile(@"Video\.cabinette-0123456789abcdef0123456789abcdef.tmp", new string('x', 4096));
+        File.SetAttributes(orphan, FileAttributes.Hidden);
+
+        var zip = Path.Combine(t.Root, "backups", "cabinette.zip");
+        await t.Library.CreateBackupAsync(zip);
+        using (var archive = ZipFile.OpenRead(zip))
+        {
+            Assert.DoesNotContain(archive.Entries, e => e.FullName.Contains(".cabinette-", StringComparison.OrdinalIgnoreCase));
+            Assert.Contains(archive.Entries, e => e.FullName == "vault/Video/clip.mp4");
+        }
+
+        var newVault = Path.Combine(t.Root, "new vault");
+        await t.Library.MoveVaultAsync(newVault);
+        Assert.True(File.Exists(orphan)); // still in the old vault
+        Assert.Empty(Directory.GetFiles(Path.Combine(newVault, "Video"), NameRules.CabinetteTempPrefix + "*"));
+        Assert.True(File.Exists((await t.ItemAsync(real.Id)).FullPath));
+        Assert.True((await t.RescanAsync()).IsEmpty);
+    }
+
+    /// <summary>
+    /// O6, Move vault variant narrowed: file attributes ARE copied (a hidden file stays hidden and ignored), only folders are
+    /// re-created without theirs, so a hidden folder becomes a category after the move.
+    /// </summary>
+    [Fact]
+    public async Task O6_MoveVaultKeepsHiddenFiles_OnlyHiddenFoldersBecomeVisible()
+    {
+        await using var t = await TestLibrary.CreateAsync();
+        await t.BuiltInAsync("code");
+        t.WriteVaultFile(@"Code\.git\HEAD", "ref: refs/heads/main");
+        File.SetAttributes(t.VaultPath(@"Code\.git"), FileAttributes.Directory | FileAttributes.Hidden);
+        var hiddenFile = t.WriteVaultFile(@"Code\private.txt", "hidden on purpose");
+        File.SetAttributes(hiddenFile, FileAttributes.Hidden);
+        Assert.True((await t.RescanAsync()).IsEmpty);
+
+        var target = Path.Combine(t.Root, "new vault");
+        await t.Library.MoveVaultAsync(target);
+
+        Assert.True(File.GetAttributes(Path.Combine(target, "Code", "private.txt")).HasFlag(FileAttributes.Hidden));
+        Assert.False(File.GetAttributes(Path.Combine(target, "Code", ".git")).HasFlag(FileAttributes.Hidden));
+
+        var summary = await t.RescanAsync();
+        Assert.Contains(".git", summary.CategoriesCreated);
+        Assert.Equal(1, summary.AddedByCategory[".git"]);
+        Assert.False(summary.AddedByCategory.ContainsKey("Code")); // the hidden file is still ignored
+    }
+
+    /// <summary>
+    /// O6, restore variant with a realistic source of hidden files: album art that Windows Media Player drops (hidden) into
+    /// music folders. Ignored before the backup, imported as items after the restore.
+    /// </summary>
+    [Fact]
+    public async Task O6_RestoreImportsHiddenAlbumArtAsItems()
+    {
+        await using var source = await TestLibrary.CreateAsync();
+        var music = await source.BuiltInAsync("audio");
+        await source.AddOneAsync(music.Id, source.CreateFile("song.mp3", "audio"));
+        var art = source.WriteVaultFile(@"Audio\AlbumArtSmall.jpg", "jpeg");
+        File.SetAttributes(art, FileAttributes.Hidden);
+        Assert.True((await source.RescanAsync()).IsEmpty);
+
+        var zip = Path.Combine(source.Root, "backups", "cabinette.zip");
+        await source.Library.CreateBackupAsync(zip);
+
+        await using var target = await TestLibrary.CreateAsync();
+        await target.Library.DisposeAsync();
+        var restoredVault = Path.Combine(target.Root, "restored vault");
+        target.Use(await LibraryFactory.RestoreAsync(zip, restoredVault, target.Options, target.RecycleBin));
+
+        Assert.False(File.GetAttributes(Path.Combine(restoredVault, "Audio", "AlbumArtSmall.jpg")).HasFlag(FileAttributes.Hidden));
+        var summary = await target.RescanAsync();
+        Assert.Equal(1, summary.AddedByCategory["Audio"]);
+        var items = await target.Library.GetThreadItemsAsync((await target.BuiltInAsync("audio")).Id);
+        Assert.Contains(items, i => i.FileName == "AlbumArtSmall.jpg");
+    }
+}

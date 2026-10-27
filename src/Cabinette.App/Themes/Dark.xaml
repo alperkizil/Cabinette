@@ -1,0 +1,59 @@
+<!--
+  Dark theme: "Graphite", neutral charcoal with the light theme's gold accent, amber copies and slate-blue pointers
+  (SPEC.md section 11).
+  Must define exactly the same keys as Light.xaml.
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Color x:Key="Cab.AccentColor">#D9A441</Color>
+
+    <SolidColorBrush x:Key="Cab.WindowBackground" Color="#121212" />
+    <SolidColorBrush x:Key="Cab.SidebarBackground" Color="#181818" />
+    <SolidColorBrush x:Key="Cab.HeaderBackground" Color="#222222" />
+    <SolidColorBrush x:Key="Cab.ChatBackground" Color="#121212" />
+    <SolidColorBrush x:Key="Cab.InputBackground" Color="#2C2C2C" />
+    <SolidColorBrush x:Key="Cab.SearchBoxBackground" Color="#222222" />
+
+    <SolidColorBrush x:Key="Cab.BubbleCopyBackground" Color="#4A3A1E" />
+    <SolidColorBrush x:Key="Cab.BubblePointerBackground" Color="#2B3A4D" />
+    <SolidColorBrush x:Key="Cab.BubblePointerBorder" Color="#2B3A4D" />
+    <!-- Grid note tiles share the copy bubbles' amber (SPEC.md section 4). -->
+    <SolidColorBrush x:Key="Cab.NoteTileBackground" Color="#4A3A1E" />
+    <SolidColorBrush x:Key="Cab.BubbleMetaText" Color="#C9BB9C" />
+
+    <SolidColorBrush x:Key="Cab.Accent" Color="#D9A441" />
+    <SolidColorBrush x:Key="Cab.AccentHover" Color="#E6B65A" />
+    <SolidColorBrush x:Key="Cab.OnAccent" Color="#2A1D07" />
+
+    <SolidColorBrush x:Key="Cab.TextPrimary" Color="#ECECEC" />
+    <SolidColorBrush x:Key="Cab.TextSecondary" Color="#9C9C9C" />
+    <SolidColorBrush x:Key="Cab.Divider" Color="#2A2A2A" />
+
+    <SolidColorBrush x:Key="Cab.RowHover" Color="#222222" />
+    <SolidColorBrush x:Key="Cab.RowSelected" Color="#2C2C2C" />
+    <!-- Outline of the selected row and keyboard focus ring: the gold accent, as in the light theme. -->
+    <SolidColorBrush x:Key="Cab.SelectionBorder" Color="#D9A441" />
+
+    <SolidColorBrush x:Key="Cab.DateHeaderBackground" Color="#1E1E1E" />
+    <SolidColorBrush x:Key="Cab.DateHeaderText" Color="#9C9C9C" />
+
+    <SolidColorBrush x:Key="Cab.TagChipBackground" Color="#3A3020" />
+    <SolidColorBrush x:Key="Cab.TagChipText" Color="#EBCB8B" />
+
+    <SolidColorBrush x:Key="Cab.Danger" Color="#F15C6D" />
+    <SolidColorBrush x:Key="Cab.MissingBadgeBackground" Color="#4A2329" />
+    <SolidColorBrush x:Key="Cab.MissingBadgeText" Color="#F7A8B2" />
+
+    <SolidColorBrush x:Key="Cab.OverlayBackground" Color="#99000000" />
+
+    <!-- Thread banner (SPEC.md section 4): the band takes the category's avatar color; these cover the rest. -->
+    <SolidColorBrush x:Key="Cab.BannerFallbackBackground" Color="#4A4A4A" />
+    <SolidColorBrush x:Key="Cab.BannerText" Color="#FFFFFF" />
+
+    <!-- Gallery (SPEC.md section 4): the print frame around each photo or video shows its mode, amber for copies and blue for
+         pointers; muted so a page of prints doesn't glare. -->
+    <SolidColorBrush x:Key="Cab.GalleryFrameCopy" Color="#8A6A30" />
+    <SolidColorBrush x:Key="Cab.GalleryFramePointer" Color="#4A6A90" />
+
+</ResourceDictionary>

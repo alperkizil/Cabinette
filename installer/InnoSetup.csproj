@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Restore-only project: pins the Inno Setup compiler that installer/build.ps1 uses.
+    Tools.InnoSetup is an unofficial NuGet package of Inno Setup (package files: public domain; Inno Setup itself:
+    the Inno Setup License, see the package's license.txt). Its build props define $(InnoSetupCompiler), the path to
+    ISCC.exe in the NuGet cache. Nothing is compiled here, and the project is not part of Cabinette.slnx.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Tools.InnoSetup" Version="7.1.0" PrivateAssets="all" />
+  </ItemGroup>
+
+</Project>

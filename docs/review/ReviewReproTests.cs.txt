@@ -1,0 +1,209 @@
+using Cabinette.Core.Categorization;
+using Cabinette.Core.Models;
+using Cabinette.Core.Services;
+using Cabinette.Core.Tests.Infrastructure;
+
+namespace Cabinette.Core.Tests;
+
+// Throwaway repro tests for the stage-1 bug hunt. Each test asserts the OBSERVED (buggy) behavior so a pass confirms the finding.
+public sealed class ReviewReproTests
+{
+    [Fact]
+    public async Task Repro_MissingPointer_BlocksReAddingTheSameContent()
+    {
+        await using var t = await TestLibrary.CreateAsync();
+        var docs = await t.BuiltInAsync("documents");
+        var source = t.CreateFile("orig.txt", "the same content");
+        var item = await t.AddOneAsync(docs.Id, source, ItemMode.Pointer);
+        var moved = Path.Combine(t.Source, "elsewhere", "orig.txt");
+        Directory.CreateDirectory(Path.GetDirectoryName(moved)!);
+        File.Move(source, moved);
+        Assert.False(await t.Library.VerifyExistsAsync(item.Id));
+
+        var result = await t.AddAsync(docs.Id, ItemMode.Copy, moved);
+
+        Assert.Empty(result.Added);
+        var dup = Assert.Single(result.Duplicates);
+        Assert.True(dup.Existing.IsMissing);
+        Assert.Equal(source, dup.Existing.FullPath);
+        Assert.Empty(Directory.GetFiles(Path.Combine(t.Vault, "Documents")));
+    }
+
+    [Fact]
+    public async Task Repro_BackgroundHash_FoldsLivePointerIntoMissingOne()
+    {
+        await using var t = await TestLibrary.CreateAsync();
+        var docs = await t.BuiltInAsync("documents");
+        var source = t.CreateFile("big.dat", "large identical content");
+        var first = await t.AddOneAsync(docs.Id, source, ItemMode.Pointer);
+        Assert.NotNull(first.Hash);
+        var moved = Path.Combine(t.Source, "moved", "big.dat");
+        Directory.CreateDirectory(Path.GetDirectoryName(moved)!);
+        File.Move(source, moved);
+        Assert.False(await t.Library.VerifyExistsAsync(first.Id));
+
+        t.Service.BackgroundHashThresholdBytes = 10;
+        var second = await t.AddOneAsync(docs.Id, moved, ItemMode.Pointer);
+        Assert.Null(second.Hash);
+        await t.Service.WhenBackgroundHashingIdleAsync();
+
+        Assert.Null(await t.Library.GetItemAsync(second.Id));
+        var survivor = await t.ItemAsync(first.Id);
+        Assert.True(survivor.IsMissing);
+        Assert.Equal(source, survivor.FullPath);
+    }
+
+    [Fact]
+    public async Task Repro_NotesTypeFilter_DoesNotMatchNotesCreatedInCabinette()
+    {
+        await using var t = await TestLibrary.CreateAsync();
+        var notes = await t.BuiltInAsync("notes");
+        await t.Library.CreateNoteAsync(notes.Id, "hello");
+        await t.Library.AddPastedTextAsync(notes.Id, "pasted text");
+
+        var filtered = await t.Library.GetThreadItemsAsync(notes.Id, null, new ItemFilter { TypeKeys = ["notes"] });
+        var asText = await t.Library.GetThreadItemsAsync(notes.Id, null, new ItemFilter { TypeKeys = ["text"] });
+        var global = await t.Library.SearchAsync("", new ItemFilter { TypeKeys = ["notes"] });
+
+        Assert.Empty(filtered);
+        Assert.Equal(2, asText.Count);
+        Assert.Empty(global.Items);
+    }
+
+    [Fact]
+    public async Task Repro_VaultInit_AdoptsExistingFolder_AndCategoryDeleteRecyclesItsForeignFiles()
+    {
+        await using var t = await TestLibrary.CreateAsync(initializeVault: false);
+        var photos = Path.Combine(t.Vault, "Images");
+        Directory.CreateDirectory(photos);
+        File.WriteAllText(Path.Combine(photos, "holiday.jpg"), "precious");
+        await t.Library.InitializeVaultAsync(t.Vault);
+        var images = await t.BuiltInAsync("images");
+        Assert.Equal(0, (await t.SummaryAsync(images.Id)).ItemCount);
+
+        await t.Library.DeleteCategoryAsync(images.Id, CategoryDeletePolicy.MoveToDeleted);
+
+        Assert.False(Directory.Exists(photos));
+        Assert.True(t.RecycleBin.WasRecycled(photos));
+    }
+
+    [Fact]
+    public async Task Repro_FilesCanBeAddedDirectlyToDeleted()
+    {
+        await using var t = await TestLibrary.CreateAsync();
+        var deleted = await t.BuiltInAsync("deleted");
+        var item = await t.AddOneAsync(deleted.Id, t.CreateFile("x.txt", "x"));
+        Assert.Equal([deleted.Id], item.CategoryIds);
+        Assert.Equal(Path.Combine(t.Vault, "Deleted", "x.txt"), item.FullPath);
+    }
+
+    [Fact]
+    public async Task Check_UnicodeCaseVariants_DoNotOverwrite()
+    {
+        await using var t = await TestLibrary.CreateAsync();
+        var text = await t.BuiltInAsync("text");
+        var a = await t.AddOneAsync(text.Id, t.CreateFile("one/şema.txt", "first"));
+        var b = await t.AddOneAsync(text.Id, t.CreateFile("two/ŞEMA.txt", "second"));
+        Assert.Equal("first", File.ReadAllText(a.FullPath));
+        Assert.Equal("second", File.ReadAllText(b.FullPath));
+        Assert.NotEqual(a.FullPath, b.FullPath, StringComparer.OrdinalIgnoreCase);
+
+        // NTFS folds ş/Ş, so b was numbered "ŞEMA (1).txt"; renaming a to "ŞEMA.txt" is a case-only rename of its own file.
+        Assert.Equal("ŞEMA (1).txt", b.FileName);
+        await t.Library.RenameItemAsync(a.Id, "ŞEMA.txt");
+        Assert.Equal("first", File.ReadAllText((await t.ItemAsync(a.Id)).FullPath));
+        Assert.Equal("second", File.ReadAllText(b.FullPath));
+
+        // Renaming b onto a's name (differs only by Turkish case) must be refused by the disk check.
+        var clash = await Assert.ThrowsAsync<LibraryException>(() => t.Library.RenameItemAsync(b.Id, "şema.txt"));
+        Assert.Equal(LibraryErrorCode.NameAlreadyExists, clash.Code);
+    }
+
+    [Fact]
+    public void Repro_ThreadFilterExtensionNormalize_KeepsStar()
+    {
+        Assert.Equal("*.pdf", ExtensionMap.Normalize("*.pdf"));
+    }
+
+    [Fact]
+    public async Task Repro_MarkViewed_RaisesCategoriesChangeThatRefreshesTheThread()
+    {
+        await using var t = await TestLibrary.CreateAsync();
+        var docs = await t.BuiltInAsync("documents");
+        t.ClearEvents();
+        await t.Library.MarkCategoryViewedAsync(docs.Id);
+        var evt = Assert.Single(t.Events);
+        Assert.Contains(docs.Id, evt.CategoryIds);
+        Assert.True(evt.Kind.HasFlag(LibraryChangeKind.Categories));
+    }
+
+    [Fact]
+    public async Task Repro_RenamingAPointerWhileItIsBeingHashed_LeavesItUnhashed()
+    {
+        await using var t = await TestLibrary.CreateAsync();
+        t.Service.BackgroundHashThresholdBytes = 10;
+        var docs = await t.BuiltInAsync("documents");
+        var source = t.CreateFile("big.dat", new byte[64 * 1024 * 1024]);
+        var item = await t.AddOneAsync(docs.Id, source, ItemMode.Pointer);
+        await t.Library.RenameItemAsync(item.Id, "renamed.dat");
+        await t.Service.WhenBackgroundHashingIdleAsync();
+        var after = await t.ItemAsync(item.Id);
+        Assert.Equal("renamed.dat", after.FileName);
+        // Depending on timing the hash may or may not be set; print for the report.
+        Console.WriteLine($"hash after rename during background hashing: {(after.Hash is null ? "NULL" : "set")}");
+    }
+
+    [Fact]
+    public async Task Repro_DeleteCategory_WhileCopyInProgress_LeavesStrayFolderOrFails()
+    {
+        await using var t = await TestLibrary.CreateAsync();
+        var trip = await t.Library.CreateCategoryAsync("Trip", null);
+        var big = t.CreateFile("big.bin", new byte[48 * 1024 * 1024]);
+        var addTask = t.Library.AddPathsAsync([big], new AddRequest { TargetCategoryId = trip.Id, Mode = ItemMode.Copy });
+        await Task.Delay(30);
+        Exception? deleteError = null;
+        try
+        {
+            await t.Library.DeleteCategoryAsync(trip.Id, CategoryDeletePolicy.MoveToDeleted);
+        }
+        catch (Exception ex)
+        {
+            deleteError = ex;
+        }
+
+        var result = await addTask;
+        Console.WriteLine($"delete error: {deleteError?.Message ?? "none"}; added={result.Added.Count}; failures={string.Join(" | ", result.Failures.Select(f => f.Message))}");
+        var tripFolder = Path.Combine(t.Vault, "Trip");
+        Console.WriteLine($"Trip folder exists after: {Directory.Exists(tripFolder)}; files: {(Directory.Exists(tripFolder) ? string.Join(",", Directory.GetFiles(tripFolder, "*", SearchOption.AllDirectories).Select(Path.GetFileName)) : "")}");
+        Console.WriteLine($"recycled: {string.Join(",", t.RecycleBin.Recycled)}");
+    }
+
+    [Fact]
+    public async Task Check_SearchShortTerm_AndTagCombination()
+    {
+        await using var t = await TestLibrary.CreateAsync();
+        var docs = await t.BuiltInAsync("documents");
+        var a = await t.AddOneAsync(docs.Id, t.CreateFile("ab invoice.pdf", "a"));
+        var b = await t.AddOneAsync(docs.Id, t.CreateFile("cd invoice.pdf", "b"));
+        await t.Library.SetItemTagsAsync(a.Id, ["Invoice", "2026"]);
+        await t.Library.SetItemTagsAsync(b.Id, ["invoice"]);
+
+        Assert.Equal([a.Id], (await t.Library.SearchAsync("#INVOICE #2026")).Items.Select(i => i.Id));
+        Assert.Equal([a.Id], (await t.Library.SearchAsync("ab #invoice")).Items.Select(i => i.Id));
+        Assert.Equal(2, (await t.Library.GetThreadItemsAsync(docs.Id, "#invoice")).Count);
+        Assert.Equal([a.Id], (await t.Library.GetThreadItemsAsync(docs.Id, "ab")).Select(i => i.Id));
+    }
+
+    [Fact]
+    public async Task Check_RemoveFromDeletedThread_IsANoOp()
+    {
+        await using var t = await TestLibrary.CreateAsync();
+        var text = await t.BuiltInAsync("text");
+        var deleted = await t.BuiltInAsync("deleted");
+        var item = await t.AddOneAsync(text.Id, t.CreateFile("a.txt", "a"));
+        await t.Library.RemoveFromCategoryAsync([item.Id], text.Id);
+        t.ClearEvents();
+        await t.Library.RemoveFromCategoryAsync([item.Id], deleted.Id);
+        Assert.Equal([deleted.Id], (await t.ItemAsync(item.Id)).CategoryIds);
+    }
+}

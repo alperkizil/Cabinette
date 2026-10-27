@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    cabinette-mcp.exe (stage 4, SPEC.md section 10): the stdio MCP server that Claude Code and Codex start. A thin
+    translator: every tool call goes to the running Cabinette over the local channel (Cabinette.Ipc), which does the work.
+    It references only Cabinette.Ipc (no Core, App or Windows), so there is no WPF or SQLite in it.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <AssemblyName>cabinette-mcp</AssemblyName>
+    <RootNamespace>Cabinette.Mcp</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Cabinette.Mcp.Tests" />
+    <InternalsVisibleTo Include="Cabinette.Mcp.TestHelper" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Cabinette.Ipc\Cabinette.Ipc.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The official C# MCP SDK (Apache-2.0). Only its core package: the low-level server, stdio transport and client. -->
+    <PackageReference Include="ModelContextProtocol.Core" Version="2.2.0" />
+  </ItemGroup>
+
+</Project>

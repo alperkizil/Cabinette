@@ -1,0 +1,90 @@
+using System.IO;
+using Cabinette.App.ViewModels.Thread;
+using Cabinette.Core.Abstractions;
+using Cabinette.Core.Models;
+using Cabinette.Core.Services;
+
+namespace Cabinette.App.Tests;
+
+/// <summary>
+/// Throwaway repro tests for the Opus bug hunt. Each test asserts the OBSERVED (buggy) behavior, so a passing test confirms
+/// the finding with the same number in the report.
+/// </summary>
+public sealed class BugHuntOpusReproTests
+{
+    private sealed class NoRecycleBin : IRecycleBin
+    {
+        public void SendToRecycleBin(IReadOnlyCollection<string> paths) => throw new IOException("not used");
+    }
+
+    /// <summary>
+    /// Finding 3: after "Move vault" the open thread keeps the OLD vault paths. The library's change event for the move has
+    /// no category or item ids, so ThreadViewModel.ClassifyChange decides "items unchanged" and the bubbles are not reloaded:
+    /// Open / Show in folder / Copy / drag out then act on the old vault's copy.
+    /// </summary>
+    [Fact]
+    public async Task F3_MoveVaultEvent_DoesNotReloadTheOpenThread_ItemsKeepOldVaultPaths()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "cabinette-bughunt-opus", Guid.NewGuid().ToString("N"));
+        var data = Path.Combine(root, "data");
+        var vault = Path.Combine(root, "vault");
+        var newVault = Path.Combine(root, "new vault");
+        Directory.CreateDirectory(Path.Combine(root, "source"));
+        var source = Path.Combine(root, "source", "report.docx");
+        File.WriteAllText(source, "report");
+
+        var library = await LibraryFactory.OpenAsync(new LibraryOptions { DataDirectory = data }, new NoRecycleBin());
+        try
+        {
+            await library.InitializeVaultAsync(vault);
+            var docs = await library.GetOrCreateBuiltInCategoryAsync("documents");
+            var added = await library.AddPathsAsync([source], new AddRequest { TargetCategoryId = docs.Id, Mode = ItemMode.Copy });
+            var item = Assert.Single(added.Added);
+
+            // The thread of "Documents" is open and shows this item (path in the old vault).
+            var shown = (await library.GetThreadItemsAsync(docs.Id)).Single();
+            Assert.StartsWith(vault + Path.DirectorySeparatorChar, shown.FullPath);
+
+            var events = new List<LibraryChangedEventArgs>();
+            library.Changed += (_, e) =>
+            {
+                lock (events)
+                {
+                    events.Add(e);
+                }
+            };
+
+            await library.MoveVaultAsync(newVault);
+
+            LibraryChangedEventArgs[] raised;
+            lock (events)
+            {
+                raised = events.ToArray();
+            }
+
+            // What the open ThreadViewModel decides for every event raised by the move: never "reload the items".
+            Assert.NotEmpty(raised);
+            Assert.All(raised, e => Assert.False(ThreadViewModel.ClassifyChange(e, docs.Id, new HashSet<long> { item.Id }).Items));
+
+            // The library itself now resolves the item into the new vault; the bubble still has the old path.
+            var current = await library.GetItemAsync(item.Id);
+            Assert.StartsWith(newVault + Path.DirectorySeparatorChar, current!.FullPath);
+            Assert.NotEqual(current.FullPath, shown.FullPath);
+            Assert.True(File.Exists(shown.FullPath)); // the old vault is kept by default, so "Open" opens the stale copy
+        }
+        finally
+        {
+            await library.DisposeAsync();
+            try
+            {
+                Directory.Delete(root, recursive: true);
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+}

@@ -1,0 +1,5 @@
+# The bundled fonts and their licenses stay byte for byte as released (README.md lists their SHA-256): no line-ending
+# conversion on checkout or commit.
+* -text
+README.md text
+.gitattributes text

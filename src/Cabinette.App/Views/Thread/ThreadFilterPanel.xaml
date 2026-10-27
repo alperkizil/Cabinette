@@ -1,0 +1,84 @@
+<UserControl x:Class="Cabinette.App.Views.Thread.ThreadFilterPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="clr-namespace:Cabinette.App.Localization"
+             xmlns:vm="clr-namespace:Cabinette.App.ViewModels.Thread">
+    <!-- Filter flyout content (DataContext = ThreadFilterViewModel). Hosted in a Popup by ThreadView. -->
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/Cabinette;component/Views/Thread/ThreadResources.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Border Width="372" Margin="12,6,12,18" Padding="18,16,18,18" Style="{StaticResource Cab.Thread.Card}">
+        <StackPanel>
+            <DockPanel Margin="0,0,0,14">
+                <Button VerticalAlignment="Center"
+                        Command="{Binding ResetCommand}"
+                        Content="{loc:Loc Thread_FilterReset}"
+                        DockPanel.Dock="Right"
+                        FontSize="12.5"
+                        Style="{StaticResource Cab.Thread.LinkButton}" />
+                <TextBlock FontSize="15" FontWeight="{DynamicResource Cab.FontWeight.Strong}" Foreground="{DynamicResource Cab.TextPrimary}" Text="{loc:Loc Thread_FilterTitle}" />
+            </DockPanel>
+
+            <TextBlock Style="{StaticResource Cab.Thread.SectionLabel}" Text="{loc:Loc Thread_FilterType}" />
+            <ItemsControl Focusable="False" ItemsPanel="{StaticResource Cab.Thread.WrapPanel}" ItemsSource="{Binding Types}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type vm:FilterOption}">
+                        <ToggleButton Content="{Binding Label}" IsChecked="{Binding IsSelected}" Style="{StaticResource Cab.Thread.Chip}" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <TextBlock Margin="0,10,0,8" Style="{StaticResource Cab.Thread.SectionLabel}" Text="{loc:Loc Thread_FilterDateAdded}" />
+            <WrapPanel>
+                <RadioButton Content="{loc:Loc Thread_FilterAnyTime}" IsChecked="{Binding DatePreset, Converter={StaticResource EnumEquals}, ConverterParameter=Any}" Style="{StaticResource Cab.Thread.Chip}" />
+                <RadioButton Content="{loc:Loc Thread_Today}" IsChecked="{Binding DatePreset, Converter={StaticResource EnumEquals}, ConverterParameter=Today}" Style="{StaticResource Cab.Thread.Chip}" />
+                <RadioButton Content="{loc:Loc Thread_FilterLast7Days}" IsChecked="{Binding DatePreset, Converter={StaticResource EnumEquals}, ConverterParameter=Last7Days}" Style="{StaticResource Cab.Thread.Chip}" />
+                <RadioButton Content="{loc:Loc Thread_FilterLast30Days}" IsChecked="{Binding DatePreset, Converter={StaticResource EnumEquals}, ConverterParameter=Last30Days}" Style="{StaticResource Cab.Thread.Chip}" />
+                <RadioButton Content="{loc:Loc Thread_FilterThisYear}" IsChecked="{Binding DatePreset, Converter={StaticResource EnumEquals}, ConverterParameter=ThisYear}" Style="{StaticResource Cab.Thread.Chip}" />
+                <RadioButton Content="{loc:Loc Thread_FilterCustom}" IsChecked="{Binding DatePreset, Converter={StaticResource EnumEquals}, ConverterParameter=Custom}" Style="{StaticResource Cab.Thread.Chip}" />
+            </WrapPanel>
+            <Grid Margin="0,2,0,4" Visibility="{Binding IsCustomDate, Converter={StaticResource BoolToVis}}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Margin="0,0,0,4" FontSize="12" Foreground="{DynamicResource Cab.TextSecondary}" Text="{loc:Loc Thread_FilterFrom}" />
+                    <DatePicker SelectedDate="{Binding CustomFrom}" />
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Margin="0,0,0,4" FontSize="12" Foreground="{DynamicResource Cab.TextSecondary}" Text="{loc:Loc Thread_FilterTo}" />
+                    <DatePicker SelectedDate="{Binding CustomTo}" />
+                </StackPanel>
+            </Grid>
+
+            <TextBlock Margin="0,10,0,8" Style="{StaticResource Cab.Thread.SectionLabel}" Text="{loc:Loc Thread_FilterSize}" />
+            <WrapPanel>
+                <RadioButton Content="{loc:Loc Thread_FilterAnySize}" IsChecked="{Binding SizePreset, Converter={StaticResource EnumEquals}, ConverterParameter=Any}" Style="{StaticResource Cab.Thread.Chip}" />
+                <RadioButton Content="{loc:Loc Thread_FilterSmall}" IsChecked="{Binding SizePreset, Converter={StaticResource EnumEquals}, ConverterParameter=Small}" Style="{StaticResource Cab.Thread.Chip}" />
+                <RadioButton Content="{loc:Loc Thread_FilterMedium}" IsChecked="{Binding SizePreset, Converter={StaticResource EnumEquals}, ConverterParameter=Medium}" Style="{StaticResource Cab.Thread.Chip}" />
+                <RadioButton Content="{loc:Loc Thread_FilterLarge}" IsChecked="{Binding SizePreset, Converter={StaticResource EnumEquals}, ConverterParameter=Large}" Style="{StaticResource Cab.Thread.Chip}" />
+            </WrapPanel>
+
+            <TextBlock Margin="0,10,0,8" Style="{StaticResource Cab.Thread.SectionLabel}" Text="{loc:Loc Thread_FilterStorage}" />
+            <WrapPanel>
+                <RadioButton Content="{loc:Loc Thread_FilterAllFiles}" IsChecked="{Binding Mode, Converter={StaticResource EnumEquals}, ConverterParameter=All}" Style="{StaticResource Cab.Thread.Chip}" />
+                <RadioButton Content="{loc:Loc Thread_FilterCopies}" IsChecked="{Binding Mode, Converter={StaticResource EnumEquals}, ConverterParameter=Copy}" Style="{StaticResource Cab.Thread.Chip}" />
+                <RadioButton Content="{loc:Loc Thread_FilterPointers}" IsChecked="{Binding Mode, Converter={StaticResource EnumEquals}, ConverterParameter=Pointer}" Style="{StaticResource Cab.Thread.Chip}" />
+            </WrapPanel>
+
+            <TextBlock Margin="0,10,0,8" Style="{StaticResource Cab.Thread.SectionLabel}" Text="{loc:Loc Thread_FilterExtension}" />
+            <Border Height="34" Style="{StaticResource Cab.Thread.InputBorder}">
+                <TextBox Style="{StaticResource Cab.Thread.BareTextBox}" Tag="{loc:Loc Thread_FilterExtensionPlaceholder}" Text="{Binding ExtensionsText, UpdateSourceTrigger=PropertyChanged, Delay=300}" />
+            </Border>
+
+            <CheckBox Margin="0,16,0,0" Content="{loc:Loc Thread_FilterMissingOnly}" IsChecked="{Binding MissingOnly}" Style="{StaticResource Cab.Thread.Switch}" />
+        </StackPanel>
+    </Border>
+</UserControl>

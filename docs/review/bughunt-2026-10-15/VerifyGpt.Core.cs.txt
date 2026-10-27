@@ -1,0 +1,359 @@
+using System.IO.Compression;
+using Cabinette.Core.Models;
+using Cabinette.Core.Services;
+using Cabinette.Core.Tests.Infrastructure;
+using Cabinette.Core.Vault;
+using Dapper;
+using Microsoft.Data.Sqlite;
+
+namespace Cabinette.Core.Tests;
+
+/// <summary>
+/// Repro tests for the ChatGPT review candidates (G1-G9). Each test asserts the behavior observed on current main,
+/// so a passing test means the reported bug is real. Everything runs in temp folders.
+/// </summary>
+public sealed class VerifyGptReproTests
+{
+    // ------------------------------------------------------------------ G1: crafted backup database escapes the vault
+
+    [Fact]
+    public async Task G1_CraftedBackupDatabase_CreatesFoldersAndMovesFilesOutsideTheChosenVault()
+    {
+        await using var source = await TestLibrary.CreateAsync();
+        var original = Path.Combine(source.Root, "original.zip");
+        await source.Library.CreateBackupAsync(original);
+
+        await using var target = await TestLibrary.CreateAsync(initializeVault: false);
+        await target.Library.DisposeAsync();
+        var restoreRoot = Path.Combine(target.Root, "restore");
+        var vault = Path.Combine(restoreRoot, "vault");
+        var escaped = Path.Combine(restoreRoot, "escaped"); // what "..\escaped" resolves to
+        var absolute = Path.Combine(target.Root, "absolute-target");
+
+        // The attacker edits only the embedded database; every zip entry name is harmless.
+        var crafted = CraftBackup(original, Path.Combine(target.Root, "crafted.zip"), db =>
+        {
+            db.Execute("UPDATE categories SET folder_name = @f WHERE builtin_key = 'executable'", new { f = @"..\escaped" });
+            db.Execute("UPDATE categories SET folder_name = @f WHERE builtin_key = 'archives'", new { f = absolute });
+        }, ("vault/payload.exe", "MZ not really a program"));
+
+        var restored = await LibraryFactory.RestoreAsync(crafted, vault, target.Options, target.RecycleBin);
+        target.Use(restored);
+
+        // CompleteRestoreAsync -> CreateVaultFolders created both folders outside the chosen vault.
+        Assert.True(Directory.Exists(escaped));
+        Assert.True(Directory.Exists(absolute));
+        Assert.False(FileOps.IsSameOrInside(escaped, vault));
+
+        // The startup rescan files the loose .exe into "Executable", i.e. moves it outside the vault.
+        await target.RescanAsync();
+        Assert.False(File.Exists(Path.Combine(vault, "payload.exe")));
+        Assert.True(File.Exists(Path.Combine(escaped, "payload.exe")));
+    }
+
+    // ------------------------------------------------------------------ G2: failed/cancelled move or restore deletes foreign files
+
+    [Fact]
+    public async Task G2_CancelledMoveVault_DeletesAForeignFileInTheDestination()
+    {
+        await using var t = await TestLibrary.CreateAsync();
+        var docs = await t.BuiltInAsync("documents");
+        await t.AddOneAsync(docs.Id, t.CreateFile("a.txt", "a"));
+        await t.AddOneAsync(docs.Id, t.CreateFile("b.txt", "b"));
+        var target = Path.Combine(t.Root, "target");
+        Directory.CreateDirectory(target); // the user picked an existing empty folder
+        var foreign = Path.Combine(target, "mine.txt");
+        using var cts = new CancellationTokenSource();
+        t.Service.AfterMoveVaultFileCopied = _ =>
+        {
+            if (!File.Exists(foreign))
+            {
+                File.WriteAllText(foreign, "saved here by the user during the move");
+                cts.Cancel();
+            }
+        };
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => t.Library.MoveVaultAsync(target, ct: cts.Token));
+
+        Assert.True(Directory.Exists(target));
+        Assert.False(File.Exists(foreign)); // permanently deleted, not recycled
+        Assert.Empty(t.RecycleBin.Recycled);
+    }
+
+    [Fact]
+    public async Task G2_MoveVaultNameCollision_FailsAndDeletesTheUsersFile()
+    {
+        await using var t = await TestLibrary.CreateAsync();
+        var docs = await t.BuiltInAsync("documents");
+        await t.AddOneAsync(docs.Id, t.CreateFile("a.txt", "a"));
+        await t.AddOneAsync(docs.Id, t.CreateFile("b.txt", "b"));
+        var target = Path.Combine(t.Root, "target");
+        var users = Path.Combine(target, "Documents", "b.txt");
+        t.Service.AfterMoveVaultFileCopied = path =>
+        {
+            if (path.EndsWith("a.txt", StringComparison.OrdinalIgnoreCase))
+            {
+                File.WriteAllText(users, "the user's own b.txt");
+            }
+        };
+
+        var ex = await Assert.ThrowsAsync<LibraryException>(() => t.Library.MoveVaultAsync(target));
+
+        Assert.Equal(LibraryErrorCode.NameAlreadyExists, ex.Code);
+        Assert.False(File.Exists(users));
+    }
+
+    [Fact]
+    public async Task G2_CancelledRestore_DeletesAForeignFileInTheChosenFolder()
+    {
+        await using var source = await TestLibrary.CreateAsync();
+        var docs = await source.BuiltInAsync("documents");
+        await source.AddOneAsync(docs.Id, source.CreateFile("a.txt", new byte[256 * 1024]));
+        await source.AddOneAsync(docs.Id, source.CreateFile("b.txt", "b"));
+        var zip = Path.Combine(source.Root, "b.zip");
+        await source.Library.CreateBackupAsync(zip);
+
+        await using var target = await TestLibrary.CreateAsync(initializeVault: false);
+        await target.Library.DisposeAsync();
+        var vault = Path.Combine(target.Root, "restored");
+        Directory.CreateDirectory(vault);
+        var foreign = Path.Combine(vault, "mine.txt");
+        using var cts = new CancellationTokenSource();
+        var progress = new CallbackProgress(p =>
+        {
+            if (p.Stage == "extracting" && !File.Exists(foreign))
+            {
+                File.WriteAllText(foreign, "saved here by the user during the restore");
+                cts.Cancel();
+            }
+        });
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => LibraryFactory.RestoreAsync(zip, vault, target.Options, target.RecycleBin, progress, cts.Token));
+
+        Assert.True(Directory.Exists(vault));
+        Assert.False(File.Exists(foreign));
+    }
+
+    // ------------------------------------------------------------------ G3: in-flight copy add during a vault move
+
+    [Fact]
+    public async Task G3_CopyAddInFlightDuringMoveVault_CommitsItsFileIntoTheOldVault()
+    {
+        await using var t = await TestLibrary.CreateAsync();
+        var docs = await t.BuiltInAsync("documents");
+        await t.AddOneAsync(docs.Id, t.CreateFile("existing.txt", "existing"));
+        var oldVault = t.Vault;
+        var newVault = Path.Combine(t.Root, "new vault");
+        MoveVaultResult? moved = null;
+        t.Service.DuringAddCopy = _ => moved = t.Library.MoveVaultAsync(newVault).GetAwaiter().GetResult();
+
+        var result = await t.AddAsync(docs.Id, ItemMode.Copy, t.CreateFile("late.txt", "added while the vault moved"));
+
+        Assert.NotNull(moved);
+        Assert.Equal(newVault, t.Library.VaultPath);
+        var added = Assert.Single(result.Added);
+        Assert.Empty(result.Failures);
+        Assert.StartsWith(newVault + Path.DirectorySeparatorChar, added.FullPath);
+        Assert.False(File.Exists(added.FullPath));                                   // the row points into the new vault...
+        Assert.True(File.Exists(Path.Combine(oldVault, "Documents", "late.txt")));   // ...but the file landed in the old one
+        Assert.False(await t.Library.VerifyExistsAsync(added.Id));
+    }
+
+    // ------------------------------------------------------------------ G4: move verification vs. source edits
+
+    [Fact]
+    public async Task G4_SourceEditedAndFileAddedDuringMove_MoveStillSucceedsWithStaleContent()
+    {
+        await using var t = await TestLibrary.CreateAsync();
+        var docs = await t.BuiltInAsync("documents");
+        var a = await t.AddOneAsync(docs.Id, t.CreateFile("a.txt", "version 1"));
+        await t.AddOneAsync(docs.Id, t.CreateFile("b.txt", "b"));
+        var oldA = a.FullPath;
+        var lateFile = t.VaultPath(@"Documents\late.txt");
+        var target = Path.Combine(t.Root, "new vault");
+        t.Service.AfterMoveVaultFileCopied = path =>
+        {
+            if (path.EndsWith("a.txt", StringComparison.OrdinalIgnoreCase))
+            {
+                // Another program saves an edit to the old vault after a.txt was copied, and a file appears after the listing.
+                File.WriteAllText(oldA, "version 2, saved during the move");
+                File.WriteAllText(lateFile, "late");
+            }
+        };
+
+        var result = await t.Library.MoveVaultAsync(target);
+
+        Assert.Equal(target, result.NewVaultPath);
+        Assert.Equal("version 1", File.ReadAllText((await t.ItemAsync(a.Id)).FullPath));
+        Assert.Equal("version 2, saved during the move", File.ReadAllText(oldA));
+        Assert.False(File.Exists(Path.Combine(target, "Documents", "late.txt")));
+    }
+
+    // ------------------------------------------------------------------ G5: Recycle Bin refusal after the commit
+
+    [Fact]
+    public async Task G5_LateRecycleRefusal_DeletesTheRow_AndThePermanentRetryDoesNothing()
+    {
+        await using var t = await TestLibrary.CreateAsync();
+        var docs = await t.BuiltInAsync("documents");
+        var item = await t.AddOneAsync(docs.Id, t.CreateFile("huge.bin", "too large for the Recycle Bin"));
+        await t.Library.AddTagsAsync([item.Id], ["keep"]);
+        t.RecycleBin.Refused.Add(item.FullPath); // CanRecycle says yes, the shell refuses (item too large)
+
+        var ex = await Assert.ThrowsAsync<LibraryException>(() => t.Library.DeleteItemsAsync([item.Id]));
+        Assert.Equal(LibraryErrorCode.RecycleBinUnavailable, ex.Code);
+
+        // The refusal came after the commit: the row (and its tags) are already gone, the file is still there.
+        Assert.Null(await t.Library.GetItemAsync(item.Id));
+        Assert.Empty(await t.Library.GetTagsAsync());
+        Assert.True(File.Exists(item.FullPath));
+
+        // What RecycleBinFallback does after "Delete permanently": the same ids again. No error, and nothing is deleted.
+        await t.Library.DeleteItemsAsync([item.Id], new DeleteItemsOptions { PermanentWhenNoRecycleBin = true });
+        Assert.True(File.Exists(item.FullPath));
+
+        // The vault monitor then brings the "deleted" file back as a new item.
+        var summary = await t.RescanAsync();
+        Assert.Equal(1, summary.AddedByCategory["Documents"]);
+    }
+
+    [Fact]
+    public async Task G5_LateRecycleRefusal_PointerItem_LosesItsMetadata_AndRealFileStays()
+    {
+        await using var t = await TestLibrary.CreateAsync();
+        var docs = await t.BuiltInAsync("documents");
+        var path = t.CreateFile("big-video.mp4", "pretend this is 40 GB");
+        var item = await t.AddOneAsync(docs.Id, path, ItemMode.Pointer);
+        t.RecycleBin.Refused.Add(path);
+
+        var ex = await Assert.ThrowsAsync<LibraryException>(() => t.Library.DeleteItemsAsync([item.Id]));
+        Assert.Equal(LibraryErrorCode.RecycleBinUnavailable, ex.Code);
+        await t.Library.DeleteItemsAsync([item.Id], new DeleteItemsOptions { PermanentWhenNoRecycleBin = true });
+
+        Assert.Null(await t.Library.GetItemAsync(item.Id));
+        Assert.True(File.Exists(path));
+    }
+
+    // ------------------------------------------------------------------ G6: paused monitor + stale is_missing for copy items
+
+    [Fact]
+    public async Task G6_WhileMonitoringIsPaused_ReAddingADeletedVaultFile_IsDiscardedAsDuplicate()
+    {
+        await using var t = await TestLibrary.CreateAsync();
+        var docs = await t.BuiltInAsync("documents");
+        var source = t.CreateFile("report.txt", "report content");
+        var item = await t.AddOneAsync(docs.Id, source);
+        var monitor = t.FastMonitor();
+        await monitor.StartAsync();
+        await monitor.WaitForQuietAsync(TimeSpan.FromMilliseconds(200), TimeSpan.FromSeconds(10));
+        await monitor.PauseAsync();
+
+        File.Delete(item.FullPath); // deleted in Explorer while paused
+        var result = await t.AddAsync(docs.Id, ItemMode.Copy, source);
+
+        Assert.Empty(result.Added);
+        Assert.Equal(item.Id, Assert.Single(result.Duplicates).Existing.Id);
+        Assert.False(File.Exists(item.FullPath)); // the new copy was thrown away
+
+        // Resuming rescans: the item's file is gone, so the item is removed. The re-added content is in the library nowhere.
+        await monitor.ResumeAsync();
+        await monitor.WaitForQuietAsync(TimeSpan.FromMilliseconds(200), TimeSpan.FromSeconds(10));
+        Assert.Null(await t.Library.GetItemAsync(item.Id));
+        Assert.Empty(await t.Library.GetThreadItemsAsync(docs.Id));
+    }
+
+    // ------------------------------------------------------------------ G8: folder + file renamed while closed
+
+    [Fact]
+    public async Task G8_FolderAndFileRenamedWhileClosed_EveryFullRescanFailsWithAForeignKeyError()
+    {
+        await using var t = await TestLibrary.CreateAsync();
+        var trip = await t.Library.CreateCategoryAsync("Trip", null);
+        var item = await t.AddOneAsync(trip.Id, t.CreateFile("a.jpg", "jpeg bytes"));
+        await t.Library.AddTagsAsync([item.Id], ["holiday"]);
+        await t.Library.DisposeAsync();
+
+        Directory.Move(t.VaultPath("Trip"), t.VaultPath("Holiday"));
+        File.Move(t.VaultPath(@"Holiday\a.jpg"), t.VaultPath(@"Holiday\b.jpg"));
+        await t.OpenAsync();
+
+        for (var attempt = 0; attempt < 2; attempt++)
+        {
+            var ex = await Assert.ThrowsAsync<LibraryException>(() => t.Service.ReconcileAsync(ReconcileRequest.Rescan(), CancellationToken.None));
+            Assert.Contains("FOREIGN KEY", ex.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        // Rolled back each time: the library still has the old category and item, pointing at a file that isn't there.
+        var stale = await t.ItemAsync(item.Id);
+        Assert.Equal(["holiday"], stale.Tags);
+        Assert.False(File.Exists(stale.FullPath));
+        Assert.DoesNotContain(await t.Library.GetAllCategoriesAsync(), c => c.Name == "Holiday");
+    }
+
+    // ------------------------------------------------------------------ G9: stale pointer hash
+
+    [Fact]
+    public async Task G9_PointerEditedOutsideCabinette_AddingItsOldContentIsDiscardedAsDuplicate()
+    {
+        await using var t = await TestLibrary.CreateAsync();
+        var docs = await t.BuiltInAsync("documents");
+        var pointerPath = t.CreateFile("template.txt", "version A");
+        var pointer = await t.AddOneAsync(docs.Id, pointerPath, ItemMode.Pointer);
+        File.WriteAllText(pointerPath, "version B, edited later"); // pointers are not watched
+
+        var oldCopy = t.CreateFile(@"mail\template-original.txt", "version A");
+        var result = await t.AddAsync(docs.Id, ItemMode.Copy, oldCopy);
+
+        Assert.Empty(result.Added);
+        Assert.Equal(pointer.Id, Assert.Single(result.Duplicates).Existing.Id);
+        Assert.Equal("version B, edited later", File.ReadAllText(pointerPath));
+        Assert.Empty(Directory.GetFiles(t.VaultPath("Documents")));
+    }
+
+    // ------------------------------------------------------------------ helpers
+
+    private sealed class CallbackProgress(Action<VaultOperationProgress> callback) : IProgress<VaultOperationProgress>
+    {
+        public void Report(VaultOperationProgress value) => callback(value);
+    }
+
+    /// <summary>Copies a real backup's manifest and database, lets <paramref name="edit"/> change the database, adds extra entries.</summary>
+    private static string CraftBackup(string originalZip, string craftedZip, Action<SqliteConnection> edit, params (string Entry, string Content)[] extra)
+    {
+        var work = Path.Combine(Path.GetDirectoryName(craftedZip)!, "craft-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(work);
+        var db = Path.Combine(work, "cabinette.db");
+        string manifest;
+        using (var zip = ZipFile.OpenRead(originalZip))
+        {
+            zip.GetEntry("cabinette.db")!.ExtractToFile(db);
+            using var reader = new StreamReader(zip.GetEntry("manifest.json")!.Open());
+            manifest = reader.ReadToEnd();
+        }
+
+        using (var connection = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = db, Pooling = false }.ToString()))
+        {
+            connection.Open();
+            edit(connection);
+        }
+
+        using (var zip = ZipFile.Open(craftedZip, ZipArchiveMode.Create))
+        {
+            WriteEntry(zip, "manifest.json", manifest);
+            zip.CreateEntryFromFile(db, "cabinette.db");
+            foreach (var (entry, content) in extra)
+            {
+                WriteEntry(zip, entry, content);
+            }
+        }
+
+        return craftedZip;
+    }
+
+    private static void WriteEntry(ZipArchive zip, string name, string content)
+    {
+        using var writer = new StreamWriter(zip.CreateEntry(name).Open());
+        writer.Write(content);
+    }
+}

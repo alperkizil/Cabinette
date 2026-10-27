@@ -1,0 +1,140 @@
+<UserControl x:Class="Cabinette.App.Views.Shell.EmptyStateView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:loc="clr-namespace:Cabinette.App.Localization"
+             xmlns:motion="clr-namespace:Cabinette.App.Views.Motion"
+             AllowDrop="True"
+             Background="{DynamicResource Cab.ChatBackground}"
+             DragEnter="OnDragOver"
+             DragLeave="OnDragLeave"
+             DragOver="OnDragOver"
+             Drop="OnDrop">
+    <!-- DataContext: MainViewModel. Shown on the right when no thread is open. -->
+    <UserControl.Resources>
+        <Style x:Key="Tile" TargetType="Border">
+            <Setter Property="Width" Value="64" />
+            <Setter Property="Height" Value="80" />
+            <Setter Property="Background" Value="{DynamicResource Cab.InputBackground}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Cab.Divider}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="RenderTransformOrigin" Value="0.5,1" />
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="14" Direction="270" Opacity="0.12" ShadowDepth="3" />
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="TipIcon" TargetType="Grid">
+            <Setter Property="Width" Value="36" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="Margin" Value="0,0,14,0" />
+        </Style>
+        <Style x:Key="TipText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="Foreground" Value="{DynamicResource Cab.TextPrimary}" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <!-- Dims (with a short fade) while files are dragged over it -->
+        <Grid motion:Dimmer.DimmedOpacity="0.2" motion:Dimmer.IsDimmed="{Binding IsEmptyStateDropTarget}">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="40,48" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="440">
+                    <!-- Illustration: a soft disc with three file cards fanned out like a drawer. -->
+                    <Grid Width="240" Height="170" HorizontalAlignment="Center">
+                        <Ellipse Width="168" Height="168" HorizontalAlignment="Center" VerticalAlignment="Center" Fill="{DynamicResource Cab.HeaderBackground}" />
+                        <Border Margin="0,0,92,30" HorizontalAlignment="Center" VerticalAlignment="Bottom" Style="{StaticResource Tile}">
+                            <Border.RenderTransform>
+                                <RotateTransform Angle="-14" />
+                            </Border.RenderTransform>
+                            <ui:SymbolIcon FontSize="30" Foreground="{DynamicResource Cab.TextSecondary}" Symbol="MusicNote224" />
+                        </Border>
+                        <Border Margin="92,0,0,30" HorizontalAlignment="Center" VerticalAlignment="Bottom" Style="{StaticResource Tile}">
+                            <Border.RenderTransform>
+                                <RotateTransform Angle="14" />
+                            </Border.RenderTransform>
+                            <ui:SymbolIcon FontSize="30" Foreground="{DynamicResource Cab.TextSecondary}" Symbol="DocumentText24" />
+                        </Border>
+                        <Border Width="76" Height="96" Margin="0,0,0,34" HorizontalAlignment="Center" VerticalAlignment="Bottom" Style="{StaticResource Tile}">
+                            <ui:SymbolIcon FontSize="38" Foreground="{DynamicResource Cab.Accent}" Symbol="Image24" />
+                        </Border>
+                        <!-- Drawer front -->
+                        <Border Width="150" Height="36" Margin="0,0,0,8" HorizontalAlignment="Center" VerticalAlignment="Bottom" Background="{DynamicResource Cab.Accent}" CornerRadius="10">
+                            <Border Width="40" Height="6" Background="{DynamicResource Cab.OnAccent}" CornerRadius="3" Opacity="0.55" />
+                        </Border>
+                    </Grid>
+
+                    <TextBlock Margin="0,26,0,0"
+                               HorizontalAlignment="Center"
+                               FontFamily="{DynamicResource Shell.FontDisplay}"
+                               FontSize="32"
+                               FontWeight="{DynamicResource Cab.FontWeight.Light}"
+                               Foreground="{DynamicResource Cab.TextPrimary}"
+                               Text="{loc:Loc App_Name}" />
+                    <TextBlock Margin="0,10,0,0"
+                               HorizontalAlignment="Center"
+                               Style="{StaticResource Shell.Text.Body}"
+                               Foreground="{DynamicResource Cab.TextSecondary}"
+                               Text="{loc:Loc Empty_Subtitle}"
+                               TextAlignment="Center" />
+
+                    <!-- Each tip wraps beside its icon (a wide font or large text would otherwise cut it off at the card's edge). -->
+                    <Border Margin="0,30,0,0" Padding="20,16" Background="{DynamicResource Cab.SidebarBackground}" BorderBrush="{DynamicResource Cab.Divider}" BorderThickness="1" CornerRadius="12">
+                        <StackPanel>
+                            <DockPanel>
+                                <Grid DockPanel.Dock="Left" Style="{StaticResource TipIcon}">
+                                    <Ellipse Fill="{DynamicResource Cab.TagChipBackground}" />
+                                    <ui:SymbolIcon FontSize="18" Foreground="{DynamicResource Cab.TagChipText}" Symbol="ArrowDownload20" />
+                                </Grid>
+                                <TextBlock Style="{StaticResource TipText}" Text="{loc:Loc Empty_TipDrop}" />
+                            </DockPanel>
+                            <DockPanel Margin="0,12,0,0">
+                                <Grid DockPanel.Dock="Left" Style="{StaticResource TipIcon}">
+                                    <Ellipse Fill="{DynamicResource Cab.TagChipBackground}" />
+                                    <ui:SymbolIcon FontSize="18" Foreground="{DynamicResource Cab.TagChipText}" Symbol="ClipboardPaste20" />
+                                </Grid>
+                                <TextBlock Style="{StaticResource TipText}" Text="{loc:Loc Empty_TipPaste}" />
+                            </DockPanel>
+                            <DockPanel Margin="0,12,0,0">
+                                <Grid DockPanel.Dock="Left" Style="{StaticResource TipIcon}">
+                                    <Ellipse Fill="{DynamicResource Cab.TagChipBackground}" />
+                                    <ui:SymbolIcon FontSize="18" Foreground="{DynamicResource Cab.TagChipText}" Symbol="CursorClick20" />
+                                </Grid>
+                                <TextBlock Style="{StaticResource TipText}" Text="{loc:Loc Empty_TipRightClick}" />
+                            </DockPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <StackPanel Margin="0,0,0,22" HorizontalAlignment="Center" VerticalAlignment="Bottom" Orientation="Horizontal">
+                <ui:SymbolIcon Margin="0,0,6,0" FontSize="13" Foreground="{DynamicResource Cab.TextSecondary}" Symbol="LockClosed16" />
+                <TextBlock FontSize="12.5" Foreground="{DynamicResource Cab.TextSecondary}" Text="{loc:Loc Empty_Footer}" />
+            </StackPanel>
+        </Grid>
+
+        <!-- Drop highlight (animated by DropZone) -->
+        <Grid x:Name="DropHighlight"
+              Margin="18"
+              IsHitTestVisible="False"
+              Visibility="Collapsed"
+              motion:DropZone.IsActive="{Binding IsEmptyStateDropTarget}">
+            <Rectangle Fill="{DynamicResource Cab.Accent}" Opacity="0.07" RadiusX="18" RadiusY="18" />
+            <Rectangle RadiusX="18" RadiusY="18" Stroke="{DynamicResource Cab.Accent}" StrokeDashArray="6 4" StrokeThickness="2" motion:DropZone.Part="Frame" />
+            <Border Padding="18,10" HorizontalAlignment="Center" VerticalAlignment="Center" Background="{DynamicResource Cab.Accent}" CornerRadius="20" motion:DropZone.Part="Card">
+                <StackPanel Orientation="Horizontal">
+                    <Grid Margin="0,0,8,0">
+                        <ui:SymbolIcon FontSize="18" Foreground="{DynamicResource Cab.OnAccent}" Symbol="ArrowDownload20" motion:DropZone.Part="Icon" />
+                        <!-- After a drop the icon turns into this ring, which fills and shows a check (cosmetic) -->
+                        <motion:DropRing Margin="-2" Stroke="{DynamicResource Cab.OnAccent}" StrokeThickness="2" motion:DropZone.Part="Ring" />
+                    </Grid>
+                    <TextBlock FontSize="14" FontWeight="{DynamicResource Cab.FontWeight.Strong}" Foreground="{DynamicResource Cab.OnAccent}" Text="{loc:Loc Empty_DropHere}" />
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

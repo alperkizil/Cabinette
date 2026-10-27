@@ -1,0 +1,312 @@
+using Cabinette.Core.Data;
+using Cabinette.Core.Models;
+using Cabinette.Core.Services;
+using Cabinette.Core.Tests.Infrastructure;
+using Cabinette.Core.Vault;
+using Xunit.Abstractions;
+
+namespace Cabinette.Core.Tests;
+
+/// <summary>
+/// Verifier (Opus) tests for bug-hunt findings F3 and F4 of the Fable reviewer. They pin down how far each finding reaches:
+/// what the user sees, whether anything is left half-done, and which of the claimed paths really get there.
+/// </summary>
+public sealed class VerifyOpusReproF3F4Tests(ITestOutputHelper output)
+{
+    private readonly ITestOutputHelper _output = output;
+
+    // ================================================================ F3: renaming a category while a copy into it runs
+
+    [Fact]
+    public async Task F3_RenameDuringCopy_IsRefusedWithAMisleadingAccessDenied_LeavesNothingHalfDone_AndWorksOnceTheCopyIsDone()
+    {
+        await using var t = await TestLibrary.CreateAsync();
+        var trip = await t.Library.CreateCategoryAsync("Trip", null);
+        var big = t.CreateFile("big.bin", new byte[4 * 1024 * 1024]);
+        LibraryException? error = null;
+        t.Service.DuringAddCopy = _ =>
+        {
+            try
+            {
+                t.Library.RenameCategoryAsync(trip.Id, "Journey").GetAwaiter().GetResult();
+            }
+            catch (LibraryException ex)
+            {
+                error = ex;
+            }
+        };
+
+        var result = await t.Library.AddPathsAsync([big], new AddRequest { TargetCategoryId = trip.Id, Mode = ItemMode.Copy });
+
+        // What the user sees: MainViewModel.ReportError shows LibraryException.Message as an error toast.
+        Assert.NotNull(error);
+        Assert.Equal(LibraryErrorCode.AccessDenied, error!.Code);
+        Assert.Equal("Access to \"Trip\" was denied.", error.Message);
+
+        // Nothing half-done: the transaction rolled back, the folder and the new item stay consistent.
+        var item = Assert.Single(result.Added);
+        Assert.Equal("Trip", (await t.CategoryAsync(trip.Id)).Name);
+        Assert.Equal(t.VaultPath("Trip"), Path.GetDirectoryName(item.FullPath));
+        Assert.True(File.Exists(item.FullPath));
+        Assert.False(Directory.Exists(t.VaultPath("Journey")));
+        Assert.True((await t.RescanAsync()).IsEmpty);
+
+        // Trying again once the copy has finished works.
+        await t.Library.RenameCategoryAsync(trip.Id, "Journey");
+        var moved = await t.ItemAsync(item.Id);
+        Assert.Equal(t.VaultPath("Journey"), Path.GetDirectoryName(moved.FullPath));
+        Assert.True(File.Exists(moved.FullPath));
+        Assert.True((await t.RescanAsync()).IsEmpty);
+    }
+
+    [Fact]
+    public async Task F3_RenamingTheParentCategory_DuringACopyIntoASubcategory_IsRefusedToo()
+    {
+        await using var t = await TestLibrary.CreateAsync();
+        var trip = await t.Library.CreateCategoryAsync("Trip", null);
+        var day = await t.Library.CreateCategoryAsync("Day 1", trip.Id);
+        var big = t.CreateFile("big.bin", new byte[4 * 1024 * 1024]);
+        LibraryException? error = null;
+        t.Service.DuringAddCopy = _ =>
+        {
+            try
+            {
+                t.Library.RenameCategoryAsync(trip.Id, "Journey").GetAwaiter().GetResult();
+            }
+            catch (LibraryException ex)
+            {
+                error = ex;
+            }
+        };
+
+        var result = await t.Library.AddPathsAsync([big], new AddRequest { TargetCategoryId = day.Id, Mode = ItemMode.Copy });
+
+        Assert.Single(result.Added);
+        Assert.NotNull(error);
+        Assert.Equal(LibraryErrorCode.AccessDenied, error!.Code);
+        Assert.Equal("Trip", (await t.CategoryAsync(trip.Id)).Name);
+    }
+
+    /// <summary>
+    /// Fix probe (OS behavior, not Cabinette code): NTFS refuses to rename a folder while a file in it is open, even when the
+    /// handle shares Delete. So opening the temp file differently is no fix; the rename has to wait for the copy, or the copy
+    /// has to go somewhere outside the category folder and be moved in under the write lock.
+    /// </summary>
+    [Fact]
+    public void F3_FixProbe_AFolderCantBeRenamedWhileAFileInItIsOpen_EvenWithShareDelete()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "cabinette-tests", "verify-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            Assert.False(TryRenameFolderWhileAFileInItIsOpen(root, "pinned", FileShare.Read));
+            Assert.False(TryRenameFolderWhileAFileInItIsOpen(root, "shared", FileShare.Read | FileShare.Delete));
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+            {
+                Directory.Delete(root, recursive: true);
+            }
+        }
+    }
+
+    private static bool TryRenameFolderWhileAFileInItIsOpen(string root, string name, FileShare share)
+    {
+        var folder = Path.Combine(root, name);
+        Directory.CreateDirectory(folder);
+        using var stream = new FileStream(Path.Combine(folder, ".cabinette-probe.tmp"), FileMode.CreateNew, FileAccess.Write, share);
+        stream.Write(new byte[4096]);
+        try
+        {
+            Directory.Move(folder, folder + "-renamed");
+            stream.Write(new byte[4096]); // the open handle keeps working at the new location
+            return true;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
+    }
+
+    // ================================================================ F4: a vault that contains the data folder
+
+    /// <summary>
+    /// Move vault can't get there: the target must be empty (or new), and the data folder always holds the open cabinette.db,
+    /// so any folder containing it is refused before anything happens (ValidateMoveTarget; the App's CheckEmptyFolder too).
+    /// </summary>
+    [Fact]
+    public async Task F4_MoveVault_IntoAnyFolderThatContainsTheDataFolder_IsRefusedAsNotEmpty()
+    {
+        await using var p = await ProfileLayout.CreateAsync();
+        await p.Library.InitializeVaultAsync(p.Vault);
+
+        foreach (var target in new[] { p.DataDirectory, p.LocalAppData, p.AppData, p.Home })
+        {
+            var ex = await Assert.ThrowsAsync<LibraryException>(() => p.Library.MoveVaultAsync(target));
+            Assert.Equal(LibraryErrorCode.NotAllowed, ex.Code);
+            Assert.Equal("Choose an empty folder for the new vault.", ex.Message);
+        }
+
+        Assert.Equal(p.Vault, p.Library.VaultPath);
+    }
+
+    /// <summary>
+    /// First run with a broad pick such as the user profile: the way to the data folder goes through the hidden AppData folder,
+    /// which the vault monitor never turns into a category, so Cabinette's own files are not imported. Only a pick of
+    /// %LocalAppData% itself (or the data folder) exposes them, and those always trigger the "This folder isn't empty" warning.
+    /// </summary>
+    [Fact]
+    public async Task F4_FirstRun_ProfileWideVault_SkipsTheHiddenAppDataFolder_SoTheDataFolderIsNotImported()
+    {
+        await using var p = await ProfileLayout.CreateAsync();
+        Directory.CreateDirectory(Path.Combine(p.Home, "Projects"));
+        File.WriteAllText(Path.Combine(p.Home, "Projects", "plan.txt"), "plan");
+
+        await p.Library.InitializeVaultAsync(p.Home);
+        var outcome = await p.Service.ReconcileAsync(ReconcileRequest.Rescan(), CancellationToken.None);
+
+        Assert.False(outcome.VaultUnavailable, outcome.Message);
+        Assert.Contains("Projects", outcome.Summary.CategoriesCreated);
+        Assert.DoesNotContain(outcome.Summary.CategoriesCreated, n => n is "AppData" or "Local" or "Cabinette");
+        Assert.DoesNotContain(outcome.DeferredFiles, f => f.StartsWith(p.AppData, StringComparison.OrdinalIgnoreCase));
+        var all = (await p.Library.SearchAsync("", new ItemFilter { MinSizeBytes = 0 })).Items;
+        Assert.DoesNotContain(all, i => i.FullPath.StartsWith(p.AppData, StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(all, i => i.FileName == "plan.txt");
+    }
+
+    /// <summary>
+    /// The narrow case that does reach the data folder (vault = %LocalAppData%, after "Use this folder anyway"): the live
+    /// database is protected by SQLite's open handle (it is put off or indexed in place, never moved), so the library survives.
+    /// </summary>
+    [Fact]
+    public async Task F4_VaultIsLocalAppData_ImportsTheDataFolderAsACategory_ButTheLiveDatabaseIsNeverMoved()
+    {
+        await using var p = await ProfileLayout.CreateAsync();
+        await p.Library.InitializeVaultAsync(p.LocalAppData);
+        var outcome = await p.Service.ReconcileAsync(ReconcileRequest.Rescan(), CancellationToken.None);
+
+        Assert.False(outcome.VaultUnavailable, outcome.Message);
+        Assert.Contains("Cabinette", outcome.Summary.CategoriesCreated);
+        var db = Path.Combine(p.DataDirectory, Database.FileName);
+        Assert.True(File.Exists(db));
+
+        var all = (await p.Library.SearchAsync("", new ItemFilter { MinSizeBytes = 0 })).Items;
+        _output.WriteLine("Deferred: " + string.Join(", ", outcome.DeferredFiles));
+        _output.WriteLine("Items: " + string.Join(", ", all.Select(i => i.FullPath)));
+
+        // The user then deletes the odd "Cabinette" category (its files go to the vault's Deleted folder).
+        var category = (await p.Library.GetAllCategoriesAsync()).Single(c => c.Name == "Cabinette");
+        var deleteError = await Record.ExceptionAsync(() => p.Library.DeleteCategoryAsync(category.Id, CategoryDeletePolicy.MoveToDeleted));
+        _output.WriteLine("Delete: " + (deleteError?.ToString() ?? "ok"));
+        _output.WriteLine("DB still there: " + File.Exists(db));
+        _output.WriteLine("Data folder: " + string.Join(", ", Directory.Exists(p.DataDirectory)
+            ? Directory.EnumerateFileSystemEntries(p.DataDirectory, "*", SearchOption.AllDirectories) : []));
+        Assert.True(File.Exists(db));
+        Assert.NotNull(await p.Library.GetSettingsAsync());
+    }
+
+    /// <summary>
+    /// Same narrow case with the live monitor running for a while: what does it do with the files SQLite keeps open, and does
+    /// Cabinette's own database traffic keep the monitor busy?
+    /// </summary>
+    [Fact]
+    public async Task F4_VaultIsLocalAppData_WithTheMonitorRunning_ProbeWhatHappensToTheOpenDatabaseFiles()
+    {
+        await using var p = await ProfileLayout.CreateAsync();
+        Directory.CreateDirectory(Path.Combine(p.DataDirectory, "thumbs"));
+        File.WriteAllText(Path.Combine(p.DataDirectory, "thumbs", "0a1b.png"), "png");
+        Directory.CreateDirectory(Path.Combine(p.DataDirectory, "logs"));
+        File.WriteAllText(Path.Combine(p.DataDirectory, "logs", "cabinette.log"), "log");
+        File.WriteAllText(Path.Combine(p.DataDirectory, "window.json"), "{}");
+        await p.Library.InitializeVaultAsync(p.LocalAppData);
+
+        var monitor = (VaultMonitor)p.Library.CreateVaultMonitor();
+        monitor.QuietPeriod = TimeSpan.FromMilliseconds(150);
+        monitor.MaxBatchDelay = TimeSpan.FromSeconds(1);
+        monitor.DeferredRetryDelay = TimeSpan.FromMilliseconds(200);
+        monitor.LockRetryDelays = [TimeSpan.FromMilliseconds(20)];
+        var batches = 0;
+        monitor.ChangesApplied += (_, _) => Interlocked.Increment(ref batches);
+        await using (monitor)
+        {
+            await monitor.StartAsync();
+            for (var i = 0; i < 10; i++)
+            {
+                await p.Library.CreateCategoryAsync("Probe " + i, null); // ordinary library writes touch the WAL
+                await Task.Delay(500);
+            }
+
+            await Task.Delay(3000);
+            var items = (await p.Library.SearchAsync("", new ItemFilter { MinSizeBytes = 0 })).Items;
+            _output.WriteLine($"Batches with changes: {batches}");
+            _output.WriteLine("Items: " + string.Join(", ", items.Select(i => Path.GetRelativePath(p.LocalAppData, i.FullPath))));
+            var db = Path.Combine(p.DataDirectory, Database.FileName);
+            _output.WriteLine("DB still in place: " + File.Exists(db));
+            Assert.True(File.Exists(db));
+        }
+    }
+
+    /// <summary>A fake user profile: home\AppData (hidden)\Local\Cabinette is the data folder; home\..\vault is a normal vault.</summary>
+    private sealed class ProfileLayout : IAsyncDisposable
+    {
+        private ProfileLayout(string root)
+        {
+            Root = root;
+        }
+
+        public string Root { get; }
+
+        public string Home => Path.Combine(Root, "home");
+
+        public string AppData => Path.Combine(Home, "AppData");
+
+        public string LocalAppData => Path.Combine(AppData, "Local");
+
+        public string DataDirectory => Path.Combine(LocalAppData, "Cabinette");
+
+        public string Vault => Path.Combine(Root, "vault");
+
+        public ILibraryService Library { get; private set; } = null!;
+
+        internal LibraryService Service => (LibraryService)Library;
+
+        public static async Task<ProfileLayout> CreateAsync()
+        {
+            var layout = new ProfileLayout(Path.Combine(Path.GetTempPath(), "cabinette-tests", "verify-" + Guid.NewGuid().ToString("N")));
+            Directory.CreateDirectory(layout.LocalAppData);
+            File.SetAttributes(layout.AppData, File.GetAttributes(layout.AppData) | FileAttributes.Hidden); // as on Windows
+            var time = new FakeTimeProvider(new DateTimeOffset(2026, 3, 14, 9, 26, 53, TimeSpan.Zero));
+            layout.Library = await LibraryFactory.OpenAsync(
+                new LibraryOptions { DataDirectory = layout.DataDirectory, TimeProvider = time },
+                new FakeRecycleBin(Path.Combine(layout.Root, "recycle")));
+            return layout;
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            await Library.DisposeAsync();
+            new Database(DataDirectory).ClearPool();
+            for (var attempt = 0; attempt < 5; attempt++)
+            {
+                try
+                {
+                    if (Directory.Exists(Root))
+                    {
+                        foreach (var entry in Directory.EnumerateFileSystemEntries(Root, "*", SearchOption.AllDirectories))
+                        {
+                            File.SetAttributes(entry, File.Exists(entry) ? FileAttributes.Normal : FileAttributes.Directory);
+                        }
+
+                        Directory.Delete(Root, recursive: true);
+                    }
+
+                    return;
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    await Task.Delay(100);
+                }
+            }
+        }
+    }
+}

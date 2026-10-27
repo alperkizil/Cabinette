@@ -1,0 +1,162 @@
+using System.IO;
+using Cabinette.App.Services;
+using Cabinette.App.ViewModels.Thread;
+using Cabinette.Core.Abstractions;
+using Cabinette.Core.Models;
+using Cabinette.Core.Services;
+
+namespace Cabinette.App.Tests;
+
+/// <summary>
+/// Repro tests for ChatGPT review candidates G5 and G7 that need App logic (RecycleBinFallback, ThreadViewModel.ClassifyChange)
+/// together with a real library. Each test asserts the behavior observed on current main. Everything runs in a temp folder.
+/// </summary>
+public sealed class VerifyGptReproAppTests : IAsyncDisposable
+{
+    private readonly string _root = Path.Combine(Path.GetTempPath(), "cabinette-tests", "gpt-verify-" + Guid.NewGuid().ToString("N"));
+    private readonly RefusingRecycleBin _recycleBin = new();
+    private ILibraryService? _library;
+
+    private string Vault => Path.Combine(_root, "vault");
+
+    // ------------------------------------------------------------------ G5
+
+    [Fact]
+    public async Task G5_LateRecycleRefusal_DeletePermanentlyIsConfirmedButLeavesTheFile()
+    {
+        var library = await OpenAsync();
+        var docs = await library.GetOrCreateBuiltInCategoryAsync("documents");
+        var item = await AddCopyAsync(library, docs.Id, "huge.bin", "too large for the Recycle Bin");
+        _recycleBin.Refused.Add(item.FullPath);
+        var dialogs = new FakeDialogs(confirm: true);
+
+        // The thread's delete path: RecycleBinFallback around DeleteItemsAsync.
+        var done = await RecycleBinFallback.RunAsync(dialogs, options => library.DeleteItemsAsync([item.Id], options));
+
+        Assert.True(done);                         // reported as done
+        Assert.Single(dialogs.Confirms);           // the user confirmed "Delete permanently"
+        Assert.True(File.Exists(item.FullPath));   // but the file is still there
+        Assert.Null(await library.GetItemAsync(item.Id));
+    }
+
+    // ------------------------------------------------------------------ G7
+
+    [Fact]
+    public async Task G7_AfterMoveVault_OpenThreadIsNotReloaded_AndKeepsOldVaultPaths()
+    {
+        var library = await OpenAsync();
+        var docs = await library.GetOrCreateBuiltInCategoryAsync("documents");
+        var item = await AddCopyAsync(library, docs.Id, "report.txt", "report");
+
+        // What the open thread holds: the items loaded before the move.
+        var shown = await library.GetThreadItemsAsync(docs.Id);
+        var shownIds = shown.Select(i => i.Id).ToHashSet();
+        var events = new List<LibraryChangedEventArgs>();
+        library.Changed += (_, e) =>
+        {
+            lock (events)
+            {
+                events.Add(e);
+            }
+        };
+
+        var newVault = Path.Combine(_root, "new vault");
+        await library.MoveVaultAsync(newVault);
+
+        List<LibraryChangedEventArgs> raised;
+        lock (events)
+        {
+            raised = events.ToList();
+        }
+
+        Assert.NotEmpty(raised);
+        Assert.Contains(raised, e => e.Kind.HasFlag(LibraryChangeKind.Items) && e.ItemIds.Count == 0 && e.CategoryIds.Count == 0);
+        foreach (var e in raised)
+        {
+            var (items, _, _) = ThreadViewModel.ClassifyChange(e, docs.Id, shownIds);
+            Assert.False(items); // the thread never reloads its items
+        }
+
+        // The cached item still points at the old vault, while the library (and VerifyExistsAsync, used by Open) uses the new one.
+        var cached = Assert.Single(shown);
+        Assert.StartsWith(Vault + Path.DirectorySeparatorChar, cached.FullPath);
+        Assert.StartsWith(newVault + Path.DirectorySeparatorChar, (await library.GetItemAsync(item.Id))!.FullPath);
+        Assert.True(await library.VerifyExistsAsync(item.Id));
+        Assert.True(File.Exists(cached.FullPath)); // so Open launches the old copy while the old vault is kept
+    }
+
+    // ------------------------------------------------------------------ helpers
+
+    private async Task<ILibraryService> OpenAsync()
+    {
+        Directory.CreateDirectory(_root);
+        _library = await LibraryFactory.OpenAsync(new LibraryOptions { DataDirectory = Path.Combine(_root, "data") }, _recycleBin);
+        await _library.InitializeVaultAsync(Vault);
+        return _library;
+    }
+
+    private async Task<LibraryItem> AddCopyAsync(ILibraryService library, long categoryId, string name, string content)
+    {
+        var source = Path.Combine(_root, "source", name);
+        Directory.CreateDirectory(Path.GetDirectoryName(source)!);
+        File.WriteAllText(source, content);
+        var result = await library.AddPathsAsync([source], new AddRequest { TargetCategoryId = categoryId, Mode = ItemMode.Copy });
+        Assert.Empty(result.Failures);
+        return Assert.Single(result.Added);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_library is not null)
+        {
+            await _library.DisposeAsync(); // releases this library's pooled connections
+        }
+
+        for (var attempt = 0; attempt < 5; attempt++)
+        {
+            try
+            {
+                if (Directory.Exists(_root))
+                {
+                    foreach (var file in Directory.EnumerateFiles(_root, "*", SearchOption.AllDirectories))
+                    {
+                        File.SetAttributes(file, FileAttributes.Normal);
+                    }
+
+                    Directory.Delete(_root, recursive: true);
+                }
+
+                return;
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                await Task.Delay(100);
+            }
+        }
+    }
+
+    /// <summary>A Recycle Bin that exists (CanRecycle = true) but refuses some items when asked, as the shell does for items too large for it.</summary>
+    private sealed class RefusingRecycleBin : IRecycleBin
+    {
+        public HashSet<string> Refused { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+        public bool CanRecycle(string path) => true;
+
+        public void SendToRecycleBin(IReadOnlyCollection<string> paths)
+        {
+            var refused = paths.Where(Refused.Contains).ToList();
+            foreach (var path in paths.Except(refused))
+            {
+                if (File.Exists(path))
+                {
+                    File.Delete(path);
+                }
+            }
+
+            if (refused.Count > 0)
+            {
+                throw new RecycleBinUnavailableException(refused, "Simulated: too large for the Recycle Bin.");
+            }
+        }
+    }
+}

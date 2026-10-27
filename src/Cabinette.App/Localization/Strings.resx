@@ -1,0 +1,2274 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="App_Name" xml:space="preserve">
+    <value>Cabinette</value>
+  </data>
+  <data name="App_Tagline" xml:space="preserve">
+    <value>Your files, organized like chats.</value>
+  </data>
+  <data name="Common_Ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Common_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Common_Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Common_Create" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="Common_Done" xml:space="preserve">
+    <value>Done</value>
+  </data>
+  <data name="Common_ComingLater" xml:space="preserve">
+    <value>Coming in a later update</value>
+  </data>
+  <data name="Time_Yesterday" xml:space="preserve">
+    <value>Yesterday</value>
+  </data>
+  <data name="ChatList_Title" xml:space="preserve">
+    <value>Categories</value>
+  </data>
+  <data name="ChatList_NewCategory" xml:space="preserve">
+    <value>New category (Ctrl+N)</value>
+  </data>
+  <data name="ChatList_AddFiles" xml:space="preserve">
+    <value>Add files</value>
+  </data>
+  <data name="ChatList_SortByLastUpload" xml:space="preserve">
+    <value>Sorted by last upload. Click to sort A–Z.</value>
+  </data>
+  <data name="ChatList_SortAlphabetical" xml:space="preserve">
+    <value>Sorted A–Z. Click to sort by last upload.</value>
+  </data>
+  <data name="ChatList_Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="ChatList_Back" xml:space="preserve">
+    <value>Back (Esc)</value>
+  </data>
+  <data name="ChatList_AllIn" xml:space="preserve">
+    <value>All in {0}</value>
+  </data>
+  <data name="ChatList_NoFilesYet" xml:space="preserve">
+    <value>No files yet</value>
+  </data>
+  <data name="ChatList_HasSubcategories" xml:space="preserve">
+    <value>Has subcategories</value>
+  </data>
+  <data name="ChatList_SubcategoryCount_One" xml:space="preserve">
+    <value>1 subcategory</value>
+  </data>
+  <data name="ChatList_SubcategoryCount" xml:space="preserve">
+    <value>{0} subcategories</value>
+  </data>
+  <data name="ChatList_FileCount_One" xml:space="preserve">
+    <value>1 file</value>
+  </data>
+  <data name="ChatList_FileCount" xml:space="preserve">
+    <value>{0} files</value>
+  </data>
+  <data name="ChatList_Starred" xml:space="preserve">
+    <value>Starred</value>
+  </data>
+  <data name="ChatList_Empty" xml:space="preserve">
+    <value>No categories here yet.</value>
+  </data>
+  <data name="ChatList_DropHere" xml:space="preserve">
+    <value>Drop to add. Files are sorted by type.</value>
+  </data>
+  <data name="Search_Placeholder" xml:space="preserve">
+    <value>Search files and categories</value>
+  </data>
+  <data name="Search_Clear" xml:space="preserve">
+    <value>Clear search (Esc)</value>
+  </data>
+  <data name="Search_Filter" xml:space="preserve">
+    <value>Filters</value>
+  </data>
+  <data name="Search_SectionCategories" xml:space="preserve">
+    <value>Categories</value>
+  </data>
+  <data name="Search_SectionFiles" xml:space="preserve">
+    <value>Files</value>
+  </data>
+  <data name="Search_SectionTags" xml:space="preserve">
+    <value>Tags</value>
+  </data>
+  <data name="Search_NoResults" xml:space="preserve">
+    <value>No results for “{0}”</value>
+  </data>
+  <data name="Search_NoResultsFiltered" xml:space="preserve">
+    <value>No files match these filters</value>
+  </data>
+  <data name="Search_Failed" xml:space="preserve">
+    <value>Search isn't available right now.</value>
+  </data>
+  <data name="Search_MoreResults" xml:space="preserve">
+    <value>Showing the first {0} files</value>
+  </data>
+  <data name="Search_Missing" xml:space="preserve">
+    <value>Missing</value>
+  </data>
+  <data name="Search_PointerTooltip" xml:space="preserve">
+    <value>Linked file (stays where it is on disk)</value>
+  </data>
+  <data name="Filter_Title" xml:space="preserve">
+    <value>Filters</value>
+  </data>
+  <data name="Filter_Reset" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="Filter_Type" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="Filter_DateAdded" xml:space="preserve">
+    <value>Date added</value>
+  </data>
+  <data name="Filter_Date_Any" xml:space="preserve">
+    <value>Any time</value>
+  </data>
+  <data name="Filter_Date_Today" xml:space="preserve">
+    <value>Today</value>
+  </data>
+  <data name="Filter_Date_Week" xml:space="preserve">
+    <value>Last 7 days</value>
+  </data>
+  <data name="Filter_Date_Month" xml:space="preserve">
+    <value>Last 30 days</value>
+  </data>
+  <data name="Filter_Date_Year" xml:space="preserve">
+    <value>Last 12 months</value>
+  </data>
+  <data name="Filter_Size" xml:space="preserve">
+    <value>Size</value>
+  </data>
+  <data name="Filter_Size_Any" xml:space="preserve">
+    <value>Any size</value>
+  </data>
+  <data name="Filter_Size_Small" xml:space="preserve">
+    <value>Under 1 MB</value>
+  </data>
+  <data name="Filter_Size_Medium" xml:space="preserve">
+    <value>1–100 MB</value>
+  </data>
+  <data name="Filter_Size_Large" xml:space="preserve">
+    <value>Over 100 MB</value>
+  </data>
+  <data name="Filter_Storage" xml:space="preserve">
+    <value>Storage</value>
+  </data>
+  <data name="Filter_Storage_Any" xml:space="preserve">
+    <value>Any</value>
+  </data>
+  <data name="Filter_Storage_Copy" xml:space="preserve">
+    <value>In the vault (copy)</value>
+  </data>
+  <data name="Filter_Storage_Pointer" xml:space="preserve">
+    <value>Linked (pointer)</value>
+  </data>
+  <data name="Filter_MissingOnly" xml:space="preserve">
+    <value>Missing files only</value>
+  </data>
+  <data name="Filter_Extension" xml:space="preserve">
+    <value>Extensions</value>
+  </data>
+  <data name="Filter_ExtensionPlaceholder" xml:space="preserve">
+    <value>e.g. pdf, docx</value>
+  </data>
+  <data name="Type_images" xml:space="preserve">
+    <value>Images</value>
+  </data>
+  <data name="Type_video" xml:space="preserve">
+    <value>Video</value>
+  </data>
+  <data name="Type_audio" xml:space="preserve">
+    <value>Audio</value>
+  </data>
+  <data name="Type_documents" xml:space="preserve">
+    <value>Documents</value>
+  </data>
+  <data name="Type_text" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="Type_notes" xml:space="preserve">
+    <value>Notes</value>
+  </data>
+  <data name="Type_spreadsheets" xml:space="preserve">
+    <value>Spreadsheets</value>
+  </data>
+  <data name="Type_presentations" xml:space="preserve">
+    <value>Presentations</value>
+  </data>
+  <data name="Type_code" xml:space="preserve">
+    <value>Code</value>
+  </data>
+  <data name="Type_archives" xml:space="preserve">
+    <value>Archives</value>
+  </data>
+  <data name="Type_executable" xml:space="preserve">
+    <value>Executables</value>
+  </data>
+  <data name="Type_ebooks" xml:space="preserve">
+    <value>E-books</value>
+  </data>
+  <data name="Type_fonts" xml:space="preserve">
+    <value>Fonts</value>
+  </data>
+  <data name="Type_design" xml:space="preserve">
+    <value>Design</value>
+  </data>
+  <data name="Type_models3d" xml:space="preserve">
+    <value>3D models</value>
+  </data>
+  <data name="Type_diskimages" xml:space="preserve">
+    <value>Disk images</value>
+  </data>
+  <data name="Type_links" xml:space="preserve">
+    <value>Links</value>
+  </data>
+  <data name="Type_other" xml:space="preserve">
+    <value>Other</value>
+  </data>
+  <data name="Empty_Subtitle" xml:space="preserve">
+    <value>Open a category on the left to see its files, or add new ones.</value>
+  </data>
+  <data name="Empty_TipDrop" xml:space="preserve">
+    <value>Drag files or folders here to add them</value>
+  </data>
+  <data name="Empty_TipPaste" xml:space="preserve">
+    <value>Press Ctrl+V to paste files, images or text</value>
+  </data>
+  <data name="Empty_TipRightClick" xml:space="preserve">
+    <value>Right-click a category for more options</value>
+  </data>
+  <data name="Empty_Footer" xml:space="preserve">
+    <value>Your files stay on this PC</value>
+  </data>
+  <data name="Empty_DropHere" xml:space="preserve">
+    <value>Drop to add to Cabinette</value>
+  </data>
+  <data name="Window_DropTitle" xml:space="preserve">
+    <value>Drop to sort automatically</value>
+  </data>
+  <data name="Window_DropHint" xml:space="preserve">
+    <value>Each file goes to the category for its type</value>
+  </data>
+  <data name="Menu_Open" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="Menu_Pin" xml:space="preserve">
+    <value>Pin to top</value>
+  </data>
+  <data name="Menu_Unpin" xml:space="preserve">
+    <value>Unpin</value>
+  </data>
+  <data name="Menu_Rename" xml:space="preserve">
+    <value>Rename…</value>
+  </data>
+  <data name="Menu_ChangeIcon" xml:space="preserve">
+    <value>Change icon…</value>
+  </data>
+  <data name="Menu_ResetIcon" xml:space="preserve">
+    <value>Reset icon</value>
+  </data>
+  <data name="Menu_NewSubcategory" xml:space="preserve">
+    <value>New subcategory…</value>
+  </data>
+  <data name="Menu_OpenFolder" xml:space="preserve">
+    <value>Open folder in Explorer</value>
+  </data>
+  <data name="Menu_Delete" xml:space="preserve">
+    <value>Delete…</value>
+  </data>
+  <data name="Menu_EmptyDeleted" xml:space="preserve">
+    <value>Empty Deleted…</value>
+  </data>
+  <data name="Category_RenameTitle" xml:space="preserve">
+    <value>Rename category</value>
+  </data>
+  <data name="Category_NameLabel" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Category_NameRequired" xml:space="preserve">
+    <value>Enter a name.</value>
+  </data>
+  <data name="Category_NameInvalid" xml:space="preserve">
+    <value>A name can't contain any of these characters: \ / : * ? " &lt; &gt; |</value>
+  </data>
+  <data name="Category_NameReserved" xml:space="preserve">
+    <value>That name isn't allowed.</value>
+  </data>
+  <data name="Category_DeleteTitle" xml:space="preserve">
+    <value>Delete “{0}”?</value>
+  </data>
+  <data name="Category_DeleteHasOne" xml:space="preserve">
+    <value>It holds 1 file.</value>
+  </data>
+  <data name="Category_DeleteHasMany" xml:space="preserve">
+    <value>It holds {0} files.</value>
+  </data>
+  <data name="Category_DeleteMoveMessage" xml:space="preserve">
+    <value>The category and its subcategories will be removed. Files that are only here move to Deleted.</value>
+  </data>
+  <data name="Category_DeleteRecycleMessage" xml:space="preserve">
+    <value>The category and its subcategories will be removed. Files that are only here are deleted:</value>
+  </data>
+  <data name="Category_DeleteEmptyMessage" xml:space="preserve">
+    <value>The category and its subcategories will be removed.</value>
+  </data>
+  <data name="Category_DeleteAskMessage" xml:space="preserve">
+    <value>What should happen to files that are only in this category?</value>
+  </data>
+  <data name="Category_DeleteMoveOption" xml:space="preserve">
+    <value>Move files to Deleted</value>
+  </data>
+  <data name="Category_DeleteRecycleOption" xml:space="preserve">
+    <value>Delete files (Recycle Bin)</value>
+  </data>
+  <data name="Category_DeleteFilesOption" xml:space="preserve">
+    <value>Delete files</value>
+  </data>
+  <data name="Category_DeleteFilesMeans" xml:space="preserve">
+    <value>Deleting the files: {0}</value>
+  </data>
+  <data name="Category_DeleteConfirm" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Category_Deleted" xml:space="preserve">
+    <value>“{0}” was deleted</value>
+  </data>
+  <data name="Category_EmptyDeletedTitle" xml:space="preserve">
+    <value>Empty Deleted?</value>
+  </data>
+  <data name="Category_EmptyDeletedMessage" xml:space="preserve">
+    <value>Files in Deleted go to the Recycle Bin. Linked (pointer) files are only removed from Cabinette.</value>
+  </data>
+  <data name="Category_EmptyDeletedConfirm" xml:space="preserve">
+    <value>Empty Deleted</value>
+  </data>
+  <data name="Category_EmptiedDeleted" xml:space="preserve">
+    <value>Deleted is now empty</value>
+  </data>
+  <data name="RecycleBin_UnavailableTitle" xml:space="preserve">
+    <value>Can't use the Recycle Bin</value>
+  </data>
+  <data name="RecycleBin_DeletePermanentlyMessage" xml:space="preserve">
+    <value>Delete permanently? This can't be undone.</value>
+  </data>
+  <data name="RecycleBin_DeletePermanentlyButton" xml:space="preserve">
+    <value>Delete permanently</value>
+  </data>
+  <data name="Category_IconPickTitle" xml:space="preserve">
+    <value>Choose an icon</value>
+  </data>
+  <data name="Category_IconFilter" xml:space="preserve">
+    <value>PNG images</value>
+  </data>
+  <data name="Category_IconUpdated" xml:space="preserve">
+    <value>Icon updated</value>
+  </data>
+  <data name="Category_IconFailed" xml:space="preserve">
+    <value>That image couldn't be used as an icon.</value>
+  </data>
+  <data name="Category_FolderNotFound" xml:space="preserve">
+    <value>The folder doesn't exist: {0}</value>
+  </data>
+  <data name="Category_Created" xml:space="preserve">
+    <value>“{0}” created</value>
+  </data>
+  <data name="NewCategory_Title" xml:space="preserve">
+    <value>New category</value>
+  </data>
+  <data name="NewCategory_SubTitle" xml:space="preserve">
+    <value>New subcategory</value>
+  </data>
+  <data name="NewCategory_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="NewCategory_NamePlaceholder" xml:space="preserve">
+    <value>e.g. Invoices</value>
+  </data>
+  <data name="NewCategory_Parent" xml:space="preserve">
+    <value>Inside</value>
+  </data>
+  <data name="NewCategory_TopLevel" xml:space="preserve">
+    <value>Top level</value>
+  </data>
+  <data name="NewCategory_ChooseParent" xml:space="preserve">
+    <value>Change</value>
+  </data>
+  <data name="NewCategory_ChooseIcon" xml:space="preserve">
+    <value>Choose PNG…</value>
+  </data>
+  <data name="NewCategory_RemoveIcon" xml:space="preserve">
+    <value>Use default</value>
+  </data>
+  <data name="NewCategory_IconHint" xml:space="preserve">
+    <value>Any size, it's scaled to fit. Leave it empty for a generated icon.</value>
+  </data>
+  <data name="NewCategory_PickParentTitle" xml:space="preserve">
+    <value>Create inside</value>
+  </data>
+  <data name="Picker_SearchPlaceholder" xml:space="preserve">
+    <value>Search categories</value>
+  </data>
+  <data name="Picker_NewCategory" xml:space="preserve">
+    <value>New category…</value>
+  </data>
+  <data name="Picker_Choose" xml:space="preserve">
+    <value>Choose</value>
+  </data>
+  <data name="Picker_Empty" xml:space="preserve">
+    <value>No matching categories</value>
+  </data>
+  <data name="Intake_PickTitle" xml:space="preserve">
+    <value>Add files to Cabinette</value>
+  </data>
+  <data name="Intake_AllFiles" xml:space="preserve">
+    <value>All files</value>
+  </data>
+  <data name="Intake_AllImages" xml:space="preserve">
+    <value>Images</value>
+  </data>
+  <data name="Intake_Adding" xml:space="preserve">
+    <value>Adding {0} files…</value>
+  </data>
+  <data name="Intake_AddingNamed" xml:space="preserve">
+    <value>Adding “{0}”…</value>
+  </data>
+  <data name="Intake_Preparing" xml:space="preserve">
+    <value>Preparing…</value>
+  </data>
+  <data name="Intake_Progress" xml:space="preserve">
+    <value>{0} of {1}</value>
+  </data>
+  <data name="Intake_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Intake_Cancelled" xml:space="preserve">
+    <value>Adding was cancelled</value>
+  </data>
+  <data name="Intake_Added" xml:space="preserve">
+    <value>{0} files added</value>
+  </data>
+  <data name="Intake_AddedOne" xml:space="preserve">
+    <value>1 file added</value>
+  </data>
+  <data name="Intake_AddedTo" xml:space="preserve">
+    <value>{0} files added to {1}</value>
+  </data>
+  <data name="Intake_AddedOneTo" xml:space="preserve">
+    <value>1 file added to {0}</value>
+  </data>
+  <data name="Intake_SortedIntoOne" xml:space="preserve">
+    <value>1 file sorted by type into {0}</value>
+  </data>
+  <data name="Intake_SortedIntoMany" xml:space="preserve">
+    <value>{0} files sorted by type into {1}</value>
+  </data>
+  <data name="Intake_SortedPart" xml:space="preserve">
+    <value>{0} to {1}</value>
+  </data>
+  <data name="Intake_SortedSplit" xml:space="preserve">
+    <value>Sorted by type: {0}</value>
+  </data>
+  <data name="Intake_SortedSplitStayed" xml:space="preserve">
+    <value>Sorted by type: {0}. {1} stayed here.</value>
+  </data>
+  <data name="Intake_SortedSplitStayedIn" xml:space="preserve">
+    <value>Sorted by type: {0}. {1} stayed in {2}.</value>
+  </data>
+  <data name="ChatList_BubblesAddedOne" xml:space="preserve">
+    <value>Added to {0}</value>
+  </data>
+  <data name="ChatList_BubblesAddedMany" xml:space="preserve">
+    <value>{0} files added to {1}</value>
+  </data>
+  <data name="Intake_Show" xml:space="preserve">
+    <value>Show</value>
+  </data>
+  <data name="Intake_Details" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="Intake_Duplicate" xml:space="preserve">
+    <value>“{0}” is already in Cabinette (in: {1})</value>
+  </data>
+  <data name="Intake_DuplicateAddedHere" xml:space="preserve">
+    <value>“{0}” was already in Cabinette (in: {1}) and is now also here</value>
+  </data>
+  <data name="Intake_DuplicateAddedTo" xml:space="preserve">
+    <value>“{0}” was already in Cabinette (in: {1}) and is now also in {2}</value>
+  </data>
+  <data name="Intake_DuplicatesMany" xml:space="preserve">
+    <value>{0} files were already in Cabinette</value>
+  </data>
+  <data name="Intake_DuplicatesTitle" xml:space="preserve">
+    <value>Already in Cabinette</value>
+  </data>
+  <data name="Intake_DuplicatesBody" xml:space="preserve">
+    <value>These files were already in the library, so no second copy was stored:</value>
+  </data>
+  <data name="Intake_Failed" xml:space="preserve">
+    <value>Couldn't add “{0}”: {1}</value>
+  </data>
+  <data name="Intake_FailedMany" xml:space="preserve">
+    <value>{0} files couldn't be added</value>
+  </data>
+  <data name="Intake_FailuresTitle" xml:space="preserve">
+    <value>Some files couldn't be added</value>
+  </data>
+  <data name="Intake_FailuresBody" xml:space="preserve">
+    <value>These files were skipped:</value>
+  </data>
+  <data name="Intake_AndMore" xml:space="preserve">
+    <value>…and {0} more</value>
+  </data>
+  <data name="Intake_NothingAdded" xml:space="preserve">
+    <value>Nothing was added</value>
+  </data>
+  <data name="Intake_NothingToPaste" xml:space="preserve">
+    <value>There's nothing to paste</value>
+  </data>
+  <data name="Intake_PasteTitleText" xml:space="preserve">
+    <value>Save pasted text to…</value>
+  </data>
+  <data name="Intake_PasteTitleImage" xml:space="preserve">
+    <value>Save pasted image to…</value>
+  </data>
+  <data name="Intake_PasteTitleLink" xml:space="preserve">
+    <value>Save pasted link to…</value>
+  </data>
+  <data name="Intake_PastedText" xml:space="preserve">
+    <value>Text saved to {0}</value>
+  </data>
+  <data name="Intake_PastedImage" xml:space="preserve">
+    <value>Image saved to {0}</value>
+  </data>
+  <data name="Intake_PastedLink" xml:space="preserve">
+    <value>Link saved to {0}</value>
+  </data>
+  <data name="Locate_Title" xml:space="preserve">
+    <value>Locate “{0}”</value>
+  </data>
+  <data name="Locate_Filter" xml:space="preserve">
+    <value>{0} files</value>
+  </data>
+  <data name="Notify_Error" xml:space="preserve">
+    <value>Something went wrong. The details were saved to the log.</value>
+  </data>
+  <data name="Notify_OpenLog" xml:space="preserve">
+    <value>Open log</value>
+  </data>
+  <data name="Startup_OpenFailedTitle" xml:space="preserve">
+    <value>Cabinette couldn't start</value>
+  </data>
+  <data name="Startup_OpenFailed" xml:space="preserve">
+    <value>The library couldn't be opened.
+
+{0}</value>
+  </data>
+  <data name="Crash_Message" xml:space="preserve">
+    <value>Something went wrong. The details were saved to:
+{0}</value>
+  </data>
+  <data name="Settings_Title" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Settings_AutoSaved" xml:space="preserve">
+    <value>Changes are saved automatically.</value>
+  </data>
+  <data name="Settings_Version" xml:space="preserve">
+    <value>Version {0}</value>
+  </data>
+  <data name="Settings_Appearance" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="Settings_Theme" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="Settings_ThemeSystem" xml:space="preserve">
+    <value>Follow Windows</value>
+  </data>
+  <data name="Settings_ThemeLight" xml:space="preserve">
+    <value>Light (classic wheat)</value>
+  </data>
+  <data name="Settings_ThemeDark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="Settings_Library" xml:space="preserve">
+    <value>Library</value>
+  </data>
+  <data name="Settings_VaultPath" xml:space="preserve">
+    <value>Vault folder</value>
+  </data>
+  <data name="Settings_VaultNotSet" xml:space="preserve">
+    <value>No vault folder yet</value>
+  </data>
+  <data name="Settings_VaultHint" xml:space="preserve">
+    <value>Files added in copy mode are stored here, one folder per category.</value>
+  </data>
+  <data name="Settings_OpenVault" xml:space="preserve">
+    <value>Open vault folder</value>
+  </data>
+  <data name="Settings_MoveVault" xml:space="preserve">
+    <value>Move vault…</value>
+  </data>
+  <data name="Settings_Adding" xml:space="preserve">
+    <value>Adding files</value>
+  </data>
+  <data name="Settings_DefaultMode" xml:space="preserve">
+    <value>Default add mode</value>
+  </data>
+  <data name="Settings_ModeCopy" xml:space="preserve">
+    <value>Copy into the vault</value>
+  </data>
+  <data name="Settings_ModeCopyHint" xml:space="preserve">
+    <value>Cabinette keeps its own copy. The original stays where it was.</value>
+  </data>
+  <data name="Settings_ModePointer" xml:space="preserve">
+    <value>Link to the file (pointer)</value>
+  </data>
+  <data name="Settings_ModePointerHint" xml:space="preserve">
+    <value>The file stays where it is. Cabinette only remembers where to find it.</value>
+  </data>
+  <data name="Settings_SortByTypeGroup" xml:space="preserve">
+    <value>When you add files to a category</value>
+  </data>
+  <data name="Settings_SortByType" xml:space="preserve">
+    <value>Sort files by type in type categories</value>
+  </data>
+  <data name="Settings_SortByTypeHint" xml:space="preserve">
+    <value>A photo dropped on Spreadsheets goes to Images, a .py file on Java goes to Python. Your own categories keep everything you add.</value>
+  </data>
+  <data name="Settings_DownloadsGroup" xml:space="preserve">
+    <value>Downloads folder</value>
+  </data>
+  <data name="Settings_CleanDownloads" xml:space="preserve">
+    <value>Clean My Downloads mode</value>
+  </data>
+  <data name="Settings_CleanDownloadsHint" xml:space="preserve">
+    <value>New downloads move into your vault, sorted by type, a minute after they finish. The originals go to the Recycle Bin. Many viewers don't keep a file open, so a file you're only viewing can still move after the minute.</value>
+  </data>
+  <data name="Downloads_ConfirmTitle" xml:space="preserve">
+    <value>Turn on Clean My Downloads?</value>
+  </data>
+  <data name="Downloads_ConfirmMessage" xml:space="preserve">
+    <value>New downloads will be moved into your vault and the originals sent to the Recycle Bin.</value>
+  </data>
+  <data name="Downloads_ConfirmButton" xml:space="preserve">
+    <value>Turn on</value>
+  </data>
+  <data name="Downloads_Title" xml:space="preserve">
+    <value>Clean My Downloads</value>
+  </data>
+  <data name="Downloads_Added" xml:space="preserve">
+    <value>{0} files from Downloads added to {1}</value>
+  </data>
+  <data name="Downloads_AddedOne" xml:space="preserve">
+    <value>1 file from Downloads added to {0}</value>
+  </data>
+  <data name="Downloads_AddedNoCategory" xml:space="preserve">
+    <value>{0} files from Downloads added</value>
+  </data>
+  <data name="Downloads_AddedOneNoCategory" xml:space="preserve">
+    <value>1 file from Downloads added</value>
+  </data>
+  <data name="Downloads_AlreadyOne" xml:space="preserve">
+    <value>“{0}” from Downloads was already in Cabinette (in: {1})</value>
+  </data>
+  <data name="Downloads_AlreadyMany" xml:space="preserve">
+    <value>{0} files from Downloads were already in Cabinette</value>
+  </data>
+  <data name="Downloads_KeptOne" xml:space="preserve">
+    <value>“{0}” stays in Downloads: {1}</value>
+  </data>
+  <data name="Downloads_KeptMany" xml:space="preserve">
+    <value>{0} files stay in Downloads</value>
+  </data>
+  <data name="Downloads_KeptManyNoRecycleBin" xml:space="preserve">
+    <value>{0} files stay in Downloads: they're in your vault, but they can't go to the Recycle Bin</value>
+  </data>
+  <data name="Downloads_ReasonNoRecycleBin" xml:space="preserve">
+    <value>it's in your vault, but it can't go to the Recycle Bin</value>
+  </data>
+  <data name="Downloads_ReasonRecycleFailed" xml:space="preserve">
+    <value>it's in your vault, but moving it to the Recycle Bin failed</value>
+  </data>
+  <data name="Downloads_ReasonVaultCopyUnchecked" xml:space="preserve">
+    <value>its copy in your vault doesn't match it, so Cabinette leaves it here</value>
+  </data>
+  <data name="Downloads_ReasonPointer" xml:space="preserve">
+    <value>Cabinette links to it as a pointer file, so the vault has no copy of it</value>
+  </data>
+  <data name="Downloads_FailedOne" xml:space="preserve">
+    <value>Couldn't move “{0}” from Downloads: {1}</value>
+  </data>
+  <data name="Downloads_FailedMany" xml:space="preserve">
+    <value>{0} files couldn't be moved from Downloads. Cabinette tries again later.</value>
+  </data>
+  <data name="Downloads_InsideVault" xml:space="preserve">
+    <value>Clean My Downloads can't run: your Downloads folder is inside the vault.</value>
+  </data>
+  <data name="Downloads_NoFolder" xml:space="preserve">
+    <value>Clean My Downloads can't run: Windows didn't say where your Downloads folder is.</value>
+  </data>
+  <data name="Downloads_NotInThisRun" xml:space="preserve">
+    <value>Clean My Downloads is on, but this developer run doesn't watch a Downloads folder (see --downloads-dir).</value>
+  </data>
+  <data name="Settings_FolderOptions" xml:space="preserve">
+    <value>When you add a folder</value>
+  </data>
+  <data name="Settings_SubfoldersAsSub" xml:space="preserve">
+    <value>Subfolders become subcategories</value>
+  </data>
+  <data name="Settings_SubfoldersAsSubHint" xml:space="preserve">
+    <value>The folder itself always becomes a category.</value>
+  </data>
+  <data name="Settings_AlsoTypeCategories" xml:space="preserve">
+    <value>Also add files to their type categories</value>
+  </data>
+  <data name="Settings_AlsoTypeCategoriesHint" xml:space="preserve">
+    <value>For example, photos also appear in Images.</value>
+  </data>
+  <data name="Settings_Deleting" xml:space="preserve">
+    <value>Deleting</value>
+  </data>
+  <data name="Settings_DeleteVaultFiles" xml:space="preserve">
+    <value>Deleting files stored in the vault</value>
+  </data>
+  <data name="Settings_RecycleVault" xml:space="preserve">
+    <value>Move them to the Recycle Bin</value>
+  </data>
+  <data name="Settings_PermanentVault" xml:space="preserve">
+    <value>Delete them permanently</value>
+  </data>
+  <data name="Settings_DeletePointer" xml:space="preserve">
+    <value>Deleting a linked (pointer) item</value>
+  </data>
+  <data name="Settings_PointerDeleteReal" xml:space="preserve">
+    <value>Also delete the real file (to the Recycle Bin)</value>
+  </data>
+  <data name="Settings_PointerLibraryOnly" xml:space="preserve">
+    <value>Only remove it from Cabinette</value>
+  </data>
+  <data name="Settings_DeleteCategory" xml:space="preserve">
+    <value>Deleting a category</value>
+  </data>
+  <data name="Settings_CategoryMove" xml:space="preserve">
+    <value>Move its files to Deleted</value>
+  </data>
+  <data name="Settings_CategoryRecycle" xml:space="preserve">
+    <value>Delete its files (Recycle Bin)</value>
+  </data>
+  <data name="Settings_CategoryAsk" xml:space="preserve">
+    <value>Ask every time</value>
+  </data>
+  <data name="Settings_ChatList" xml:space="preserve">
+    <value>Chat list</value>
+  </data>
+  <data name="Settings_Sort" xml:space="preserve">
+    <value>Sort categories by</value>
+  </data>
+  <data name="Settings_SortLastUpload" xml:space="preserve">
+    <value>Last upload</value>
+  </data>
+  <data name="Settings_SortLastUploadHint" xml:space="preserve">
+    <value>Categories with new files move to the top, like chats.</value>
+  </data>
+  <data name="Settings_SortAlpha" xml:space="preserve">
+    <value>Name (A–Z)</value>
+  </data>
+  <data name="Settings_PinnedHint" xml:space="preserve">
+    <value>Pinned categories always stay at the top. Right-click a category to pin it.</value>
+  </data>
+  <data name="Settings_System" xml:space="preserve">
+    <value>Windows</value>
+  </data>
+  <data name="Settings_StartWithWindows" xml:space="preserve">
+    <value>Start with Windows</value>
+  </data>
+  <data name="Settings_CloseToTray" xml:space="preserve">
+    <value>Close button sends Cabinette to the tray</value>
+  </data>
+  <data name="Settings_Notifications" xml:space="preserve">
+    <value>Notifications when the vault changes</value>
+  </data>
+  <data name="Settings_SaveFailed" xml:space="preserve">
+    <value>Settings couldn't be saved: {0}</value>
+  </data>
+  <data name="FirstRun_Title" xml:space="preserve">
+    <value>Welcome to Cabinette</value>
+  </data>
+  <data name="FirstRun_Body" xml:space="preserve">
+    <value>Cabinette keeps your files in categories, the way a messenger keeps chats. First, choose a folder for your vault: files you add in copy mode are stored there.</value>
+  </data>
+  <data name="FirstRun_VaultLabel" xml:space="preserve">
+    <value>Vault folder</value>
+  </data>
+  <data name="FirstRun_Browse" xml:space="preserve">
+    <value>Browse…</value>
+  </data>
+  <data name="FirstRun_Hint" xml:space="preserve">
+    <value>Any folder works. It's created if it doesn't exist yet.</value>
+  </data>
+  <data name="FirstRun_Start" xml:space="preserve">
+    <value>Get started</value>
+  </data>
+  <data name="FirstRun_PickTitle" xml:space="preserve">
+    <value>Choose a folder for your Cabinette vault</value>
+  </data>
+  <data name="FirstRun_PathRequired" xml:space="preserve">
+    <value>Enter a full folder path, such as C:\Users\you\Documents\Cabinette Vault.</value>
+  </data>
+  <data name="FirstRun_Error" xml:space="preserve">
+    <value>The folder couldn't be used: {0}</value>
+  </data>
+  <data name="FirstRun_Point1" xml:space="preserve">
+    <value>Drop files to add them. They're sorted by type automatically.</value>
+  </data>
+  <data name="FirstRun_Point2" xml:space="preserve">
+    <value>Keep links to files that stay where they are.</value>
+  </data>
+  <data name="FirstRun_Point3" xml:space="preserve">
+    <value>Search everything, tag anything.</value>
+  </data>
+  <data name="Settings_TextSize" xml:space="preserve">
+    <value>Text size</value>
+  </data>
+  <data name="Settings_TextSizeSmall" xml:space="preserve">
+    <value>Small</value>
+  </data>
+  <data name="Settings_TextSizeMedium" xml:space="preserve">
+    <value>Medium (default)</value>
+  </data>
+  <data name="Settings_TextSizeLarge" xml:space="preserve">
+    <value>Large</value>
+  </data>
+  <data name="Settings_TextSizeExtraLarge" xml:space="preserve">
+    <value>Extra large</value>
+  </data>
+  <data name="Settings_Font" xml:space="preserve">
+    <value>Font</value>
+  </data>
+  <data name="Settings_FontSegoeVariable" xml:space="preserve">
+    <value>Segoe UI Variable (default)</value>
+  </data>
+  <data name="Settings_FontSegoe" xml:space="preserve">
+    <value>Segoe UI</value>
+  </data>
+  <data name="Settings_FontInter" xml:space="preserve">
+    <value>Inter</value>
+  </data>
+  <data name="Settings_FontSourceSans" xml:space="preserve">
+    <value>Source Sans 3</value>
+  </data>
+  <data name="Settings_FontAtkinson" xml:space="preserve">
+    <value>Atkinson Hyperlegible Next</value>
+  </data>
+  <data name="Settings_FontLexend" xml:space="preserve">
+    <value>Lexend</value>
+  </data>
+  <data name="Settings_FontBahnschrift" xml:space="preserve">
+    <value>Bahnschrift</value>
+  </data>
+  <data name="Settings_FontSitka" xml:space="preserve">
+    <value>Sitka</value>
+  </data>
+  <data name="Settings_FontCascadia" xml:space="preserve">
+    <value>Cascadia Mono</value>
+  </data>
+  <data name="Settings_FontJetBrains" xml:space="preserve">
+    <value>JetBrains Mono</value>
+  </data>
+  <data name="Settings_BoldText" xml:space="preserve">
+    <value>Bold text</value>
+  </data>
+  <data name="Settings_BoldTextHint" xml:space="preserve">
+    <value>Makes all text heavier and easier to read. Titles still stand out.</value>
+  </data>
+  <data name="ChatList_Home" xml:space="preserve">
+    <value>Home (Ctrl+Home)</value>
+  </data>
+  <!-- ======================================================== stage 2: tray -->
+  <data name="Tray_TipUpToDate" xml:space="preserve">
+    <value>Cabinette · up to date</value>
+  </data>
+  <data name="Tray_TipSyncing" xml:space="preserve">
+    <value>Cabinette · syncing {0} changes…</value>
+  </data>
+  <data name="Tray_TipSyncingOne" xml:space="preserve">
+    <value>Cabinette · syncing 1 change…</value>
+  </data>
+  <data name="Tray_TipSyncingUnknown" xml:space="preserve">
+    <value>Cabinette · syncing…</value>
+  </data>
+  <data name="Tray_TipPaused" xml:space="preserve">
+    <value>Cabinette · monitoring paused</value>
+  </data>
+  <data name="Tray_TipVaultMissing" xml:space="preserve">
+    <value>Cabinette · vault not found</value>
+  </data>
+  <data name="Tray_TipStarting" xml:space="preserve">
+    <value>Cabinette · checking the vault…</value>
+  </data>
+  <data name="Tray_TipOff" xml:space="preserve">
+    <value>Cabinette · not watching the vault</value>
+  </data>
+  <data name="Tray_Open" xml:space="preserve">
+    <value>Open Cabinette</value>
+  </data>
+  <data name="Tray_OpenVault" xml:space="preserve">
+    <value>Open vault folder</value>
+  </data>
+  <data name="Tray_Pause" xml:space="preserve">
+    <value>Pause monitoring</value>
+  </data>
+  <data name="Tray_Resume" xml:space="preserve">
+    <value>Resume monitoring</value>
+  </data>
+  <data name="Tray_Quit" xml:space="preserve">
+    <value>Quit</value>
+  </data>
+  <data name="Tray_HintTitle" xml:space="preserve">
+    <value>Cabinette is still running</value>
+  </data>
+  <data name="Tray_HintBody" xml:space="preserve">
+    <value>It keeps watching your vault from the tray. To quit, right-click the tray icon. You can change this in Settings › Windows.</value>
+  </data>
+  <!-- ======================================================== stage 2: vault monitor status -->
+  <data name="Monitor_Watching" xml:space="preserve">
+    <value>Watching · last sync {0}</value>
+  </data>
+  <data name="Monitor_WatchingNoSync" xml:space="preserve">
+    <value>Watching for changes</value>
+  </data>
+  <data name="Monitor_Syncing" xml:space="preserve">
+    <value>Syncing {0} changes…</value>
+  </data>
+  <data name="Monitor_SyncingOne" xml:space="preserve">
+    <value>Syncing 1 change…</value>
+  </data>
+  <data name="Monitor_SyncingUnknown" xml:space="preserve">
+    <value>Syncing…</value>
+  </data>
+  <data name="Monitor_Paused" xml:space="preserve">
+    <value>Paused</value>
+  </data>
+  <data name="Monitor_PausedHint" xml:space="preserve">
+    <value>Changes made in the vault are picked up when you resume.</value>
+  </data>
+  <data name="Monitor_VaultMissing" xml:space="preserve">
+    <value>Vault not found</value>
+  </data>
+  <data name="Monitor_VaultMissingHint" xml:space="preserve">
+    <value>Nothing is removed from your library. Cabinette tries again every 30 seconds.</value>
+  </data>
+  <data name="Monitor_Starting" xml:space="preserve">
+    <value>Checking the vault…</value>
+  </data>
+  <data name="Monitor_Off" xml:space="preserve">
+    <value>Not watching the vault</value>
+  </data>
+  <data name="Monitor_OffHint" xml:space="preserve">
+    <value>Changes made in the vault outside Cabinette aren't picked up in this session.</value>
+  </data>
+  <data name="Monitor_Pause" xml:space="preserve">
+    <value>Pause</value>
+  </data>
+  <data name="Monitor_Resume" xml:space="preserve">
+    <value>Resume</value>
+  </data>
+  <data name="Monitor_PauseFailed" xml:space="preserve">
+    <value>Monitoring couldn't be paused. The details were saved to the log.</value>
+  </data>
+  <data name="Monitor_ResumeFailed" xml:space="preserve">
+    <value>Monitoring couldn't be resumed. The details were saved to the log.</value>
+  </data>
+  <!-- ======================================================== stage 2: vault change notifications -->
+  <data name="VaultNotify_Title" xml:space="preserve">
+    <value>Changes in your vault</value>
+  </data>
+  <data name="VaultNotify_Added" xml:space="preserve">
+    <value>{0} files added to {1}</value>
+  </data>
+  <data name="VaultNotify_AddedOne" xml:space="preserve">
+    <value>1 file added to {0}</value>
+  </data>
+  <data name="VaultNotify_TwoNames" xml:space="preserve">
+    <value>{0} and {1}</value>
+  </data>
+  <data name="VaultNotify_NamesAndMore" xml:space="preserve">
+    <value>{0}, {1} and {2} more</value>
+  </data>
+  <data name="VaultNotify_NewCategory" xml:space="preserve">
+    <value>New category: {0}</value>
+  </data>
+  <data name="VaultNotify_NewCategoriesTwo" xml:space="preserve">
+    <value>New categories: {0}</value>
+  </data>
+  <data name="VaultNotify_NewCategoriesMany" xml:space="preserve">
+    <value>{0} new categories</value>
+  </data>
+  <data name="VaultNotify_Moved" xml:space="preserve">
+    <value>{0} files moved to another category</value>
+  </data>
+  <data name="VaultNotify_MovedOne" xml:space="preserve">
+    <value>1 file moved to another category</value>
+  </data>
+  <data name="VaultNotify_Renamed" xml:space="preserve">
+    <value>{0} files renamed</value>
+  </data>
+  <data name="VaultNotify_RenamedOne" xml:space="preserve">
+    <value>1 file renamed</value>
+  </data>
+  <data name="VaultNotify_Removed" xml:space="preserve">
+    <value>{0} files removed</value>
+  </data>
+  <data name="VaultNotify_RemovedOne" xml:space="preserve">
+    <value>1 file removed</value>
+  </data>
+  <data name="VaultNotify_CategoryRemoved" xml:space="preserve">
+    <value>Category removed: {0}</value>
+  </data>
+  <data name="VaultNotify_CategoriesRemoved" xml:space="preserve">
+    <value>{0} categories removed</value>
+  </data>
+  <data name="VaultNotify_Updated" xml:space="preserve">
+    <value>{0} files updated</value>
+  </data>
+  <data name="VaultNotify_UpdatedOne" xml:space="preserve">
+    <value>1 file updated</value>
+  </data>
+  <data name="VaultNotify_Duplicates" xml:space="preserve">
+    <value>{0} duplicates kept</value>
+  </data>
+  <data name="VaultNotify_DuplicateOne" xml:space="preserve">
+    <value>1 duplicate kept</value>
+  </data>
+  <!-- ======================================================== stage 2: progress dialog -->
+  <data name="Progress_Preparing" xml:space="preserve">
+    <value>Getting ready…</value>
+  </data>
+  <data name="Progress_Scanning" xml:space="preserve">
+    <value>Counting files…</value>
+  </data>
+  <data name="Progress_Copying" xml:space="preserve">
+    <value>Copying files…</value>
+  </data>
+  <data name="Progress_Verifying" xml:space="preserve">
+    <value>Checking the copies…</value>
+  </data>
+  <data name="Progress_Rechecking" xml:space="preserve">
+    <value>Checking for recent changes…</value>
+  </data>
+  <data name="Progress_Zipping" xml:space="preserve">
+    <value>Writing the backup…</value>
+  </data>
+  <data name="Progress_Extracting" xml:space="preserve">
+    <value>Restoring files…</value>
+  </data>
+  <data name="Progress_Finishing" xml:space="preserve">
+    <value>Finishing up…</value>
+  </data>
+  <data name="Progress_Working" xml:space="preserve">
+    <value>Working…</value>
+  </data>
+  <data name="Progress_Cancelling" xml:space="preserve">
+    <value>Cancelling…</value>
+  </data>
+  <data name="Progress_Files" xml:space="preserve">
+    <value>{0} of {1} files</value>
+  </data>
+  <data name="Progress_Bytes" xml:space="preserve">
+    <value>{0} of {1}</value>
+  </data>
+  <data name="Progress_Step" xml:space="preserve">
+    <value>Step {0} of {1} · {2}</value>
+  </data>
+  <!-- ======================================================== stage 2: move vault -->
+  <data name="Vault_NoVaultTitle" xml:space="preserve">
+    <value>No vault yet</value>
+  </data>
+  <data name="Vault_NoVault" xml:space="preserve">
+    <value>Choose a vault folder first.</value>
+  </data>
+  <data name="Vault_MovePickTitle" xml:space="preserve">
+    <value>Choose an empty folder for the vault</value>
+  </data>
+  <data name="Vault_FolderNotUsableTitle" xml:space="preserve">
+    <value>Choose another folder</value>
+  </data>
+  <data name="Vault_FolderNotEmpty" xml:space="preserve">
+    <value>This folder isn't empty. Choose an empty folder, or make a new one in the folder picker.</value>
+  </data>
+  <data name="Vault_FolderOverlaps" xml:space="preserve">
+    <value>The new vault can't be inside the current vault, or the other way around. Choose a separate folder.</value>
+  </data>
+  <data name="Vault_MoveConfirmTitle" xml:space="preserve">
+    <value>Move the vault?</value>
+  </data>
+  <data name="Vault_MoveConfirmMessage" xml:space="preserve">
+    <value>Cabinette copies every file to the new folder, checks each copy, then switches to it. Monitoring pauses meanwhile. Your current vault is kept until you decide what to do with it.</value>
+  </data>
+  <data name="Vault_MoveConfirm" xml:space="preserve">
+    <value>Move vault</value>
+  </data>
+  <data name="Vault_FactFrom" xml:space="preserve">
+    <value>From</value>
+  </data>
+  <data name="Vault_FactTo" xml:space="preserve">
+    <value>To</value>
+  </data>
+  <data name="Vault_FactContents" xml:space="preserve">
+    <value>Contents</value>
+  </data>
+  <data name="Vault_Counting" xml:space="preserve">
+    <value>Counting files…</value>
+  </data>
+  <data name="Vault_CountTooLong" xml:space="preserve">
+    <value>Too many files to count quickly</value>
+  </data>
+  <data name="Vault_NotEnoughSpace" xml:space="preserve">
+    <value>The destination drive may not have enough free space ({0} free, {1} needed).</value>
+  </data>
+  <data name="Vault_MoveProgressTitle" xml:space="preserve">
+    <value>Moving the vault</value>
+  </data>
+  <data name="Vault_MoveCancelled" xml:space="preserve">
+    <value>Moving the vault was cancelled. Cabinette still uses your current vault.</value>
+  </data>
+  <data name="Vault_MoveFailedTitle" xml:space="preserve">
+    <value>The vault couldn't be moved</value>
+  </data>
+  <data name="Vault_MovedTitle" xml:space="preserve">
+    <value>Vault moved</value>
+  </data>
+  <data name="Vault_MovedMessage" xml:space="preserve">
+    <value>Every file was copied and checked, and Cabinette now uses the new folder. Your old vault is still there. Send it to the Recycle Bin?</value>
+  </data>
+  <data name="Vault_MovedMessageNoRecycle" xml:space="preserve">
+    <value>Every file was copied and checked, and Cabinette now uses the new folder. Your old vault was kept.</value>
+  </data>
+  <data name="Vault_FactNewVault" xml:space="preserve">
+    <value>New vault</value>
+  </data>
+  <data name="Vault_FactCopied" xml:space="preserve">
+    <value>Copied</value>
+  </data>
+  <data name="Vault_FactOldVault" xml:space="preserve">
+    <value>Old vault</value>
+  </data>
+  <data name="Vault_KeepOld" xml:space="preserve">
+    <value>Keep it</value>
+  </data>
+  <data name="Vault_RecycleOld" xml:space="preserve">
+    <value>Send old vault to Recycle Bin</value>
+  </data>
+  <data name="Vault_OldRecycled" xml:space="preserve">
+    <value>The old vault was moved to the Recycle Bin.</value>
+  </data>
+  <data name="Vault_OldRecycleFailed" xml:space="preserve">
+    <value>The old vault couldn't be moved to the Recycle Bin: {0}</value>
+  </data>
+  <data name="Vault_OldDeleted" xml:space="preserve">
+    <value>The old vault was deleted permanently.</value>
+  </data>
+  <data name="Vault_OldDeleteFailed" xml:space="preserve">
+    <value>The old vault couldn't be deleted: {0}</value>
+  </data>
+  <data name="Vault_OldChangedTitle" xml:space="preserve">
+    <value>The old vault changed after the move</value>
+  </data>
+  <data name="Vault_OldChangedMessage" xml:space="preserve">
+    <value>These files in the old vault were added or changed after Cabinette switched to the new vault, so the new vault doesn't have these versions. If you send the old vault to the Recycle Bin, they go with it.</value>
+  </data>
+  <data name="Vault_OldChangedDetailsTitle" xml:space="preserve">
+    <value>Changed after the move</value>
+  </data>
+  <data name="Vault_OldChangedMore" xml:space="preserve">
+    <value>…and {0} more</value>
+  </data>
+  <data name="Vault_FactChanged" xml:space="preserve">
+    <value>Changed files</value>
+  </data>
+  <data name="Vault_RecycleAnyway" xml:space="preserve">
+    <value>Recycle anyway</value>
+  </data>
+  <data name="Vault_KeepOldVault" xml:space="preserve">
+    <value>Keep old vault</value>
+  </data>
+  <data name="Vault_FilesAndSize" xml:space="preserve">
+    <value>{0} files · {1}</value>
+  </data>
+  <data name="Vault_FilesAndSizeOne" xml:space="preserve">
+    <value>1 file · {0}</value>
+  </data>
+  <data name="Vault_CountAtLeast" xml:space="preserve">
+    <value>{0}+</value>
+  </data>
+  <data name="Vault_UnavailableTitle" xml:space="preserve">
+    <value>Not available yet</value>
+  </data>
+  <data name="Vault_Unavailable" xml:space="preserve">
+    <value>This version of Cabinette can't do this yet.</value>
+  </data>
+  <data name="Vault_UnexpectedError" xml:space="preserve">
+    <value>Something went wrong: {0}</value>
+  </data>
+  <data name="Vault_WaitForOperation" xml:space="preserve">
+    <value>Cabinette is busy with your vault. Wait until it's done, or cancel it first.</value>
+  </data>
+  <!-- ======================================================== stage 2: copy linked files into the vault -->
+  <data name="Migrate_NoneTitle" xml:space="preserve">
+    <value>No linked files</value>
+  </data>
+  <data name="Migrate_None" xml:space="preserve">
+    <value>Every file in your library is already stored in the vault.</value>
+  </data>
+  <data name="Migrate_ConfirmTitle" xml:space="preserve">
+    <value>Copy linked files into the vault?</value>
+  </data>
+  <data name="Migrate_ConfirmMessage" xml:space="preserve">
+    <value>Each linked file is copied into its category's folder in the vault and becomes a vault file. The originals stay where they are. Missing files are skipped.</value>
+  </data>
+  <data name="Migrate_Confirm" xml:space="preserve">
+    <value>Copy files</value>
+  </data>
+  <data name="Migrate_FactLinked" xml:space="preserve">
+    <value>Linked files</value>
+  </data>
+  <data name="Migrate_FactSize" xml:space="preserve">
+    <value>Total size</value>
+  </data>
+  <data name="Migrate_FactMissing" xml:space="preserve">
+    <value>Missing</value>
+  </data>
+  <data name="Migrate_MissingValue" xml:space="preserve">
+    <value>{0} (will be skipped)</value>
+  </data>
+  <data name="Migrate_ProgressTitle" xml:space="preserve">
+    <value>Copying linked files into the vault</value>
+  </data>
+  <data name="Migrate_Cancelled" xml:space="preserve">
+    <value>Copying linked files was cancelled.</value>
+  </data>
+  <data name="Migrate_FailedTitle" xml:space="preserve">
+    <value>Linked files couldn't be copied</value>
+  </data>
+  <data name="Migrate_DoneTitle" xml:space="preserve">
+    <value>Linked files copied</value>
+  </data>
+  <data name="Migrate_DoneMessage" xml:space="preserve">
+    <value>These files are now stored in the vault. The originals are still where they were.</value>
+  </data>
+  <data name="Migrate_DonePartialMessage" xml:space="preserve">
+    <value>The other files are now stored in the vault. The ones below were not copied and are still linked.</value>
+  </data>
+  <data name="Migrate_FactCopied" xml:space="preserve">
+    <value>Copied</value>
+  </data>
+  <data name="Migrate_FactSkipped" xml:space="preserve">
+    <value>Skipped (missing)</value>
+  </data>
+  <data name="Migrate_FactFailed" xml:space="preserve">
+    <value>Failed</value>
+  </data>
+  <data name="Migrate_DetailsTitle" xml:space="preserve">
+    <value>Not copied</value>
+  </data>
+  <data name="Migrate_DetailMissing" xml:space="preserve">
+    <value>{0}: not found at {1}</value>
+  </data>
+  <data name="Migrate_DetailFailed" xml:space="preserve">
+    <value>{0}: {1}</value>
+  </data>
+  <!-- ======================================================== stage 2: backup -->
+  <data name="Backup_OptionsTitle" xml:space="preserve">
+    <value>Create a backup</value>
+  </data>
+  <data name="Backup_OptionsMessage" xml:space="preserve">
+    <value>A backup is one .zip file with your library and every file in your vault. You can restore it on this PC or another one.</value>
+  </data>
+  <data name="Backup_MigrateFirst" xml:space="preserve">
+    <value>Copy linked files into the vault first (recommended)</value>
+  </data>
+  <data name="Backup_MigrateFirstHint" xml:space="preserve">
+    <value>{0} linked files live outside the vault. Without this, the backup only remembers where they are.</value>
+  </data>
+  <data name="Backup_MigrateFirstHintOne" xml:space="preserve">
+    <value>1 linked file lives outside the vault. Without this, the backup only remembers where it is.</value>
+  </data>
+  <data name="Backup_Continue" xml:space="preserve">
+    <value>Continue</value>
+  </data>
+  <data name="Backup_PickTitle" xml:space="preserve">
+    <value>Save the backup</value>
+  </data>
+  <data name="Backup_Filter" xml:space="preserve">
+    <value>Cabinette backup (*.zip)</value>
+  </data>
+  <data name="Backup_FileName" xml:space="preserve">
+    <value>Cabinette backup {0}.zip</value>
+  </data>
+  <data name="Backup_InsideVault" xml:space="preserve">
+    <value>Save the backup outside the vault folder.</value>
+  </data>
+  <data name="Backup_ProgressTitle" xml:space="preserve">
+    <value>Creating a backup</value>
+  </data>
+  <data name="Backup_StepMigrate" xml:space="preserve">
+    <value>Copying linked files</value>
+  </data>
+  <data name="Backup_StepZip" xml:space="preserve">
+    <value>Writing the backup</value>
+  </data>
+  <data name="Backup_Cancelled" xml:space="preserve">
+    <value>The backup was cancelled.</value>
+  </data>
+  <data name="Backup_FailedTitle" xml:space="preserve">
+    <value>The backup couldn't be created</value>
+  </data>
+  <data name="Backup_DoneTitle" xml:space="preserve">
+    <value>Backup created</value>
+  </data>
+  <data name="Backup_DoneMessage" xml:space="preserve">
+    <value>Keep it somewhere safe, like an external drive or cloud storage.</value>
+  </data>
+  <data name="Backup_FactFile" xml:space="preserve">
+    <value>File</value>
+  </data>
+  <data name="Backup_FactFolder" xml:space="preserve">
+    <value>Folder</value>
+  </data>
+  <data name="Backup_FactContents" xml:space="preserve">
+    <value>Contents</value>
+  </data>
+  <data name="Backup_FactMigrated" xml:space="preserve">
+    <value>Linked files copied first</value>
+  </data>
+  <data name="Backup_PointersNotIncluded" xml:space="preserve">
+    <value>{0} linked files aren't in the backup, only where they are.</value>
+  </data>
+  <data name="Backup_PointersNotIncludedOne" xml:space="preserve">
+    <value>1 linked file isn't in the backup, only where it is.</value>
+  </data>
+  <data name="Backup_ShowInFolder" xml:space="preserve">
+    <value>Show in folder</value>
+  </data>
+  <!-- ======================================================== stage 2: restore -->
+  <data name="Restore_PickTitle" xml:space="preserve">
+    <value>Choose a Cabinette backup</value>
+  </data>
+  <data name="Restore_NotABackupTitle" xml:space="preserve">
+    <value>This backup can't be restored</value>
+  </data>
+  <data name="Restore_DetailsTitle" xml:space="preserve">
+    <value>Restore this backup?</value>
+  </data>
+  <data name="Restore_DetailsMessage" xml:space="preserve">
+    <value>Next, choose an empty folder for the restored vault. File locations in the library are updated automatically.</value>
+  </data>
+  <data name="Restore_ChooseFolder" xml:space="preserve">
+    <value>Choose vault folder…</value>
+  </data>
+  <data name="Restore_FactBackup" xml:space="preserve">
+    <value>Backup</value>
+  </data>
+  <data name="Restore_FactCreated" xml:space="preserve">
+    <value>Created</value>
+  </data>
+  <data name="Restore_CreatedValue" xml:space="preserve">
+    <value>{0} on {1}</value>
+  </data>
+  <data name="Restore_FactFiles" xml:space="preserve">
+    <value>Files</value>
+  </data>
+  <data name="Restore_FactCategories" xml:space="preserve">
+    <value>Categories</value>
+  </data>
+  <data name="Restore_FactLinked" xml:space="preserve">
+    <value>Linked files</value>
+  </data>
+  <data name="Restore_LinkedValue" xml:space="preserve">
+    <value>{0} (only their locations are in the backup)</value>
+  </data>
+  <data name="Restore_PickFolderTitle" xml:space="preserve">
+    <value>Choose an empty folder for the restored vault</value>
+  </data>
+  <data name="Restore_ReplaceTitle" xml:space="preserve">
+    <value>Replace your current library?</value>
+  </data>
+  <data name="Restore_ReplaceMessage" xml:space="preserve">
+    <value>Your current library is replaced by the backup, then Cabinette restarts. Its database is kept as a .bak file next to it, and the files in your current vault are not touched.</value>
+  </data>
+  <data name="Restore_ReplaceConfirm" xml:space="preserve">
+    <value>Restore and restart</value>
+  </data>
+  <data name="Restore_ConfirmTitle" xml:space="preserve">
+    <value>Restore the backup?</value>
+  </data>
+  <data name="Restore_ConfirmMessage" xml:space="preserve">
+    <value>Cabinette restores your library and its files into the folder you chose, then restarts.</value>
+  </data>
+  <data name="Restore_Confirm" xml:space="preserve">
+    <value>Restore</value>
+  </data>
+  <data name="Restore_FactNewVault" xml:space="preserve">
+    <value>New vault</value>
+  </data>
+  <data name="Restore_ProgressTitle" xml:space="preserve">
+    <value>Restoring the backup</value>
+  </data>
+  <data name="Restore_Closing" xml:space="preserve">
+    <value>Closing the current library…</value>
+  </data>
+  <data name="Restore_DoneTitle" xml:space="preserve">
+    <value>Backup restored</value>
+  </data>
+  <data name="Restore_DoneMessage" xml:space="preserve">
+    <value>Cabinette restarts now to open the restored library.</value>
+  </data>
+  <data name="Restore_RestartNow" xml:space="preserve">
+    <value>Restart now</value>
+  </data>
+  <data name="Restore_CancelledTitle" xml:space="preserve">
+    <value>Restore cancelled</value>
+  </data>
+  <data name="Restore_CancelledMessage" xml:space="preserve">
+    <value>The restore was cancelled.</value>
+  </data>
+  <data name="Restore_FailedTitle" xml:space="preserve">
+    <value>The backup couldn't be restored</value>
+  </data>
+  <data name="Restore_RestartAfterFailure" xml:space="preserve">
+    <value>Cabinette restarts now to open your library again.</value>
+  </data>
+  <!-- ======================================================== stage 2: settings and first run -->
+  <data name="Settings_MoveVaultHint" xml:space="preserve">
+    <value>Copy the vault to another folder or drive. The old one is kept until you decide.</value>
+  </data>
+  <data name="Settings_VaultTools" xml:space="preserve">
+    <value>Vault tools</value>
+  </data>
+  <data name="Settings_Migrate" xml:space="preserve">
+    <value>Copy linked files into the vault…</value>
+  </data>
+  <data name="Settings_MigrateHint" xml:space="preserve">
+    <value>Linked files become vault files. The originals stay where they are.</value>
+  </data>
+  <data name="Settings_Backups" xml:space="preserve">
+    <value>Backups</value>
+  </data>
+  <data name="Settings_Backup" xml:space="preserve">
+    <value>Create backup…</value>
+  </data>
+  <data name="Settings_BackupHint" xml:space="preserve">
+    <value>One .zip file with your library and every file in the vault.</value>
+  </data>
+  <data name="Settings_Restore" xml:space="preserve">
+    <value>Restore from backup…</value>
+  </data>
+  <data name="Settings_RestoreHint" xml:space="preserve">
+    <value>Replace this library with a backup from this PC or another one.</value>
+  </data>
+  <data name="Settings_TrayGroup" xml:space="preserve">
+    <value>Startup and tray</value>
+  </data>
+  <data name="Settings_StartWithWindowsHint" xml:space="preserve">
+    <value>Cabinette starts quietly in the tray when you sign in, so it keeps watching your vault.</value>
+  </data>
+  <data name="Settings_CloseToTrayHint" xml:space="preserve">
+    <value>Cabinette keeps running in the tray. To quit, right-click the tray icon.</value>
+  </data>
+  <data name="Settings_NotificationsGroup" xml:space="preserve">
+    <value>Notifications</value>
+  </data>
+  <data name="Settings_NotificationsHint" xml:space="preserve">
+    <value>For example "3 files added to Images" when files change in the vault outside Cabinette.</value>
+  </data>
+  <data name="FirstRun_Restore" xml:space="preserve">
+    <value>Restore from a backup</value>
+  </data>
+  <data name="FirstRun_RestoreHint" xml:space="preserve">
+    <value>Used Cabinette before? Restore your library and vault from a backup .zip.</value>
+  </data>
+  <data name="FirstRun_NotEmptyTitle" xml:space="preserve">
+    <value>This folder isn't empty</value>
+  </data>
+  <data name="FirstRun_NotEmptyMessage" xml:space="preserve">
+    <value>Cabinette will take over what's already in it:
+• Its subfolders become categories, and the files in them are added to your library.
+• Files directly in this folder are moved into category folders by type.
+• Deleting a category in Cabinette later also moves its files to Deleted or deletes them.
+
+To start with an empty vault, choose another folder.</value>
+  </data>
+  <data name="FirstRun_ChooseAnotherFolder" xml:space="preserve">
+    <value>Choose another folder</value>
+  </data>
+  <data name="FirstRun_UseFolderAnyway" xml:space="preserve">
+    <value>Use this folder anyway</value>
+  </data>
+  <!-- ======================================================== stage 3: Explorer entries -->
+  <data name="Explorer_CopyEntry" xml:space="preserve">
+    <value>Copy to Cabinette</value>
+  </data>
+  <data name="Explorer_PointerEntry" xml:space="preserve">
+    <value>Add to Cabinette (Pointer)</value>
+  </data>
+  <data name="Explorer_ForwardFailed" xml:space="preserve">
+    <value>Cabinette is running but didn't take the files from Explorer, so nothing was added.
+
+Try again, or open Cabinette and drop the files onto its window.</value>
+  </data>
+  <!-- ======================================================== quick switcher (Ctrl+K) -->
+  <data name="QuickSwitcher_Title" xml:space="preserve">
+    <value>Quick switcher</value>
+  </data>
+  <data name="QuickSwitcher_Placeholder" xml:space="preserve">
+    <value>Go to a category or file</value>
+  </data>
+  <data name="QuickSwitcher_Recent" xml:space="preserve">
+    <value>Recently opened</value>
+  </data>
+  <data name="QuickSwitcher_NoRecent" xml:space="preserve">
+    <value>Type to find a category or file by name.</value>
+  </data>
+  <data name="QuickSwitcher_Hint" xml:space="preserve">
+    <value>↑↓ to choose  ·  Enter to open  ·  Shift+Enter opens the file  ·  Esc to close</value>
+  </data>
+  <data name="QuickSwitcher_FileGone" xml:space="preserve">
+    <value>“{0}” is no longer in Cabinette.</value>
+  </data>
+  <data name="AiNotify_UnknownClient" xml:space="preserve">
+    <value>An AI app</value>
+  </data>
+  <data name="AiNotify_InApp" xml:space="preserve">
+    <value>{0} {1}</value>
+  </data>
+  <data name="AiNotify_OperationFailed" xml:space="preserve">
+    <value>Vault operation stopped: {0}</value>
+  </data>
+  <data name="AiNotify_OperationFailedP" xml:space="preserve">
+    <value>couldn't finish a vault operation: {0}</value>
+  </data>
+  <data name="AiNotify_OperationFailedPlain" xml:space="preserve">
+    <value>A vault operation didn't finish</value>
+  </data>
+  <data name="AiNotify_OperationFailedPlainP" xml:space="preserve">
+    <value>couldn't finish a vault operation</value>
+  </data>
+  <data name="AiNotify_AddedOneTo" xml:space="preserve">
+    <value>1 file added to {0}</value>
+  </data>
+  <data name="AiNotify_AddedOneToP" xml:space="preserve">
+    <value>added 1 file to {0}</value>
+  </data>
+  <data name="AiNotify_AddedTo" xml:space="preserve">
+    <value>{0} files added to {1}</value>
+  </data>
+  <data name="AiNotify_AddedToP" xml:space="preserve">
+    <value>added {0} files to {1}</value>
+  </data>
+  <data name="AiNotify_AddedToOthers" xml:space="preserve">
+    <value>{0} files added to {1} other categories</value>
+  </data>
+  <data name="AiNotify_AddedToOthersP" xml:space="preserve">
+    <value>added {0} files to {1} other categories</value>
+  </data>
+  <data name="AiNotify_AddedOne" xml:space="preserve">
+    <value>1 file added</value>
+  </data>
+  <data name="AiNotify_AddedOneP" xml:space="preserve">
+    <value>added 1 file</value>
+  </data>
+  <data name="AiNotify_Added" xml:space="preserve">
+    <value>{0} files added</value>
+  </data>
+  <data name="AiNotify_AddedP" xml:space="preserve">
+    <value>added {0} files</value>
+  </data>
+  <data name="AiNotify_DuplicateOne" xml:space="preserve">
+    <value>1 file was already in Cabinette</value>
+  </data>
+  <data name="AiNotify_DuplicateOneP" xml:space="preserve">
+    <value>found 1 file already in Cabinette</value>
+  </data>
+  <data name="AiNotify_Duplicates" xml:space="preserve">
+    <value>{0} files were already in Cabinette</value>
+  </data>
+  <data name="AiNotify_DuplicatesP" xml:space="preserve">
+    <value>found {0} files already in Cabinette</value>
+  </data>
+  <data name="AiNotify_FailedOne" xml:space="preserve">
+    <value>1 file couldn't be added</value>
+  </data>
+  <data name="AiNotify_FailedOneP" xml:space="preserve">
+    <value>couldn't add 1 file</value>
+  </data>
+  <data name="AiNotify_Failed" xml:space="preserve">
+    <value>{0} files couldn't be added</value>
+  </data>
+  <data name="AiNotify_FailedP" xml:space="preserve">
+    <value>couldn't add {0} files</value>
+  </data>
+  <data name="AiNotify_NoteAddedTo" xml:space="preserve">
+    <value>Note added to {0}</value>
+  </data>
+  <data name="AiNotify_NoteAddedToP" xml:space="preserve">
+    <value>added a note to {0}</value>
+  </data>
+  <data name="AiNotify_NotesAddedTo" xml:space="preserve">
+    <value>{0} notes added to {1}</value>
+  </data>
+  <data name="AiNotify_NotesAddedToP" xml:space="preserve">
+    <value>added {0} notes to {1}</value>
+  </data>
+  <data name="AiNotify_NoteAdded" xml:space="preserve">
+    <value>Note added</value>
+  </data>
+  <data name="AiNotify_NoteAddedP" xml:space="preserve">
+    <value>added a note</value>
+  </data>
+  <data name="AiNotify_NotesAdded" xml:space="preserve">
+    <value>{0} notes added</value>
+  </data>
+  <data name="AiNotify_NotesAddedP" xml:space="preserve">
+    <value>added {0} notes</value>
+  </data>
+  <data name="AiNotify_AlsoAddedOne" xml:space="preserve">
+    <value>1 file also added to {0}</value>
+  </data>
+  <data name="AiNotify_AlsoAddedOneP" xml:space="preserve">
+    <value>also added 1 file to {0}</value>
+  </data>
+  <data name="AiNotify_AlsoAdded" xml:space="preserve">
+    <value>{0} files also added to {1}</value>
+  </data>
+  <data name="AiNotify_AlsoAddedP" xml:space="preserve">
+    <value>also added {0} files to {1}</value>
+  </data>
+  <data name="AiNotify_AlsoAddedOneNoName" xml:space="preserve">
+    <value>1 file added to another category</value>
+  </data>
+  <data name="AiNotify_AlsoAddedOneNoNameP" xml:space="preserve">
+    <value>added 1 file to another category</value>
+  </data>
+  <data name="AiNotify_AlsoAddedNoName" xml:space="preserve">
+    <value>{0} files added to another category</value>
+  </data>
+  <data name="AiNotify_AlsoAddedNoNameP" xml:space="preserve">
+    <value>added {0} files to another category</value>
+  </data>
+  <data name="AiNotify_MovedOne" xml:space="preserve">
+    <value>1 file moved to {0}</value>
+  </data>
+  <data name="AiNotify_MovedOneP" xml:space="preserve">
+    <value>moved 1 file to {0}</value>
+  </data>
+  <data name="AiNotify_Moved" xml:space="preserve">
+    <value>{0} files moved to {1}</value>
+  </data>
+  <data name="AiNotify_MovedP" xml:space="preserve">
+    <value>moved {0} files to {1}</value>
+  </data>
+  <data name="AiNotify_MovedOneNoName" xml:space="preserve">
+    <value>1 file moved to another category</value>
+  </data>
+  <data name="AiNotify_MovedOneNoNameP" xml:space="preserve">
+    <value>moved 1 file to another category</value>
+  </data>
+  <data name="AiNotify_MovedNoName" xml:space="preserve">
+    <value>{0} files moved to another category</value>
+  </data>
+  <data name="AiNotify_MovedNoNameP" xml:space="preserve">
+    <value>moved {0} files to another category</value>
+  </data>
+  <data name="AiNotify_RemovedFromOne" xml:space="preserve">
+    <value>1 file removed from {0}</value>
+  </data>
+  <data name="AiNotify_RemovedFromOneP" xml:space="preserve">
+    <value>removed 1 file from {0}</value>
+  </data>
+  <data name="AiNotify_RemovedFrom" xml:space="preserve">
+    <value>{0} files removed from {1}</value>
+  </data>
+  <data name="AiNotify_RemovedFromP" xml:space="preserve">
+    <value>removed {0} files from {1}</value>
+  </data>
+  <data name="AiNotify_RemovedFromOneNoName" xml:space="preserve">
+    <value>1 file removed from a category</value>
+  </data>
+  <data name="AiNotify_RemovedFromOneNoNameP" xml:space="preserve">
+    <value>removed 1 file from a category</value>
+  </data>
+  <data name="AiNotify_RemovedFromNoName" xml:space="preserve">
+    <value>{0} files removed from a category</value>
+  </data>
+  <data name="AiNotify_RemovedFromNoNameP" xml:space="preserve">
+    <value>removed {0} files from a category</value>
+  </data>
+  <data name="AiNotify_RenamedTo" xml:space="preserve">
+    <value>1 file renamed to {0}</value>
+  </data>
+  <data name="AiNotify_RenamedToP" xml:space="preserve">
+    <value>renamed a file to {0}</value>
+  </data>
+  <data name="AiNotify_RenamedOne" xml:space="preserve">
+    <value>1 file renamed</value>
+  </data>
+  <data name="AiNotify_RenamedOneP" xml:space="preserve">
+    <value>renamed 1 file</value>
+  </data>
+  <data name="AiNotify_Renamed" xml:space="preserve">
+    <value>{0} files renamed</value>
+  </data>
+  <data name="AiNotify_RenamedP" xml:space="preserve">
+    <value>renamed {0} files</value>
+  </data>
+  <data name="AiNotify_TaggedOne" xml:space="preserve">
+    <value>1 file tagged</value>
+  </data>
+  <data name="AiNotify_TaggedOneP" xml:space="preserve">
+    <value>tagged 1 file</value>
+  </data>
+  <data name="AiNotify_Tagged" xml:space="preserve">
+    <value>{0} files tagged</value>
+  </data>
+  <data name="AiNotify_TaggedP" xml:space="preserve">
+    <value>tagged {0} files</value>
+  </data>
+  <data name="AiNotify_UntaggedOne" xml:space="preserve">
+    <value>Tags removed from 1 file</value>
+  </data>
+  <data name="AiNotify_UntaggedOneP" xml:space="preserve">
+    <value>removed tags from 1 file</value>
+  </data>
+  <data name="AiNotify_Untagged" xml:space="preserve">
+    <value>Tags removed from {0} files</value>
+  </data>
+  <data name="AiNotify_UntaggedP" xml:space="preserve">
+    <value>removed tags from {0} files</value>
+  </data>
+  <data name="AiNotify_StarredOne" xml:space="preserve">
+    <value>1 file starred</value>
+  </data>
+  <data name="AiNotify_StarredOneP" xml:space="preserve">
+    <value>starred 1 file</value>
+  </data>
+  <data name="AiNotify_Starred" xml:space="preserve">
+    <value>{0} files starred</value>
+  </data>
+  <data name="AiNotify_StarredP" xml:space="preserve">
+    <value>starred {0} files</value>
+  </data>
+  <data name="AiNotify_UnstarredOne" xml:space="preserve">
+    <value>1 file unstarred</value>
+  </data>
+  <data name="AiNotify_UnstarredOneP" xml:space="preserve">
+    <value>unstarred 1 file</value>
+  </data>
+  <data name="AiNotify_Unstarred" xml:space="preserve">
+    <value>{0} files unstarred</value>
+  </data>
+  <data name="AiNotify_UnstarredP" xml:space="preserve">
+    <value>unstarred {0} files</value>
+  </data>
+  <data name="AiNotify_DeletedOne" xml:space="preserve">
+    <value>1 file deleted (Recycle Bin)</value>
+  </data>
+  <data name="AiNotify_DeletedOneP" xml:space="preserve">
+    <value>deleted 1 file (Recycle Bin)</value>
+  </data>
+  <data name="AiNotify_Deleted" xml:space="preserve">
+    <value>{0} files deleted (Recycle Bin)</value>
+  </data>
+  <data name="AiNotify_DeletedP" xml:space="preserve">
+    <value>deleted {0} files (Recycle Bin)</value>
+  </data>
+  <data name="AiNotify_CategoryCreated" xml:space="preserve">
+    <value>Category {0} created</value>
+  </data>
+  <data name="AiNotify_CategoryCreatedP" xml:space="preserve">
+    <value>created the category {0}</value>
+  </data>
+  <data name="AiNotify_CategoriesCreatedTwo" xml:space="preserve">
+    <value>Categories {0} and {1} created</value>
+  </data>
+  <data name="AiNotify_CategoriesCreatedTwoP" xml:space="preserve">
+    <value>created the categories {0} and {1}</value>
+  </data>
+  <data name="AiNotify_CategoriesCreated" xml:space="preserve">
+    <value>{0} categories created</value>
+  </data>
+  <data name="AiNotify_CategoriesCreatedP" xml:space="preserve">
+    <value>created {0} categories</value>
+  </data>
+  <data name="AiNotify_CategoryRenamed" xml:space="preserve">
+    <value>Category renamed to {0}</value>
+  </data>
+  <data name="AiNotify_CategoryRenamedP" xml:space="preserve">
+    <value>renamed a category to {0}</value>
+  </data>
+  <data name="AiNotify_CategoriesRenamed" xml:space="preserve">
+    <value>{0} categories renamed</value>
+  </data>
+  <data name="AiNotify_CategoriesRenamedP" xml:space="preserve">
+    <value>renamed {0} categories</value>
+  </data>
+  <data name="AiNotify_CategoryDeleted" xml:space="preserve">
+    <value>Category {0} deleted</value>
+  </data>
+  <data name="AiNotify_CategoryDeletedP" xml:space="preserve">
+    <value>deleted the category {0}</value>
+  </data>
+  <data name="AiNotify_CategoriesDeletedTwo" xml:space="preserve">
+    <value>Categories {0} and {1} deleted</value>
+  </data>
+  <data name="AiNotify_CategoriesDeletedTwoP" xml:space="preserve">
+    <value>deleted the categories {0} and {1}</value>
+  </data>
+  <data name="AiNotify_CategoriesDeleted" xml:space="preserve">
+    <value>{0} categories deleted</value>
+  </data>
+  <data name="AiNotify_CategoriesDeletedP" xml:space="preserve">
+    <value>deleted {0} categories</value>
+  </data>
+  <data name="AiNotify_MigratedNone" xml:space="preserve">
+    <value>No linked files needed copying into the vault</value>
+  </data>
+  <data name="AiNotify_MigratedNoneP" xml:space="preserve">
+    <value>found no linked files to copy into the vault</value>
+  </data>
+  <data name="AiNotify_MigratedOne" xml:space="preserve">
+    <value>1 linked file copied into the vault</value>
+  </data>
+  <data name="AiNotify_MigratedOneP" xml:space="preserve">
+    <value>copied 1 linked file into the vault</value>
+  </data>
+  <data name="AiNotify_Migrated" xml:space="preserve">
+    <value>{0} linked files copied into the vault</value>
+  </data>
+  <data name="AiNotify_MigratedP" xml:space="preserve">
+    <value>copied {0} linked files into the vault</value>
+  </data>
+  <data name="AiNotify_VaultMoved" xml:space="preserve">
+    <value>Vault moved to {0}</value>
+  </data>
+  <data name="AiNotify_VaultMovedP" xml:space="preserve">
+    <value>moved the vault to {0}</value>
+  </data>
+  <data name="AiNotify_VaultMovedPlain" xml:space="preserve">
+    <value>Vault moved</value>
+  </data>
+  <data name="AiNotify_VaultMovedPlainP" xml:space="preserve">
+    <value>moved the vault</value>
+  </data>
+  <data name="AiNotify_Backup" xml:space="preserve">
+    <value>Backup written to {0}</value>
+  </data>
+  <data name="AiNotify_BackupP" xml:space="preserve">
+    <value>wrote a backup to {0}</value>
+  </data>
+  <data name="AiNotify_BackupPlain" xml:space="preserve">
+    <value>Backup written</value>
+  </data>
+  <data name="AiNotify_BackupPlainP" xml:space="preserve">
+    <value>wrote a backup</value>
+  </data>
+  <data name="AiNotify_Backups" xml:space="preserve">
+    <value>{0} backups written</value>
+  </data>
+  <data name="AiNotify_BackupsP" xml:space="preserve">
+    <value>wrote {0} backups</value>
+  </data>
+  <data name="Settings_Ai" xml:space="preserve">
+    <value>AI</value>
+  </data>
+  <data name="SettingsAi_ConnectGroup" xml:space="preserve">
+    <value>Connect an AI</value>
+  </data>
+  <data name="SettingsAi_ConnectHint" xml:space="preserve">
+    <value>Run a command once in PowerShell to let Claude Code or Codex search, read and organize your files in Cabinette.</value>
+  </data>
+  <data name="SettingsAi_ClaudeCode" xml:space="preserve">
+    <value>Claude Code</value>
+  </data>
+  <data name="SettingsAi_Codex" xml:space="preserve">
+    <value>Codex</value>
+  </data>
+  <data name="SettingsAi_Copy" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="SettingsAi_Copied" xml:space="preserve">
+    <value>Copied</value>
+  </data>
+  <data name="SettingsAi_CopyFailed" xml:space="preserve">
+    <value>Couldn't copy</value>
+  </data>
+  <data name="SettingsAi_CopyTooltip" xml:space="preserve">
+    <value>Copy the command</value>
+  </data>
+  <data name="SettingsAi_RemoveLabel" xml:space="preserve">
+    <value>To remove:</value>
+  </data>
+  <data name="SettingsAi_DevNote" xml:space="preserve">
+    <value>This dev run registers as “{0}” with its own data folder and this Cabinette.exe, so it never replaces your real registration. Claude Code keeps it only for the folder you run the command in.</value>
+  </data>
+  <data name="SettingsAi_ExeMissing" xml:space="preserve">
+    <value>cabinette-mcp.exe wasn't found in {0}. Reinstall Cabinette before running these commands.</value>
+  </data>
+  <data name="SettingsAi_ExeMissingDev" xml:space="preserve">
+    <value>cabinette-mcp.exe wasn't found in {0}. Build src/Cabinette.Mcp (dotnet build Cabinette.slnx) before running these commands.</value>
+  </data>
+  <data name="SettingsAi_ActivityGroup" xml:space="preserve">
+    <value>Activity</value>
+  </data>
+  <data name="SettingsAi_ActivityHint" xml:space="preserve">
+    <value>Every search, read and change an AI made in Cabinette, kept for a year. Click a name to open it.</value>
+  </data>
+  <data name="AiFilter_AllTools" xml:space="preserve">
+    <value>All tools</value>
+  </data>
+  <data name="AiFilter_ChangesOnly" xml:space="preserve">
+    <value>Changes only</value>
+  </data>
+  <data name="AiFilter_ReadingHeader" xml:space="preserve">
+    <value>Reading</value>
+  </data>
+  <data name="AiFilter_ChangesHeader" xml:space="preserve">
+    <value>Changes</value>
+  </data>
+  <data name="AiFilter_OtherHeader" xml:space="preserve">
+    <value>Other</value>
+  </data>
+  <data name="AiFilter_AllClients" xml:space="preserve">
+    <value>All clients</value>
+  </data>
+  <data name="AiFilter_DateLabel" xml:space="preserve">
+    <value>Date</value>
+  </data>
+  <data name="AiFilter_ToolLabel" xml:space="preserve">
+    <value>Tool</value>
+  </data>
+  <data name="AiFilter_ClientLabel" xml:space="preserve">
+    <value>Client</value>
+  </data>
+  <data name="AiActivity_EmptyTitle" xml:space="preserve">
+    <value>No AI activity yet</value>
+  </data>
+  <data name="AiActivity_EmptyHint" xml:space="preserve">
+    <value>Once Claude Code or Codex use Cabinette, everything they do shows up here.</value>
+  </data>
+  <data name="AiActivity_EmptyFilteredTitle" xml:space="preserve">
+    <value>Nothing matches these filters</value>
+  </data>
+  <data name="AiActivity_EmptyFilteredHint" xml:space="preserve">
+    <value>Try another date, tool or client.</value>
+  </data>
+  <data name="AiActivity_ShowOlder" xml:space="preserve">
+    <value>Show older</value>
+  </data>
+  <data name="AiActivity_Loading" xml:space="preserve">
+    <value>Loading…</value>
+  </data>
+  <data name="AiActivity_LoadFailed" xml:space="preserve">
+    <value>The activity log couldn't be read: {0}</value>
+  </data>
+  <data name="AiActivity_FileGone" xml:space="preserve">
+    <value>“{0}” is no longer in Cabinette.</value>
+  </data>
+  <data name="AiActivity_CategoryGone" xml:space="preserve">
+    <value>The category “{0}” no longer exists.</value>
+  </data>
+  <data name="AiActivity_FileOpenFailed" xml:space="preserve">
+    <value>“{0}” couldn't be opened: {1}</value>
+  </data>
+  <data name="AiActivity_CategoryOpenFailed" xml:space="preserve">
+    <value>The category “{0}” couldn't be opened: {1}</value>
+  </data>
+  <data name="AiActivity_Failed" xml:space="preserve">
+    <value>Failed: {0}</value>
+  </data>
+  <data name="AiActivity_FailedPlain" xml:space="preserve">
+    <value>Failed</value>
+  </data>
+  <data name="AiActivity_SearchedFor" xml:space="preserve">
+    <value>Searched for “{0}” ({1})</value>
+  </data>
+  <data name="AiActivity_SearchedForPlain" xml:space="preserve">
+    <value>Searched for “{0}”</value>
+  </data>
+  <data name="AiActivity_SearchedResults" xml:space="preserve">
+    <value>Searched ({0})</value>
+  </data>
+  <data name="AiActivity_SearchedPlain" xml:space="preserve">
+    <value>Searched</value>
+  </data>
+  <data name="AiActivity_ListedCategories" xml:space="preserve">
+    <value>Listed the categories</value>
+  </data>
+  <data name="AiActivity_ListedCategoriesIn" xml:space="preserve">
+    <value>Listed the categories in {0}</value>
+  </data>
+  <data name="AiActivity_ListedFiles" xml:space="preserve">
+    <value>Listed files</value>
+  </data>
+  <data name="AiActivity_ListedFilesIn" xml:space="preserve">
+    <value>Listed the files in {0}</value>
+  </data>
+  <data name="AiActivity_Matching" xml:space="preserve">
+    <value> matching “{0}”</value>
+  </data>
+  <data name="AiActivity_CountSuffix" xml:space="preserve">
+    <value> ({0})</value>
+  </data>
+  <data name="AiActivity_LookedUp" xml:space="preserve">
+    <value>Looked up {0}</value>
+  </data>
+  <data name="AiActivity_Read" xml:space="preserve">
+    <value>Read {0}</value>
+  </data>
+  <data name="AiActivity_ReadMore" xml:space="preserve">
+    <value>Read more of {0}</value>
+  </data>
+  <data name="AiActivity_ListedTags" xml:space="preserve">
+    <value>Listed the tags</value>
+  </data>
+  <data name="AiActivity_CheckedOperation" xml:space="preserve">
+    <value>Checked on a vault operation</value>
+  </data>
+  <data name="AiActivity_AddedTo" xml:space="preserve">
+    <value>Added {0} to {1}</value>
+  </data>
+  <data name="AiActivity_AddedLinksTo" xml:space="preserve">
+    <value>Added {0} to {1} as links</value>
+  </data>
+  <data name="AiActivity_Added" xml:space="preserve">
+    <value>Added {0}</value>
+  </data>
+  <data name="AiActivity_AddedLinks" xml:space="preserve">
+    <value>Added {0} as links</value>
+  </data>
+  <data name="AiActivity_CreatedNote" xml:space="preserve">
+    <value>Created a note</value>
+  </data>
+  <data name="AiActivity_CreatedNoteIn" xml:space="preserve">
+    <value>Created a note in {0}</value>
+  </data>
+  <data name="AiActivity_Tagged" xml:space="preserve">
+    <value>Tagged {0} with {1}</value>
+  </data>
+  <data name="AiActivity_TaggedPlain" xml:space="preserve">
+    <value>Tagged {0}</value>
+  </data>
+  <data name="AiActivity_Untagged" xml:space="preserve">
+    <value>Removed {1} from {0}</value>
+  </data>
+  <data name="AiActivity_UntaggedPlain" xml:space="preserve">
+    <value>Removed tags from {0}</value>
+  </data>
+  <data name="AiActivity_AlsoAdded" xml:space="preserve">
+    <value>Added {0} to another category</value>
+  </data>
+  <data name="AiActivity_AlsoAddedTo" xml:space="preserve">
+    <value>Also added {0} to {1}</value>
+  </data>
+  <data name="AiActivity_RemovedFromCategory" xml:space="preserve">
+    <value>Removed {0} from a category</value>
+  </data>
+  <data name="AiActivity_RemovedFrom" xml:space="preserve">
+    <value>Removed {0} from {1}</value>
+  </data>
+  <data name="AiActivity_Moved" xml:space="preserve">
+    <value>Moved {0} to another category</value>
+  </data>
+  <data name="AiActivity_MovedTo" xml:space="preserve">
+    <value>Moved {0} to {1}</value>
+  </data>
+  <data name="AiActivity_RenamedFile" xml:space="preserve">
+    <value>Renamed {0} to “{1}”</value>
+  </data>
+  <data name="AiActivity_RenamedFileTo" xml:space="preserve">
+    <value>Renamed a file to {0}</value>
+  </data>
+  <data name="AiActivity_RenamedFilePlain" xml:space="preserve">
+    <value>Renamed {0}</value>
+  </data>
+  <data name="AiActivity_Deleted" xml:space="preserve">
+    <value>Deleted {0}</value>
+  </data>
+  <data name="AiActivity_Starred" xml:space="preserve">
+    <value>Starred {0}</value>
+  </data>
+  <data name="AiActivity_Unstarred" xml:space="preserve">
+    <value>Unstarred {0}</value>
+  </data>
+  <data name="AiActivity_CreatedCategory" xml:space="preserve">
+    <value>Created the category {0}</value>
+  </data>
+  <data name="AiActivity_CreatedCategoryPlain" xml:space="preserve">
+    <value>Created a category</value>
+  </data>
+  <data name="AiActivity_RenamedCategory" xml:space="preserve">
+    <value>Renamed the category {0} to “{1}”</value>
+  </data>
+  <data name="AiActivity_RenamedCategoryTo" xml:space="preserve">
+    <value>Renamed a category to {0}</value>
+  </data>
+  <data name="AiActivity_RenamedCategoryNamed" xml:space="preserve">
+    <value>Renamed the category {0}</value>
+  </data>
+  <data name="AiActivity_RenamedCategoryPlain" xml:space="preserve">
+    <value>Renamed a category</value>
+  </data>
+  <data name="AiActivity_DeletedCategory" xml:space="preserve">
+    <value>Deleted the category {0}</value>
+  </data>
+  <data name="AiActivity_DeletedCategoryPlain" xml:space="preserve">
+    <value>Deleted a category</value>
+  </data>
+  <data name="AiActivity_MovingVault" xml:space="preserve">
+    <value>Started moving the vault to {0}</value>
+  </data>
+  <data name="AiActivity_MovingVaultPlain" xml:space="preserve">
+    <value>Started moving the vault</value>
+  </data>
+  <data name="AiActivity_Migrating" xml:space="preserve">
+    <value>Started copying linked files into the vault</value>
+  </data>
+  <data name="AiActivity_BackingUp" xml:space="preserve">
+    <value>Started a backup to {0}</value>
+  </data>
+  <data name="AiActivity_BackingUpPlain" xml:space="preserve">
+    <value>Started a backup</value>
+  </data>
+  <data name="AiActivity_Showed" xml:space="preserve">
+    <value>Showed {0} in Cabinette</value>
+  </data>
+  <data name="AiActivity_ShowedWindow" xml:space="preserve">
+    <value>Opened Cabinette</value>
+  </data>
+  <data name="AiActivity_Quoted" xml:space="preserve">
+    <value>“{0}”</value>
+  </data>
+  <data name="AiActivity_ListSeparator" xml:space="preserve">
+    <value>: </value>
+  </data>
+  <data name="AiActivity_NameSeparator" xml:space="preserve">
+    <value>, </value>
+  </data>
+  <data name="AiActivity_AndMore" xml:space="preserve">
+    <value> and {0} more</value>
+  </data>
+  <data name="AiActivity_NoFiles" xml:space="preserve">
+    <value>no files</value>
+  </data>
+  <data name="AiActivity_OneFile" xml:space="preserve">
+    <value>1 file</value>
+  </data>
+  <data name="AiActivity_Files" xml:space="preserve">
+    <value>{0} files</value>
+  </data>
+  <data name="AiActivity_NoResults" xml:space="preserve">
+    <value>no results</value>
+  </data>
+  <data name="AiActivity_OneResult" xml:space="preserve">
+    <value>1 result</value>
+  </data>
+  <data name="AiActivity_Results" xml:space="preserve">
+    <value>{0} results</value>
+  </data>
+  <data name="AiActivity_ACategory" xml:space="preserve">
+    <value>a category</value>
+  </data>
+  <data name="AiTool_search" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="AiTool_list_categories" xml:space="preserve">
+    <value>List categories</value>
+  </data>
+  <data name="AiTool_list_files" xml:space="preserve">
+    <value>List files</value>
+  </data>
+  <data name="AiTool_get_files" xml:space="preserve">
+    <value>Get file details</value>
+  </data>
+  <data name="AiTool_read_file" xml:space="preserve">
+    <value>Read file contents</value>
+  </data>
+  <data name="AiTool_list_tags" xml:space="preserve">
+    <value>List tags</value>
+  </data>
+  <data name="AiTool_get_operation_status" xml:space="preserve">
+    <value>Vault operation status</value>
+  </data>
+  <data name="AiTool_add_files" xml:space="preserve">
+    <value>Add files</value>
+  </data>
+  <data name="AiTool_create_note" xml:space="preserve">
+    <value>Create note</value>
+  </data>
+  <data name="AiTool_tag_files" xml:space="preserve">
+    <value>Tag files</value>
+  </data>
+  <data name="AiTool_untag_files" xml:space="preserve">
+    <value>Untag files</value>
+  </data>
+  <data name="AiTool_add_to_category" xml:space="preserve">
+    <value>Add to category</value>
+  </data>
+  <data name="AiTool_remove_from_category" xml:space="preserve">
+    <value>Remove from category</value>
+  </data>
+  <data name="AiTool_move_files" xml:space="preserve">
+    <value>Move files</value>
+  </data>
+  <data name="AiTool_rename_file" xml:space="preserve">
+    <value>Rename file</value>
+  </data>
+  <data name="AiTool_delete_files" xml:space="preserve">
+    <value>Delete files</value>
+  </data>
+  <data name="AiTool_star_files" xml:space="preserve">
+    <value>Star files</value>
+  </data>
+  <data name="AiTool_unstar_files" xml:space="preserve">
+    <value>Unstar files</value>
+  </data>
+  <data name="AiTool_create_category" xml:space="preserve">
+    <value>Create category</value>
+  </data>
+  <data name="AiTool_rename_category" xml:space="preserve">
+    <value>Rename category</value>
+  </data>
+  <data name="AiTool_delete_category" xml:space="preserve">
+    <value>Delete category</value>
+  </data>
+  <data name="AiTool_move_vault" xml:space="preserve">
+    <value>Move vault</value>
+  </data>
+  <data name="AiTool_migrate_pointers" xml:space="preserve">
+    <value>Copy linked files into the vault</value>
+  </data>
+  <data name="AiTool_create_backup" xml:space="preserve">
+    <value>Back up</value>
+  </data>
+  <data name="AiTool_show_in_cabinette" xml:space="preserve">
+    <value>Show in Cabinette</value>
+  </data>
+</root>

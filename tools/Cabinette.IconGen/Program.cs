@@ -1,0 +1,297 @@
+using System.Globalization;
+using System.IO;
+using System.Text;
+using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+
+namespace Cabinette.IconGen;
+
+/// <summary>
+/// Renders Cabinette's icons from the logo SVGs in <c>assets/logo</c>:
+/// <list type="bullet">
+/// <item><c>assets/icons/Cabinette.ico</c>: 16, 20, 24, 32, 40, 48, 64 and 256 px (app, taskbar, title bar).</item>
+/// <item><c>assets/icons/tray-idle|syncing|paused|error.ico</c>: 16, 20, 24, 32, 48 px with a status badge (idle has none).</item>
+/// <item><c>assets/icons/CabinetteLogo.xaml</c>: the logo as vector <c>DrawingImage</c> resources for the UI.</item>
+/// <item><c>assets/icons/preview-*.png</c>: contact sheets for checking the result by eye.</item>
+/// </list>
+/// <c>cabinette-256.svg</c> is used for sizes of 32 px and up, <c>cabinette-16.svg</c> (when present) for 24 px and below.
+/// Usage: <c>Cabinette.IconGen [--root &lt;repo folder&gt;]</c>. The repo root is found from the current folder by default.
+/// </summary>
+internal static class Program
+{
+    private static readonly int[] AppSizes = [16, 20, 24, 32, 40, 48, 64, 256];
+    private static readonly int[] TraySizes = [16, 20, 24, 32, 48];
+
+    [STAThread]
+    private static int Main(string[] args)
+    {
+        try
+        {
+            var root = FindRoot(args);
+            var logoFolder = Path.Combine(root, "assets", "logo");
+            var outFolder = Path.Combine(root, "assets", "icons");
+            Directory.CreateDirectory(outFolder);
+
+            var large = SvgLogo.Load(Path.Combine(logoFolder, "cabinette-256.svg"));
+            var smallPath = Path.Combine(logoFolder, "cabinette-16.svg");
+            var small = File.Exists(smallPath) ? SvgLogo.Load(smallPath) : large;
+            foreach (var logo in new[] { large, small }.Distinct())
+            {
+                foreach (var warning in logo.Warnings)
+                {
+                    Console.WriteLine($"warning: {Path.GetFileName(logo.SourcePath)}: {warning}");
+                }
+            }
+
+            SvgLogo For(int size) => size <= 24 ? small : large;
+
+            // App icon
+            var appImages = AppSizes.Select(size => IconRenderer.Render(For(size), size)).ToList();
+            Save(Path.Combine(outFolder, "Cabinette.ico"), path => IcoFile.Write(path, appImages));
+
+            // Tray icons
+            var variants = new (string Name, TrayBadge Badge)[]
+            {
+                ("idle", TrayBadge.None),
+                ("syncing", TrayBadge.Syncing),
+                ("paused", TrayBadge.Paused),
+                ("error", TrayBadge.Error),
+            };
+            var trayImages = new Dictionary<string, List<BitmapSource>>();
+            foreach (var (name, badge) in variants)
+            {
+                var images = TraySizes.Select(size => IconRenderer.Render(For(size), size, badge)).ToList();
+                trayImages[name] = images;
+                Save(Path.Combine(outFolder, $"tray-{name}.ico"), path => IcoFile.Write(path, images));
+            }
+
+            // Vector logo for the UI
+            Save(Path.Combine(outFolder, "CabinetteLogo.xaml"), path => File.WriteAllText(path, LogoXaml(large, small), new UTF8Encoding(false)));
+
+            // Previews
+            Save(Path.Combine(outFolder, "preview-app.png"), path => SavePng(path, AppPreview(appImages)));
+            Save(Path.Combine(outFolder, "preview-tray.png"), path => SavePng(path, TrayPreview(variants.Select(v => (v.Name, trayImages[v.Name])).ToList())));
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine("error: " + ex.Message);
+            return 1;
+        }
+    }
+
+    private static string FindRoot(string[] args)
+    {
+        for (var i = 0; i + 1 < args.Length; i++)
+        {
+            if (args[i] == "--root")
+            {
+                return Path.GetFullPath(args[i + 1]);
+            }
+        }
+
+        foreach (var start in new[] { Environment.CurrentDirectory, AppContext.BaseDirectory })
+        {
+            for (var dir = new DirectoryInfo(start); dir is not null; dir = dir.Parent)
+            {
+                if (File.Exists(Path.Combine(dir.FullName, "Cabinette.slnx")))
+                {
+                    return dir.FullName;
+                }
+            }
+        }
+
+        throw new DirectoryNotFoundException("Could not find the repo root (Cabinette.slnx). Pass --root <folder>.");
+    }
+
+    private static void Save(string path, Action<string> write)
+    {
+        write(path);
+        Console.WriteLine($"wrote {path} ({new FileInfo(path).Length:N0} bytes)");
+    }
+
+    // ------------------------------------------------------------------ vector logo
+
+    private static string LogoXaml(SvgLogo large, SvgLogo small)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine("<!--");
+        builder.AppendLine("  GENERATED by tools/Cabinette.IconGen from assets/logo/*.svg. Do not edit; change the SVG and run the tool again.");
+        builder.AppendLine("  The logo as vector images (its brand colors are part of the artwork, not theme tokens).");
+        builder.AppendLine("  Cab.Logo: the full logo (sizes from 32 px). Cab.LogoSmall: the version drawn for 16 px (title bar, small sizes).");
+        builder.AppendLine("-->");
+        builder.AppendLine("<ResourceDictionary xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\"");
+        builder.AppendLine("                    xmlns:x=\"http://schemas.microsoft.com/winfx/2006/xaml\">");
+        AppendLogo(builder, "Cab.Logo", large);
+        AppendLogo(builder, "Cab.LogoSmall", small);
+        builder.AppendLine("</ResourceDictionary>");
+        return builder.ToString();
+    }
+
+    private static void AppendLogo(StringBuilder builder, string key, SvgLogo logo)
+    {
+        var box = logo.ViewBox;
+        string N(double v) => v.ToString("0.###", CultureInfo.InvariantCulture);
+        var bounds = $"M{N(box.Left)},{N(box.Top)}H{N(box.Right)}V{N(box.Bottom)}H{N(box.Left)}Z";
+
+        builder.AppendLine();
+        builder.AppendLine($"    <DrawingImage x:Key=\"{key}\">");
+        builder.AppendLine("        <DrawingImage.Drawing>");
+        builder.AppendLine($"            <DrawingGroup ClipGeometry=\"{bounds}\">");
+        builder.AppendLine($"                <GeometryDrawing Brush=\"#00000000\" Geometry=\"{bounds}\" />");
+        foreach (var shape in logo.Shapes)
+        {
+            var brush = $"#{shape.Fill.A:X2}{shape.Fill.R:X2}{shape.Fill.G:X2}{shape.Fill.B:X2}";
+            var figures = System.Text.RegularExpressions.Regex.Replace(
+                shape.Geometry.Figures.ToString(CultureInfo.InvariantCulture),
+                @"-?\d+\.\d+(?:E[+-]?\d+)?",
+                m => N(double.Parse(m.Value, NumberStyles.Float, CultureInfo.InvariantCulture)));
+            var fillRule = shape.Geometry.FillRule == FillRule.Nonzero ? "Nonzero" : "EvenOdd";
+            if (shape.Geometry.Transform is MatrixTransform { Matrix: var m } && !m.IsIdentity)
+            {
+                builder.AppendLine($"                <GeometryDrawing Brush=\"{brush}\">");
+                builder.AppendLine("                    <GeometryDrawing.Geometry>");
+                builder.AppendLine($"                        <PathGeometry FillRule=\"{fillRule}\" Figures=\"{figures}\" Transform=\"{N(m.M11)},{N(m.M12)},{N(m.M21)},{N(m.M22)},{N(m.OffsetX)},{N(m.OffsetY)}\" />");
+                builder.AppendLine("                    </GeometryDrawing.Geometry>");
+                builder.AppendLine("                </GeometryDrawing>");
+            }
+            else
+            {
+                var prefix = shape.Geometry.FillRule == FillRule.Nonzero ? "F1 " : "F0 ";
+                builder.AppendLine($"                <GeometryDrawing Brush=\"{brush}\" Geometry=\"{prefix}{figures}\" />");
+            }
+        }
+
+        builder.AppendLine("            </DrawingGroup>");
+        builder.AppendLine("        </DrawingImage.Drawing>");
+        builder.AppendLine("    </DrawingImage>");
+    }
+
+    // ------------------------------------------------------------------ previews
+
+    private static readonly Color LightBackground = Color.FromRgb(0xFB, 0xF3, 0xE4);
+    private static readonly Color DarkBackground = Color.FromRgb(0x0B, 0x14, 0x1A);
+    private static readonly Color LightTaskbar = Color.FromRgb(0xEE, 0xEE, 0xEE);
+    private static readonly Color DarkTaskbar = Color.FromRgb(0x1C, 0x1C, 0x1C);
+
+    private static BitmapSource AppPreview(IReadOnlyList<BitmapSource> images)
+    {
+        const int pad = 24;
+        var width = pad + images.Sum(i => i.PixelWidth + pad);
+        var rowHeight = 256 + 40;
+        var visual = new DrawingVisual();
+        using (var dc = visual.RenderOpen())
+        {
+            var rows = new[] { (LightBackground, Color.FromRgb(0x3D, 0x32, 0x22)), (DarkBackground, Color.FromRgb(0xE9, 0xED, 0xEF)) };
+            for (var row = 0; row < rows.Length; row++)
+            {
+                var (background, text) = rows[row];
+                var top = row * rowHeight;
+                dc.DrawRectangle(new SolidColorBrush(background), null, new Rect(0, top, width, rowHeight));
+                var x = pad;
+                foreach (var image in images)
+                {
+                    var y = top + 16 + (256 - image.PixelHeight);
+                    dc.DrawImage(image, new Rect(x, y, image.PixelWidth, image.PixelHeight));
+                    Label(dc, image.PixelWidth.ToString(CultureInfo.InvariantCulture), x, top + 16 + 256 + 4, text);
+                    x += image.PixelWidth + pad;
+                }
+            }
+        }
+
+        return Snapshot(visual, width, rowHeight * 2);
+    }
+
+    private static BitmapSource TrayPreview(IReadOnlyList<(string Name, List<BitmapSource> Images)> variants)
+    {
+        const int zoom = 8;
+        const int cellPad = 14;
+        var actualWidth = TraySizes.Sum(s => s + cellPad) + cellPad;
+        var zoomWidth = (16 * zoom) + cellPad + (24 * zoom) + cellPad;
+        var rowHeight = Math.Max(24 * zoom, 48) + 44;
+        var width = 90 + (2 * actualWidth) + zoomWidth + cellPad;
+        var height = (variants.Count * rowHeight) + 30;
+        var visual = new DrawingVisual();
+        using (var dc = visual.RenderOpen())
+        {
+            dc.DrawRectangle(new SolidColorBrush(Color.FromRgb(0xF7, 0xF7, 0xF7)), null, new Rect(0, 0, width, height));
+            Label(dc, "actual size on a light / dark taskbar, then 16 px and 24 px at 8x", 12, 6, Colors.Black);
+            for (var row = 0; row < variants.Count; row++)
+            {
+                var (name, images) = variants[row];
+                var top = 30 + (row * rowHeight);
+                Label(dc, name, 12, top + 20, Colors.Black);
+                var x = 90.0;
+                foreach (var background in new[] { LightTaskbar, DarkTaskbar })
+                {
+                    dc.DrawRectangle(new SolidColorBrush(background), null, new Rect(x, top, actualWidth, 64));
+                    var cx = x + cellPad;
+                    foreach (var image in images)
+                    {
+                        dc.DrawImage(image, new Rect(cx, top + 8 + (48 - image.PixelHeight), image.PixelWidth, image.PixelHeight));
+                        cx += image.PixelWidth + cellPad;
+                    }
+
+                    x += actualWidth;
+                }
+
+                x += cellPad;
+                foreach (var size in new[] { 16, 24 })
+                {
+                    var image = images.First(i => i.PixelWidth == size);
+                    dc.DrawRectangle(new SolidColorBrush(DarkTaskbar), null, new Rect(x, top, size * zoom, size * zoom));
+                    dc.DrawImage(Magnify(image, zoom), new Rect(x, top, size * zoom, size * zoom));
+                    x += (size * zoom) + cellPad;
+                }
+            }
+        }
+
+        return Snapshot(visual, width, height);
+    }
+
+    /// <summary>Pixel-exact enlargement (each pixel becomes a factor × factor block) for inspecting small icons.</summary>
+    private static BitmapSource Magnify(BitmapSource image, int factor)
+    {
+        var source = new FormatConvertedBitmap(image, PixelFormats.Pbgra32, null, 0);
+        var width = source.PixelWidth;
+        var height = source.PixelHeight;
+        var pixels = new int[width * height];
+        source.CopyPixels(pixels, width * 4, 0);
+        var big = new int[width * factor * height * factor];
+        for (var y = 0; y < height * factor; y++)
+        {
+            for (var x = 0; x < width * factor; x++)
+            {
+                big[(y * width * factor) + x] = pixels[((y / factor) * width) + (x / factor)];
+            }
+        }
+
+        var result = BitmapSource.Create(width * factor, height * factor, 96, 96, PixelFormats.Pbgra32, null, big, width * factor * 4);
+        result.Freeze();
+        return result;
+    }
+
+    private static void Label(DrawingContext dc, string text, double x, double y, Color color)
+    {
+        var formatted = new FormattedText(
+            text,
+            CultureInfo.InvariantCulture,
+            FlowDirection.LeftToRight,
+            new Typeface("Segoe UI"),
+            12,
+            new SolidColorBrush(color),
+            1.0);
+        dc.DrawText(formatted, new Point(x, y));
+    }
+
+    private static BitmapSource Snapshot(Visual visual, int width, int height)
+    {
+        var bitmap = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
+        bitmap.Render(visual);
+        bitmap.Freeze();
+        return bitmap;
+    }
+
+    private static void SavePng(string path, BitmapSource image) => File.WriteAllBytes(path, IcoFile.EncodePng(image));
+}

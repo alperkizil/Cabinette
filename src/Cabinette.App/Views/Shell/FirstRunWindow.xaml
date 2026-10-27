@@ -1,0 +1,140 @@
+<ui:FluentWindow x:Class="Cabinette.App.Views.Shell.FirstRunWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                 xmlns:loc="clr-namespace:Cabinette.App.Localization"
+                 xmlns:dialogs="clr-namespace:Cabinette.App.Views.Dialogs"
+                 Title="{loc:Loc FirstRun_Title}"
+                 Icon="pack://application:,,,/Assets/Cabinette.ico"
+                 Width="820"
+                 Height="540"
+                 MinWidth="720"
+                 MinHeight="500"
+                 Background="{DynamicResource Cab.WindowBackground}"
+                 ExtendsContentIntoTitleBar="True"
+                 FontFamily="{DynamicResource Shell.Font}"
+                 FontWeight="{DynamicResource Cab.FontWeight.Body}"
+                 Foreground="{DynamicResource Cab.TextPrimary}"
+                 ResizeMode="CanMinimize"
+                 TextOptions.TextFormattingMode="Ideal"
+                 UseLayoutRounding="True"
+                 WindowBackdropType="None"
+                 WindowCornerPreference="Round"
+                 WindowStartupLocation="CenterScreen">
+    <!-- DataContext: FirstRunViewModel -->
+    <Grid x:Name="Root" Background="{DynamicResource Cab.SidebarBackground}" LayoutTransform="{DynamicResource Cab.UiScaleTransform}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="300" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Left: brand panel -->
+        <Border Background="{DynamicResource Cab.HeaderBackground}">
+            <Grid>
+                <StackPanel Margin="36,0" VerticalAlignment="Center">
+                    <Image Width="64" Height="64" HorizontalAlignment="Left" Source="{StaticResource Cab.Logo}" />
+
+                    <TextBlock Margin="0,22,0,0"
+                               FontFamily="{DynamicResource Shell.FontDisplay}"
+                               FontSize="30"
+                               FontWeight="{DynamicResource Cab.FontWeight.Strong}"
+                               Foreground="{DynamicResource Cab.TextPrimary}"
+                               Text="{loc:Loc App_Name}" />
+                    <TextBlock Margin="0,6,0,0" Style="{StaticResource Shell.Text.Body}" Foreground="{DynamicResource Cab.TextSecondary}" Text="{loc:Loc App_Tagline}" />
+
+                    <StackPanel Margin="0,34,0,0">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Margin="0,0,12,0" VerticalAlignment="Top" FontSize="18" Foreground="{DynamicResource Cab.Accent}" Symbol="ArrowDownload20" />
+                            <TextBlock Width="210" Style="{StaticResource Shell.Text.Secondary}" Foreground="{DynamicResource Cab.TextPrimary}" Text="{loc:Loc FirstRun_Point1}" />
+                        </StackPanel>
+                        <StackPanel Margin="0,14,0,0" Orientation="Horizontal">
+                            <ui:SymbolIcon Margin="0,0,12,0" VerticalAlignment="Top" FontSize="18" Foreground="{DynamicResource Cab.Accent}" Symbol="Link20" />
+                            <TextBlock Width="210" Style="{StaticResource Shell.Text.Secondary}" Foreground="{DynamicResource Cab.TextPrimary}" Text="{loc:Loc FirstRun_Point2}" />
+                        </StackPanel>
+                        <StackPanel Margin="0,14,0,0" Orientation="Horizontal">
+                            <ui:SymbolIcon Margin="0,0,12,0" VerticalAlignment="Top" FontSize="18" Foreground="{DynamicResource Cab.Accent}" Symbol="Tag20" />
+                            <TextBlock Width="210" Style="{StaticResource Shell.Text.Secondary}" Foreground="{DynamicResource Cab.TextPrimary}" Text="{loc:Loc FirstRun_Point3}" />
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Right: vault setup -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <ui:TitleBar Height="38"
+                         Background="Transparent"
+                         ButtonsForeground="{DynamicResource Cab.TextPrimary}"
+                         ShowMaximize="False" />
+
+            <StackPanel Grid.Row="1" Margin="44,10,44,40" VerticalAlignment="Center">
+                <TextBlock Style="{StaticResource Shell.Text.Title}" FontSize="26" Text="{loc:Loc FirstRun_Title}" />
+                <TextBlock Margin="0,12,0,0" Style="{StaticResource Shell.Text.Body}" Foreground="{DynamicResource Cab.TextSecondary}" Text="{loc:Loc FirstRun_Body}" />
+
+                <TextBlock Margin="0,30,0,8" FontSize="13" FontWeight="{DynamicResource Cab.FontWeight.Strong}" Foreground="{DynamicResource Cab.TextPrimary}" Text="{loc:Loc FirstRun_VaultLabel}" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="PathBox" Style="{StaticResource Shell.TextBox}" Text="{Binding VaultPath, UpdateSourceTrigger=PropertyChanged}" />
+                    <Button Grid.Column="1" Margin="8,0,0,0" Command="{Binding BrowseCommand}" Style="{StaticResource Shell.SecondaryButton}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Margin="0,0,8,0" FontSize="16" Symbol="FolderOpen20" />
+                            <TextBlock Text="{loc:Loc FirstRun_Browse}" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+                <TextBlock Margin="2,8,0,0" Style="{StaticResource Shell.Text.Secondary}" FontSize="12.5" Text="{loc:Loc FirstRun_Hint}" />
+                <TextBlock MinHeight="18" Margin="2,10,0,0" Style="{StaticResource Shell.Text.Error}" Text="{Binding Error}" />
+
+                <Grid Margin="0,18,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <!-- Restore an existing library (another PC, or after reinstalling) instead of starting empty. -->
+                    <Button MinHeight="42"
+                            Command="{Binding RestoreCommand}"
+                            Style="{StaticResource Shell.SecondaryButton}"
+                            ToolTip="{loc:Loc FirstRun_RestoreHint}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Margin="0,0,8,0" FontSize="16" Symbol="ArchiveArrowBack20" />
+                            <TextBlock Text="{loc:Loc FirstRun_Restore}" />
+                        </StackPanel>
+                    </Button>
+                    <ProgressBar Grid.Column="1"
+                                 Width="90"
+                                 Margin="0,0,16,0"
+                                 HorizontalAlignment="Right"
+                                 VerticalAlignment="Center"
+                                 IsIndeterminate="True"
+                                 Style="{StaticResource Shell.ProgressBar}"
+                                 Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
+                    <Button Grid.Column="2"
+                            MinWidth="150"
+                            MinHeight="42"
+                            Command="{Binding StartCommand}"
+                            Style="{StaticResource Shell.AccentButton}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{loc:Loc FirstRun_Start}" />
+                            <ui:SymbolIcon Margin="8,0,0,0" FontSize="16" Symbol="ArrowRight16" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </StackPanel>
+        </Grid>
+
+        <!-- Dialogs of the restore flow (over the whole window) -->
+        <dialogs:DialogHost x:Name="Dialogs"
+                            Grid.ColumnSpan="2"
+                            Panel.ZIndex="10"
+                            DataContext="{Binding Dialogs}"
+                            Visibility="{Binding IsAnyOpen, Converter={StaticResource BoolToVisibility}}" />
+    </Grid>
+</ui:FluentWindow>

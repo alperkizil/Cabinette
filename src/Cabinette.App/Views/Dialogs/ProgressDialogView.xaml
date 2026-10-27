@@ -1,0 +1,59 @@
+<UserControl x:Class="Cabinette.App.Views.Dialogs.ProgressDialogView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:loc="clr-namespace:Cabinette.App.Localization">
+    <!-- DataContext: ProgressDialogViewModel -->
+    <StackPanel Margin="24,22,24,20">
+        <TextBlock Style="{StaticResource Shell.Text.DialogTitle}" Text="{Binding Title}" />
+        <TextBlock Margin="0,4,0,0"
+                   Style="{StaticResource Shell.Text.Secondary}"
+                   Text="{Binding StepText}"
+                   Visibility="{Binding HasStep, Converter={StaticResource BoolToVisibility}}" />
+
+        <Grid Margin="0,20,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid Width="36" Height="36" Margin="0,0,12,0" VerticalAlignment="Center">
+                <Ellipse Fill="{DynamicResource Cab.TagChipBackground}" />
+                <ui:SymbolIcon FontSize="18" Foreground="{DynamicResource Cab.TagChipText}" Symbol="ArrowSync20" />
+            </Grid>
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <TextBlock FontSize="14"
+                           FontWeight="{DynamicResource Cab.FontWeight.Strong}"
+                           Foreground="{DynamicResource Cab.TextPrimary}"
+                           Text="{Binding StageText}"
+                           TextTrimming="CharacterEllipsis" />
+                <TextBlock Margin="0,2,0,0"
+                           FontSize="12.5"
+                           Foreground="{DynamicResource Cab.TextSecondary}"
+                           Text="{Binding CountText}"
+                           TextTrimming="CharacterEllipsis"
+                           Visibility="{Binding CountText, Converter={StaticResource NullToVisibility}}" />
+            </StackPanel>
+        </Grid>
+
+        <ProgressBar Height="6"
+                     Margin="0,16,0,0"
+                     IsIndeterminate="{Binding IsIndeterminate}"
+                     Style="{StaticResource Shell.ProgressBar}"
+                     Value="{Binding Fraction, Mode=OneWay}" />
+
+        <TextBlock MinHeight="18"
+                   Margin="0,10,0,0"
+                   FontSize="12.5"
+                   Foreground="{DynamicResource Cab.TextSecondary}"
+                   Text="{Binding CurrentFile}"
+                   TextTrimming="CharacterEllipsis"
+                   ToolTip="{Binding CurrentFile}" />
+
+        <Button Margin="0,14,0,0"
+                HorizontalAlignment="Right"
+                Command="{Binding RequestCancelCommand}"
+                Content="{loc:Loc Common_Cancel}"
+                Style="{StaticResource Shell.SecondaryButton}"
+                Visibility="{Binding CanCancel, Converter={StaticResource BoolToVisibility}}" />
+    </StackPanel>
+</UserControl>

@@ -1,0 +1,128 @@
+<UserControl x:Class="Cabinette.App.Views.Dialogs.QuickSwitcherView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:loc="clr-namespace:Cabinette.App.Localization"
+             xmlns:shell="clr-namespace:Cabinette.App.Views.Shell"
+             xmlns:vm="clr-namespace:Cabinette.App.ViewModels.Dialogs">
+    <!-- DataContext: QuickSwitcherViewModel. Ctrl+K: search box, best matches (or recent categories), keyboard hints. -->
+    <UserControl.Resources>
+        <DataTemplate DataType="{x:Type vm:QuickSwitcherCategoryRow}">
+            <Grid Height="48" Background="Transparent">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <shell:CategoryAvatar VerticalAlignment="Center" IconKey="{Binding IconKey}" Size="32" Source="{Binding Icon}" />
+                <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                    <TextBlock FontSize="14.5" Foreground="{DynamicResource Cab.TextPrimary}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Margin="0,1,0,0"
+                               FontSize="12.5"
+                               Foreground="{DynamicResource Cab.TextSecondary}"
+                               Text="{Binding Detail}"
+                               TextTrimming="CharacterEllipsis"
+                               Visibility="{Binding HasDetail, Converter={StaticResource BoolToVisibility}}" />
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vm:QuickSwitcherFileRow}">
+            <Grid Height="48" Background="Transparent">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <!-- The file's type icon, on the same tile as in search results -->
+                <Border Width="32" Height="32" VerticalAlignment="Center" Background="{DynamicResource Cab.HeaderBackground}" CornerRadius="7">
+                    <ui:SymbolIcon FontSize="17" Foreground="{DynamicResource Cab.TextSecondary}" Symbol="{Binding Symbol}" />
+                </Border>
+                <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                    <TextBlock FontSize="14.5" Foreground="{DynamicResource Cab.TextPrimary}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                    <DockPanel Margin="0,1,0,0">
+                        <Border Margin="6,0,0,0"
+                                Padding="6,0"
+                                VerticalAlignment="Center"
+                                Background="{DynamicResource Cab.MissingBadgeBackground}"
+                                CornerRadius="4"
+                                DockPanel.Dock="Right"
+                                Visibility="{Binding IsMissing, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock FontSize="11" Foreground="{DynamicResource Cab.MissingBadgeText}" Text="{loc:Loc Search_Missing}" />
+                        </Border>
+                        <ui:SymbolIcon Margin="0,0,4,0"
+                                       DockPanel.Dock="Left"
+                                       FontSize="13"
+                                       Foreground="{DynamicResource Cab.TextSecondary}"
+                                       Symbol="Link16"
+                                       AutomationProperties.Name="{loc:Loc Search_PointerTooltip}"
+                                       ToolTip="{loc:Loc Search_PointerTooltip}"
+                                       Visibility="{Binding IsPointer, Converter={StaticResource BoolToVisibility}}" />
+                        <TextBlock VerticalAlignment="Center"
+                                   FontSize="12.5"
+                                   Foreground="{DynamicResource Cab.TextSecondary}"
+                                   Text="{Binding Detail}"
+                                   TextTrimming="CharacterEllipsis" />
+                    </DockPanel>
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <DockPanel>
+        <!-- Search box -->
+        <Grid Height="44" Margin="16,16,16,10" DockPanel.Dock="Top">
+            <Border Background="{DynamicResource Cab.SearchBoxBackground}" CornerRadius="22" />
+            <ui:SymbolIcon Margin="16,0,0,0"
+                           HorizontalAlignment="Left"
+                           FontSize="18"
+                           Foreground="{DynamicResource Cab.TextSecondary}"
+                           Symbol="Search20" />
+            <TextBox x:Name="SearchBox"
+                     Margin="46,0,16,0"
+                     AutomationProperties.Name="{Binding Title}"
+                     FontSize="15"
+                     PreviewKeyDown="OnSearchPreviewKeyDown"
+                     Style="{StaticResource Shell.BareTextBox}"
+                     Tag="{loc:Loc QuickSwitcher_Placeholder}"
+                     Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}" />
+        </Grid>
+
+        <!-- Keyboard hints -->
+        <Border BorderBrush="{DynamicResource Cab.Divider}" BorderThickness="0,1,0,0" DockPanel.Dock="Bottom">
+            <TextBlock Margin="22,10,22,12"
+                       FontSize="12"
+                       Foreground="{DynamicResource Cab.TextSecondary}"
+                       Text="{loc:Loc QuickSwitcher_Hint}"
+                       TextTrimming="CharacterEllipsis" />
+        </Border>
+
+        <TextBlock Margin="24,2,24,4"
+                   DockPanel.Dock="Top"
+                   Style="{StaticResource Shell.Text.Section}"
+                   Text="{loc:Loc QuickSwitcher_Recent}"
+                   Visibility="{Binding IsShowingRecent, Converter={StaticResource BoolToVisibility}}" />
+
+        <TextBlock Margin="24,14,24,22"
+                   HorizontalAlignment="Center"
+                   DockPanel.Dock="Top"
+                   Style="{StaticResource Shell.Text.Secondary}"
+                   Text="{Binding EmptyText}"
+                   TextAlignment="Center"
+                   TextWrapping="Wrap"
+                   Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}" />
+
+        <!-- Results (or recent categories). Rows don't take focus: typing stays in the box, the arrows move the selection. -->
+        <ListBox x:Name="List"
+                 ItemsSource="{Binding Rows}"
+                 SelectedItem="{Binding Selected}"
+                 Style="{StaticResource Shell.ListBox}">
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem" BasedOn="{StaticResource Shell.RowItem}">
+                    <Setter Property="Focusable" Value="False" />
+                    <Setter Property="Margin" Value="10,1" />
+                    <Setter Property="Padding" Value="10,0" />
+                    <EventSetter Event="MouseLeftButtonUp" Handler="OnRowClick" />
+                </Style>
+            </ListBox.ItemContainerStyle>
+        </ListBox>
+    </DockPanel>
+</UserControl>

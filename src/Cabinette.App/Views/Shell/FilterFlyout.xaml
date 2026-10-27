@@ -1,0 +1,99 @@
+<UserControl x:Class="Cabinette.App.Views.Shell.FilterFlyout"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="clr-namespace:Cabinette.App.Localization"
+             x:Name="Root">
+    <!-- DataContext: MainViewModel. Drawn inside the left pane, under the search box. -->
+    <UserControl.Resources>
+        <Style x:Key="Label" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="FontWeight" Value="{DynamicResource Cab.FontWeight.Strong}" />
+            <Setter Property="Foreground" Value="{DynamicResource Cab.TextSecondary}" />
+            <Setter Property="Margin" Value="0,14,0,8" />
+        </Style>
+    </UserControl.Resources>
+    <Grid>
+        <!-- Click outside closes -->
+        <Border Background="Transparent" MouseLeftButtonDown="OnOutsideClick" />
+        <Border x:Name="Card"
+                Margin="12,0,12,12"
+                VerticalAlignment="Top"
+                Style="{StaticResource Shell.Card}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid Margin="18,14,10,0">
+                    <TextBlock VerticalAlignment="Center" Style="{StaticResource Shell.Text.Subtitle}" Text="{loc:Loc Filter_Title}" />
+                    <Button HorizontalAlignment="Right"
+                            Command="{Binding Search.Filter.ResetCommand}"
+                            Content="{loc:Loc Filter_Reset}"
+                            Style="{StaticResource Shell.TextButton}" />
+                </Grid>
+                <ScrollViewer Grid.Row="1"
+                              MaxHeight="{Binding ActualHeight, ElementName=Root, Converter={StaticResource Add}, ConverterParameter=-120}"
+                              VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="18,0,12,4">
+                        <TextBlock Style="{StaticResource Label}" Text="{loc:Loc Filter_Type}" />
+                        <ItemsControl Focusable="False" ItemsSource="{Binding Search.Filter.Types}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox Content="{Binding Label}" IsChecked="{Binding IsChecked}" Style="{StaticResource Shell.Chip}" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock Style="{StaticResource Label}" Text="{loc:Loc Filter_DateAdded}" />
+                        <WrapPanel>
+                            <RadioButton Content="{loc:Loc Filter_Date_Any}" GroupName="FilterDate" IsChecked="{Binding Search.Filter.DateRange, Converter={StaticResource EnumEquals}, ConverterParameter=Any}" Style="{StaticResource Shell.Chip}" />
+                            <RadioButton Content="{loc:Loc Filter_Date_Today}" GroupName="FilterDate" IsChecked="{Binding Search.Filter.DateRange, Converter={StaticResource EnumEquals}, ConverterParameter=Today}" Style="{StaticResource Shell.Chip}" />
+                            <RadioButton Content="{loc:Loc Filter_Date_Week}" GroupName="FilterDate" IsChecked="{Binding Search.Filter.DateRange, Converter={StaticResource EnumEquals}, ConverterParameter=Week}" Style="{StaticResource Shell.Chip}" />
+                            <RadioButton Content="{loc:Loc Filter_Date_Month}" GroupName="FilterDate" IsChecked="{Binding Search.Filter.DateRange, Converter={StaticResource EnumEquals}, ConverterParameter=Month}" Style="{StaticResource Shell.Chip}" />
+                            <RadioButton Content="{loc:Loc Filter_Date_Year}" GroupName="FilterDate" IsChecked="{Binding Search.Filter.DateRange, Converter={StaticResource EnumEquals}, ConverterParameter=Year}" Style="{StaticResource Shell.Chip}" />
+                        </WrapPanel>
+
+                        <TextBlock Style="{StaticResource Label}" Text="{loc:Loc Filter_Size}" />
+                        <WrapPanel>
+                            <RadioButton Content="{loc:Loc Filter_Size_Any}" GroupName="FilterSize" IsChecked="{Binding Search.Filter.SizeRange, Converter={StaticResource EnumEquals}, ConverterParameter=Any}" Style="{StaticResource Shell.Chip}" />
+                            <RadioButton Content="{loc:Loc Filter_Size_Small}" GroupName="FilterSize" IsChecked="{Binding Search.Filter.SizeRange, Converter={StaticResource EnumEquals}, ConverterParameter=Small}" Style="{StaticResource Shell.Chip}" />
+                            <RadioButton Content="{loc:Loc Filter_Size_Medium}" GroupName="FilterSize" IsChecked="{Binding Search.Filter.SizeRange, Converter={StaticResource EnumEquals}, ConverterParameter=Medium}" Style="{StaticResource Shell.Chip}" />
+                            <RadioButton Content="{loc:Loc Filter_Size_Large}" GroupName="FilterSize" IsChecked="{Binding Search.Filter.SizeRange, Converter={StaticResource EnumEquals}, ConverterParameter=Large}" Style="{StaticResource Shell.Chip}" />
+                        </WrapPanel>
+
+                        <TextBlock Style="{StaticResource Label}" Text="{loc:Loc Filter_Storage}" />
+                        <WrapPanel>
+                            <RadioButton Content="{loc:Loc Filter_Storage_Any}" GroupName="FilterStorage" IsChecked="{Binding Search.Filter.Storage, Converter={StaticResource EnumEquals}, ConverterParameter=Any}" Style="{StaticResource Shell.Chip}" />
+                            <RadioButton Content="{loc:Loc Filter_Storage_Copy}" GroupName="FilterStorage" IsChecked="{Binding Search.Filter.Storage, Converter={StaticResource EnumEquals}, ConverterParameter=Copy}" Style="{StaticResource Shell.Chip}" />
+                            <RadioButton Content="{loc:Loc Filter_Storage_Pointer}" GroupName="FilterStorage" IsChecked="{Binding Search.Filter.Storage, Converter={StaticResource EnumEquals}, ConverterParameter=Pointer}" Style="{StaticResource Shell.Chip}" />
+                        </WrapPanel>
+
+                        <CheckBox Margin="-12,6,0,0"
+                                  Content="{loc:Loc Filter_MissingOnly}"
+                                  IsChecked="{Binding Search.Filter.MissingOnly}"
+                                  Style="{StaticResource Shell.ToggleSwitch}" />
+
+                        <TextBlock Style="{StaticResource Label}" Text="{loc:Loc Filter_Extension}" />
+                        <TextBox Style="{StaticResource Shell.TextBox}"
+                                 Tag="{loc:Loc Filter_ExtensionPlaceholder}"
+                                 Text="{Binding Search.Filter.ExtensionsText, UpdateSourceTrigger=PropertyChanged, Delay=300}" />
+                    </StackPanel>
+                </ScrollViewer>
+                <Border Grid.Row="2" Margin="0,10,0,0" BorderBrush="{DynamicResource Cab.Divider}" BorderThickness="0,1,0,0">
+                    <Button Margin="0,12,16,14"
+                            MinWidth="96"
+                            HorizontalAlignment="Right"
+                            Command="{Binding CloseFilterCommand}"
+                            Content="{loc:Loc Common_Done}"
+                            Style="{StaticResource Shell.AccentButton}" />
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

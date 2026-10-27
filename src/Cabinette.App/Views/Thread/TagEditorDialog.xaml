@@ -1,0 +1,131 @@
+<Window x:Class="Cabinette.App.Views.Thread.TagEditorDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:loc="clr-namespace:Cabinette.App.Localization"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        xmlns:vm="clr-namespace:Cabinette.App.ViewModels.Thread"
+        Title="{Binding Title}"
+        Width="500"
+        AllowsTransparency="True"
+        Background="Transparent"
+        FontFamily="{DynamicResource Shell.Font}"
+        FontWeight="{DynamicResource Cab.FontWeight.Body}"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        SizeToContent="Height"
+        SnapsToDevicePixels="True"
+        UseLayoutRounding="True"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None">
+    <!-- Tag chip editor (DataContext = TagEditorViewModel). -->
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/Cabinette;component/Views/Thread/ThreadResources.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Border x:Name="Card"
+            LayoutTransform="{DynamicResource Cab.UiScaleTransform}"
+            Margin="20,14,20,26"
+            Padding="24,20,24,20"
+            MouseLeftButtonDown="Card_MouseLeftButtonDown"
+            Style="{StaticResource Cab.Thread.Card}">
+        <StackPanel>
+            <DockPanel>
+                <Grid Width="40" Height="40" Margin="0,0,12,0" DockPanel.Dock="Left">
+                    <Ellipse Fill="{DynamicResource Cab.Accent}" Opacity="0.16" />
+                    <ui:SymbolIcon FontSize="20" Foreground="{DynamicResource Cab.Accent}" Symbol="Tag24" />
+                </Grid>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock FontSize="17" FontWeight="{DynamicResource Cab.FontWeight.Strong}" Foreground="{DynamicResource Cab.TextPrimary}" Text="{Binding Title}" />
+                    <TextBlock Margin="0,1,0,0" FontSize="12.5" Foreground="{DynamicResource Cab.TextSecondary}" Text="{Binding Subtitle}" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+            </DockPanel>
+
+            <Border x:Name="ChipBox"
+                    MinHeight="46"
+                    Margin="0,18,0,0"
+                    Padding="6,5"
+                    Cursor="IBeam"
+                    MouseLeftButtonDown="ChipBox_MouseLeftButtonDown"
+                    Style="{StaticResource Cab.Thread.InputBorder}">
+                <WrapPanel>
+                    <ItemsControl Focusable="False" ItemsPanel="{StaticResource Cab.Thread.WrapPanel}" ItemsSource="{Binding Chips}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type vm:TagChipViewModel}">
+                                <Border x:Name="Chip"
+                                        Margin="2"
+                                        Padding="10,4,4,4"
+                                        Background="{DynamicResource Cab.TagChipBackground}"
+                                        Cursor="Arrow"
+                                        CornerRadius="14">
+                                    <Border.InputBindings>
+                                        <MouseBinding Command="{Binding PromoteCommand}" MouseAction="LeftClick" />
+                                    </Border.InputBindings>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock VerticalAlignment="Center" FontSize="13" Foreground="{DynamicResource Cab.TagChipText}" Text="{Binding Name, StringFormat='#{0}'}" />
+                                        <Button Width="22"
+                                                Height="22"
+                                                Margin="4,0,0,0"
+                                                Command="{Binding DataContext.RemoveCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding}"
+                                                Foreground="{DynamicResource Cab.TagChipText}"
+                                                Style="{StaticResource Cab.Thread.SmallIconButton}"
+                                                ToolTip="{loc:Loc Thread_TagsRemove}">
+                                            <ui:SymbolIcon FontSize="12" Symbol="Dismiss20" />
+                                        </Button>
+                                    </StackPanel>
+                                </Border>
+                                <DataTemplate.Triggers>
+                                    <DataTrigger Binding="{Binding IsPartial}" Value="True">
+                                        <Setter TargetName="Chip" Property="Opacity" Value="0.5" />
+                                        <Setter TargetName="Chip" Property="Cursor" Value="Hand" />
+                                        <Setter TargetName="Chip" Property="ToolTip" Value="{loc:Loc Thread_TagsPartialTooltip}" />
+                                    </DataTrigger>
+                                </DataTemplate.Triggers>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBox x:Name="Input"
+                             MinWidth="150"
+                             Height="30"
+                             Margin="6,2,2,2"
+                             PreviewKeyDown="Input_PreviewKeyDown"
+                             Style="{StaticResource Cab.Thread.BareTextBox}"
+                             Tag="{loc:Loc Thread_TagsPlaceholder}"
+                             Text="{Binding Input, UpdateSourceTrigger=PropertyChanged}" />
+                </WrapPanel>
+            </Border>
+            <TextBlock Margin="2,7,0,0" FontSize="11.5" Foreground="{DynamicResource Cab.TextSecondary}" Text="{loc:Loc Thread_TagsHint}" TextWrapping="Wrap" />
+            <TextBlock Margin="2,4,0,0"
+                       FontSize="11.5"
+                       Foreground="{DynamicResource Cab.TextSecondary}"
+                       Text="{loc:Loc Thread_TagsPartialHint}"
+                       TextWrapping="Wrap"
+                       Visibility="{Binding HasPartial, Converter={StaticResource BoolToVis}}" />
+
+            <TextBlock Margin="0,16,0,8"
+                       Style="{StaticResource Cab.Thread.SectionLabel}"
+                       Text="{loc:Loc Thread_TagsExisting}"
+                       Visibility="{Binding HasSuggestions, Converter={StaticResource BoolToVis}}" />
+            <ItemsControl Focusable="False" ItemsPanel="{StaticResource Cab.Thread.WrapPanel}" ItemsSource="{Binding Suggestions}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button Command="{Binding DataContext.AddSuggestionCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="{Binding}"
+                                Content="{Binding}"
+                                ContentStringFormat="#{0}"
+                                Style="{StaticResource Cab.Thread.SuggestionChip}" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <StackPanel Margin="0,20,0,0" HorizontalAlignment="Right" Orientation="Horizontal">
+                <Button Margin="0,0,8,0" Content="{loc:Loc Thread_Cancel}" IsCancel="True" Style="{StaticResource Cab.Thread.SecondaryButton}" />
+                <Button Click="Save_Click" Content="{loc:Loc Thread_Save}" Style="{StaticResource Cab.Thread.PrimaryButton}" />
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>

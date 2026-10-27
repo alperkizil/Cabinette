@@ -1,0 +1,879 @@
+<UserControl x:Class="Cabinette.App.Views.Dialogs.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:loc="clr-namespace:Cabinette.App.Localization"
+             xmlns:views="clr-namespace:Cabinette.App.Views.Dialogs"
+             xmlns:vm="clr-namespace:Cabinette.App.ViewModels.Dialogs">
+    <UserControl.Resources>
+        <Style x:Key="Group" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource Cab.WindowBackground}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Cab.Divider}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="4" />
+            <Setter Property="Margin" Value="0,0,0,22" />
+        </Style>
+        <Style x:Key="GroupTitle" TargetType="TextBlock" BasedOn="{StaticResource Shell.Text.Subtitle}">
+            <Setter Property="Margin" Value="2,0,0,8" />
+            <Setter Property="FontSize" Value="14" />
+        </Style>
+        <Style x:Key="OptionTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Foreground" Value="{DynamicResource Cab.TextPrimary}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style x:Key="OptionHint" TargetType="TextBlock" BasedOn="{StaticResource Shell.Text.Secondary}">
+            <Setter Property="Margin" Value="0,2,0,0" />
+            <Setter Property="FontSize" Value="12.5" />
+        </Style>
+        <Style x:Key="SectionPanel" TargetType="StackPanel">
+            <Setter Property="Margin" Value="28,4,28,12" />
+        </Style>
+        <Style x:Key="RowDivider" TargetType="Border">
+            <Setter Property="Height" Value="1" />
+            <Setter Property="Margin" Value="12,0" />
+            <Setter Property="Background" Value="{DynamicResource Cab.Divider}" />
+        </Style>
+        <!-- A whole-row button inside a settings group: icon, title, hint, chevron. -->
+        <Style x:Key="ActionRow" TargetType="Button">
+            <Setter Property="OverridesDefaultStyle" Value="True" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource Shell.FocusVisual}" />
+            <Setter Property="Foreground" Value="{DynamicResource Cab.TextPrimary}" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Padding" Value="12,11" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid Background="Transparent">
+                            <Border x:Name="Overlay" Background="{DynamicResource Cab.TextPrimary}" CornerRadius="8" Opacity="0" />
+                            <Grid Margin="{TemplateBinding Padding}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <ContentPresenter VerticalAlignment="Center" />
+                                <ui:SymbolIcon Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center" FontSize="16" Foreground="{DynamicResource Cab.TextSecondary}" Symbol="ChevronRight16" />
+                            </Grid>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Overlay" Property="Opacity" Value="0.04" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Overlay" Property="Opacity" Value="0.08" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ActionIcon" TargetType="ui:SymbolIcon">
+            <Setter Property="Margin" Value="0,1,14,0" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="Foreground" Value="{DynamicResource Cab.Accent}" />
+        </Style>
+
+        <!-- ============================================================ Settings › AI -->
+        <FontFamily x:Key="CommandFont">Cascadia Mono, Consolas</FontFamily>
+
+        <!-- A registration command: title and its copy button, then the command in a read-only, selectable code box as wide
+             as the group, so a usual path fits on one line. The command wraps only between its arguments (AiCommandText),
+             not inside a quoted path; one wider than the box breaks after a backslash. -->
+        <DataTemplate x:Key="CommandLine" DataType="{x:Type vm:AiCommandLineViewModel}">
+            <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock VerticalAlignment="Center" Style="{StaticResource OptionTitle}" FontWeight="{DynamicResource Cab.FontWeight.Strong}" Text="{Binding Title}" />
+                    <Button Grid.Column="1"
+                            MinWidth="96"
+                            Margin="8,0,0,0"
+                            Padding="12,0"
+                            AutomationProperties.Name="{Binding CopyLabel}"
+                            Command="{Binding CopyCommand}"
+                            Style="{StaticResource Shell.SecondaryButton}"
+                            ToolTip="{loc:Loc SettingsAi_CopyTooltip}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon x:Name="CopyIcon" Margin="0,0,6,0" FontSize="16" Symbol="Copy20" />
+                            <TextBlock VerticalAlignment="Center" Text="{Binding CopyLabel}" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+                <Border Margin="0,6,0,0" Padding="10,8" Background="{DynamicResource Cab.HeaderBackground}" CornerRadius="8">
+                    <TextBox AutomationProperties.Name="{Binding Title}"
+                             FontFamily="{StaticResource CommandFont}"
+                             FontSize="12.5"
+                             IsReadOnly="True"
+                             IsReadOnlyCaretVisible="False"
+                             Style="{StaticResource Shell.BareTextBox}"
+                             views:AiCommandText.Command="{Binding Text}"
+                             TextWrapping="Wrap" />
+                </Border>
+            </StackPanel>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding State}" Value="Copied">
+                    <Setter TargetName="CopyIcon" Property="Symbol" Value="Checkmark20" />
+                    <Setter TargetName="CopyIcon" Property="Foreground" Value="{DynamicResource Cab.Accent}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="Failed">
+                    <Setter TargetName="CopyIcon" Property="Symbol" Value="ErrorCircle20" />
+                    <Setter TargetName="CopyIcon" Property="Foreground" Value="{DynamicResource Cab.Danger}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!-- A small read-only, selectable command ("To remove:"). -->
+        <Style x:Key="SmallCommand" TargetType="TextBox" BasedOn="{StaticResource Shell.BareTextBox}">
+            <Setter Property="FontFamily" Value="{StaticResource CommandFont}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource Cab.TextSecondary}" />
+            <Setter Property="IsReadOnly" Value="True" />
+            <Setter Property="IsReadOnlyCaretVisible" Value="False" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+
+        <!-- The drop-down button of an activity filter: a chip with the current choice; tinted when it filters. -->
+        <Style x:Key="FilterChip" TargetType="ToggleButton">
+            <Setter Property="OverridesDefaultStyle" Value="True" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource Shell.FocusVisual}" />
+            <Setter Property="Foreground" Value="{DynamicResource Cab.TextPrimary}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Cab.Divider}" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Padding" Value="12,0,10,0" />
+            <Setter Property="MinHeight" Value="30" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Grid>
+                            <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="15" />
+                            <Border x:Name="Overlay" Background="{DynamicResource Cab.TextPrimary}" CornerRadius="15" Opacity="0" />
+                            <ContentPresenter Margin="{TemplateBinding Padding}" VerticalAlignment="Center" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Overlay" Property="Opacity" Value="0.05" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Overlay" Property="Opacity" Value="0.08" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsDefault}" Value="False">
+                    <Setter Property="Background" Value="{DynamicResource Cab.TagChipBackground}" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource Cab.TagChipBackground}" />
+                    <Setter Property="Foreground" Value="{DynamicResource Cab.TagChipText}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- One choice in a filter's list: a menu-like row with a check on the current choice. -->
+        <Style x:Key="FilterOptionButton" TargetType="Button">
+            <Setter Property="OverridesDefaultStyle" Value="True" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Foreground" Value="{DynamicResource Cab.TextPrimary}" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="MinHeight" Value="34" />
+            <Setter Property="Padding" Value="8,0,14,0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid Background="Transparent">
+                            <Border x:Name="Hover" Background="{DynamicResource Cab.TextPrimary}" CornerRadius="6" Opacity="0" />
+                            <ContentPresenter Margin="{TemplateBinding Padding}" VerticalAlignment="Center" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Hover" Property="Opacity" Value="0.07" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Hover" Property="Opacity" Value="0.09" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Hover" Property="Opacity" Value="0.12" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- An activity filter: the chip, and its list of choices in a popup (headings between groups of tools). -->
+        <DataTemplate x:Key="FilterDropDown" DataType="{x:Type vm:AiFilterChoice}">
+            <Grid Margin="0,0,8,8">
+                <ToggleButton x:Name="Toggle"
+                              AutomationProperties.Name="{Binding Name}"
+                              IsChecked="{Binding IsOpen, Mode=TwoWay}"
+                              IsHitTestVisible="{Binding IsOpen, ElementName=Popup, Converter={StaticResource InverseBool}}"
+                              Style="{StaticResource FilterChip}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center" Text="{Binding Selected.Label}" />
+                        <ui:SymbolIcon Margin="6,1,0,0" FontSize="12" Symbol="ChevronDown16" />
+                    </StackPanel>
+                </ToggleButton>
+                <Popup x:Name="Popup"
+                       AllowsTransparency="True"
+                       Closed="OnFilterPopupClosed"
+                       IsOpen="{Binding IsOpen, Mode=TwoWay}"
+                       Opened="OnFilterPopupOpened"
+                       Placement="Bottom"
+                       PlacementTarget="{Binding ElementName=Toggle}"
+                       PopupAnimation="None"
+                       StaysOpen="False">
+                    <Border Margin="0,4,10,14"
+                            Padding="5"
+                            MinWidth="200"
+                            Background="{DynamicResource Cab.InputBackground}"
+                            BorderBrush="{DynamicResource Cab.Divider}"
+                            BorderThickness="1"
+                            CornerRadius="10"
+                            LayoutTransform="{DynamicResource Cab.UiScaleTransform}"
+                            PreviewKeyDown="OnFilterPopupKeyDown"
+                            TextElement.FontFamily="{DynamicResource Shell.Font}">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="18" Direction="270" Opacity="0.22" ShadowDepth="4" />
+                        </Border.Effect>
+                        <ScrollViewer MaxHeight="360" Focusable="False" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl Focusable="False" ItemsSource="{Binding Options}" KeyboardNavigation.DirectionalNavigation="Cycle" KeyboardNavigation.TabNavigation="Cycle">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type vm:AiFilterOption}">
+                                        <Grid>
+                                            <TextBlock x:Name="Header"
+                                                       Margin="10,10,10,4"
+                                                       FontSize="12"
+                                                       FontWeight="{DynamicResource Cab.FontWeight.Strong}"
+                                                       Foreground="{DynamicResource Cab.TextSecondary}"
+                                                       Text="{Binding Label}"
+                                                       Visibility="Collapsed" />
+                                            <Button x:Name="Option"
+                                                    Command="{Binding DataContext.ChooseCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource FilterOptionButton}">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="24" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <ui:SymbolIcon x:Name="Check" FontSize="16" Foreground="{DynamicResource Cab.Accent}" Symbol="Checkmark16" Visibility="Hidden" />
+                                                    <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding Label}" />
+                                                </Grid>
+                                            </Button>
+                                        </Grid>
+                                        <DataTemplate.Triggers>
+                                            <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                <Setter TargetName="Check" Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsHeader}" Value="True">
+                                                <Setter TargetName="Header" Property="Visibility" Value="Visible" />
+                                                <Setter TargetName="Option" Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </DataTemplate.Triggers>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+                </Popup>
+            </Grid>
+        </DataTemplate>
+
+        <!-- Activity rows: not selectable (their names are the links). -->
+        <Style x:Key="ActivityItem" TargetType="ListBoxItem">
+            <Setter Property="OverridesDefaultStyle" Value="True" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <ContentPresenter HorizontalAlignment="Stretch" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- One activity entry: a day heading above the first of each day, the tool's icon, the sentence with links, the
+             failure, the client and the time. -->
+        <DataTemplate x:Key="ActivityRow" DataType="{x:Type vm:AiActivityRowViewModel}">
+            <StackPanel>
+                <Border Margin="0,10,0,4"
+                        Padding="10,3"
+                        HorizontalAlignment="Center"
+                        Background="{DynamicResource Cab.DateHeaderBackground}"
+                        CornerRadius="8"
+                        Visibility="{Binding ShowDayHeader, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock FontSize="12" Foreground="{DynamicResource Cab.DateHeaderText}" Text="{Binding DayHeader}" />
+                </Border>
+                <Grid Margin="14,7,14,7">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border Width="30" Height="30" VerticalAlignment="Top" Background="{DynamicResource Cab.TagChipBackground}" CornerRadius="15">
+                        <ui:SymbolIcon x:Name="Icon" FontSize="16" Foreground="{DynamicResource Cab.TagChipText}" Symbol="{Binding Symbol}" />
+                    </Border>
+                    <StackPanel Grid.Column="1" Margin="12,1,10,0">
+                        <TextBlock views:AiActivityInlines.LinkCommand="{Binding OpenLinkCommand}"
+                                   views:AiActivityInlines.Segments="{Binding Segments}"
+                                   AutomationProperties.Name="{Binding Sentence}"
+                                   FontSize="13.5"
+                                   Foreground="{DynamicResource Cab.TextPrimary}"
+                                   LineHeight="19"
+                                   TextWrapping="Wrap" />
+                        <TextBlock Margin="0,2,0,0"
+                                   Style="{StaticResource Shell.Text.Error}"
+                                   Text="{Binding FailureText}"
+                                   Visibility="{Binding IsFailed, Converter={StaticResource BoolToVisibility}}" />
+                        <TextBlock Margin="0,2,0,0" FontSize="12" Foreground="{DynamicResource Cab.TextSecondary}" Text="{Binding Client}" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="2" Margin="0,2,0,0" VerticalAlignment="Top" FontSize="12" Foreground="{DynamicResource Cab.TextSecondary}" Text="{Binding Time}" />
+                </Grid>
+            </StackPanel>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsFailed}" Value="True">
+                    <Setter TargetName="Icon" Property="Foreground" Value="{DynamicResource Cab.Danger}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="224" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Navigation -->
+        <Border Background="{DynamicResource Cab.HeaderBackground}" CornerRadius="11,0,0,11">
+            <Grid Margin="12,20,12,16">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <TextBlock Margin="12,0,0,16" Style="{StaticResource Shell.Text.Title}" FontSize="20" Text="{Binding Title}" />
+                <ListBox Grid.Row="1"
+                         ItemsSource="{Binding Sections}"
+                         SelectedItem="{Binding SelectedSection}"
+                         Style="{StaticResource Shell.ListBox}"
+                         ItemContainerStyle="{StaticResource Shell.NavItem}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Margin="0,0,12,0" FontSize="18" Foreground="{DynamicResource Cab.TextSecondary}" Symbol="{Binding Symbol}" />
+                                <TextBlock VerticalAlignment="Center" FontSize="14" Text="{Binding Title}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <StackPanel Grid.Row="2" Margin="12,0,0,0">
+                    <TextBlock Style="{StaticResource Shell.Text.Secondary}" FontSize="12" Text="{loc:Loc Settings_AutoSaved}" />
+                    <TextBlock Margin="0,2,0,0" Style="{StaticResource Shell.Text.Secondary}" FontSize="12" Text="{Binding VersionText}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Content -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid Margin="28,22,16,14">
+                <TextBlock VerticalAlignment="Center" Style="{StaticResource Shell.Text.DialogTitle}" Text="{Binding SelectedSection.Title}" />
+                <Button HorizontalAlignment="Right"
+                        Command="{Binding CancelCommand}"
+                        Style="{StaticResource Shell.IconButton}"
+                        AutomationProperties.Name="{loc:Loc Common_Close}" ToolTip="{loc:Loc Common_Close}">
+                    <ui:SymbolIcon Symbol="Dismiss20" />
+                </Button>
+            </Grid>
+
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <Grid>
+                    <!-- Appearance -->
+                    <StackPanel Style="{StaticResource SectionPanel}" Visibility="{Binding SelectedSection.Key, Converter={StaticResource EqualsToVisibility}, ConverterParameter=appearance}">
+                        <TextBlock Style="{StaticResource GroupTitle}" Text="{loc:Loc Settings_Theme}" />
+                        <Border Style="{StaticResource Group}">
+                            <StackPanel>
+                                <RadioButton GroupName="Theme" IsChecked="{Binding Theme, Converter={StaticResource EnumEquals}, ConverterParameter=System}" Style="{StaticResource Shell.RadioOption}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:SymbolIcon Margin="0,0,10,0" FontSize="18" Foreground="{DynamicResource Cab.TextSecondary}" Symbol="Desktop20" />
+                                        <TextBlock Style="{StaticResource OptionTitle}" Text="{loc:Loc Settings_ThemeSystem}" />
+                                    </StackPanel>
+                                </RadioButton>
+                                <RadioButton GroupName="Theme" IsChecked="{Binding Theme, Converter={StaticResource EnumEquals}, ConverterParameter=Light}" Style="{StaticResource Shell.RadioOption}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:SymbolIcon Margin="0,0,10,0" FontSize="18" Foreground="{DynamicResource Cab.TextSecondary}" Symbol="WeatherSunny20" />
+                                        <TextBlock Style="{StaticResource OptionTitle}" Text="{loc:Loc Settings_ThemeLight}" />
+                                    </StackPanel>
+                                </RadioButton>
+                                <RadioButton GroupName="Theme" IsChecked="{Binding Theme, Converter={StaticResource EnumEquals}, ConverterParameter=Dark}" Style="{StaticResource Shell.RadioOption}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:SymbolIcon Margin="0,0,10,0" FontSize="18" Foreground="{DynamicResource Cab.TextSecondary}" Symbol="WeatherMoon20" />
+                                        <TextBlock Style="{StaticResource OptionTitle}" Text="{loc:Loc Settings_ThemeDark}" />
+                                    </StackPanel>
+                                </RadioButton>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Font: the family of all text (Services/UiFont). Each name is drawn in its own font. -->
+                        <TextBlock Style="{StaticResource GroupTitle}" Text="{loc:Loc Settings_Font}" />
+                        <Border Style="{StaticResource Group}" Padding="12">
+                            <ComboBox AutomationProperties.Name="{loc:Loc Settings_Font}"
+                                      ItemsSource="{Binding Fonts}"
+                                      SelectedItem="{Binding SelectedFont}"
+                                      Style="{StaticResource Shell.ComboBox}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type vm:FontOption}">
+                                        <TextBlock FontFamily="{Binding Family}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </Border>
+
+                        <!-- Text size: scales the whole app (Services/UiScale). The "Aa" sample previews each size. -->
+                        <TextBlock Style="{StaticResource GroupTitle}" Text="{loc:Loc Settings_TextSize}" />
+                        <Border Style="{StaticResource Group}">
+                            <StackPanel>
+                                <RadioButton GroupName="TextSize" IsChecked="{Binding TextSize, Converter={StaticResource EnumEquals}, ConverterParameter=Small}" Style="{StaticResource Shell.RadioOption}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Width="34" VerticalAlignment="Center" FontSize="12.5" Foreground="{DynamicResource Cab.TextSecondary}" Text="Aa" />
+                                        <TextBlock VerticalAlignment="Center" Style="{StaticResource OptionTitle}" Text="{loc:Loc Settings_TextSizeSmall}" />
+                                    </StackPanel>
+                                </RadioButton>
+                                <RadioButton GroupName="TextSize" IsChecked="{Binding TextSize, Converter={StaticResource EnumEquals}, ConverterParameter=Medium}" Style="{StaticResource Shell.RadioOption}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Width="34" VerticalAlignment="Center" FontSize="14" Foreground="{DynamicResource Cab.TextSecondary}" Text="Aa" />
+                                        <TextBlock VerticalAlignment="Center" Style="{StaticResource OptionTitle}" Text="{loc:Loc Settings_TextSizeMedium}" />
+                                    </StackPanel>
+                                </RadioButton>
+                                <RadioButton GroupName="TextSize" IsChecked="{Binding TextSize, Converter={StaticResource EnumEquals}, ConverterParameter=Large}" Style="{StaticResource Shell.RadioOption}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Width="34" VerticalAlignment="Center" FontSize="16" Foreground="{DynamicResource Cab.TextSecondary}" Text="Aa" />
+                                        <TextBlock VerticalAlignment="Center" Style="{StaticResource OptionTitle}" Text="{loc:Loc Settings_TextSizeLarge}" />
+                                    </StackPanel>
+                                </RadioButton>
+                                <RadioButton GroupName="TextSize" IsChecked="{Binding TextSize, Converter={StaticResource EnumEquals}, ConverterParameter=ExtraLarge}" Style="{StaticResource Shell.RadioOption}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Width="34" VerticalAlignment="Center" FontSize="18" Foreground="{DynamicResource Cab.TextSecondary}" Text="Aa" />
+                                        <TextBlock VerticalAlignment="Center" Style="{StaticResource OptionTitle}" Text="{loc:Loc Settings_TextSizeExtraLarge}" />
+                                    </StackPanel>
+                                </RadioButton>
+                                <!-- Bold text: every text weight one step heavier (Services/UiWeight). -->
+                                <Border Style="{StaticResource RowDivider}" />
+                                <CheckBox IsChecked="{Binding BoldText}" Style="{StaticResource Shell.ToggleSwitch}">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource OptionTitle}" Text="{loc:Loc Settings_BoldText}" />
+                                        <TextBlock Style="{StaticResource OptionHint}" Text="{loc:Loc Settings_BoldTextHint}" />
+                                    </StackPanel>
+                                </CheckBox>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Library -->
+                    <StackPanel Style="{StaticResource SectionPanel}" Visibility="{Binding SelectedSection.Key, Converter={StaticResource EqualsToVisibility}, ConverterParameter=library}">
+                        <TextBlock Style="{StaticResource GroupTitle}" Text="{loc:Loc Settings_VaultPath}" />
+                        <Border Style="{StaticResource Group}" Padding="16,14">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <ui:SymbolIcon Margin="0,0,12,0" VerticalAlignment="Top" FontSize="20" Foreground="{DynamicResource Cab.Accent}" Symbol="FolderOpen20" />
+                                    <StackPanel Grid.Column="1">
+                                        <TextBox Padding="0"
+                                                 Background="Transparent"
+                                                 BorderThickness="0"
+                                                 FontSize="14"
+                                                 IsReadOnly="True"
+                                                 Style="{StaticResource Shell.BareTextBox}"
+                                                 Text="{Binding VaultPath, Mode=OneWay}"
+                                                 TextWrapping="Wrap" />
+                                        <TextBlock Style="{StaticResource OptionHint}" Text="{loc:Loc Settings_VaultHint}" />
+                                    </StackPanel>
+                                </Grid>
+                                <!-- Vault monitor status -->
+                                <Grid Margin="32,14,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Ellipse Width="9" Height="9" Margin="1,6,10,0" VerticalAlignment="Top">
+                                        <Ellipse.Style>
+                                            <Style TargetType="Ellipse">
+                                                <Setter Property="Fill" Value="{DynamicResource Cab.TextSecondary}" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Monitor.Indicator}" Value="Idle">
+                                                        <Setter Property="Fill" Value="{DynamicResource Cab.SelectionBorder}" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Monitor.Indicator}" Value="Syncing">
+                                                        <Setter Property="Fill" Value="{DynamicResource Cab.Accent}" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Monitor.Indicator}" Value="Error">
+                                                        <Setter Property="Fill" Value="{DynamicResource Cab.Danger}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Ellipse.Style>
+                                    </Ellipse>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock FontSize="13.5" Foreground="{DynamicResource Cab.TextPrimary}" Text="{Binding Monitor.StatusLine}" TextWrapping="Wrap" />
+                                        <TextBlock Style="{StaticResource OptionHint}"
+                                                   Text="{Binding Monitor.StatusDetail}"
+                                                   Visibility="{Binding Monitor.StatusDetail, Converter={StaticResource NullToVisibility}}" />
+                                    </StackPanel>
+                                    <Button Grid.Column="2"
+                                            Margin="12,-4,0,0"
+                                            VerticalAlignment="Top"
+                                            Command="{Binding TogglePauseCommand}"
+                                            Content="{Binding Monitor.ToggleActionText}"
+                                            IsEnabled="{Binding Monitor.CanTogglePause}"
+                                            Style="{StaticResource Shell.TextButton}"
+                                            Visibility="{Binding Monitor.IsAvailable, Converter={StaticResource BoolToVisibility}}" />
+                                </Grid>
+                                <WrapPanel Margin="32,14,0,0">
+                                    <Button Margin="0,0,8,6"
+                                            Command="{Binding OpenVaultFolderCommand}"
+                                            IsEnabled="{Binding HasVault}"
+                                            Style="{StaticResource Shell.SecondaryButton}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <ui:SymbolIcon Margin="0,0,8,0" FontSize="16" Symbol="Open20" />
+                                            <TextBlock Text="{loc:Loc Settings_OpenVault}" />
+                                        </StackPanel>
+                                    </Button>
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Vault tools -->
+                        <TextBlock Style="{StaticResource GroupTitle}" Text="{loc:Loc Settings_VaultTools}" />
+                        <Border Style="{StaticResource Group}">
+                            <StackPanel>
+                                <Button Command="{Binding MoveVaultCommand}" IsEnabled="{Binding HasVault}" Style="{StaticResource ActionRow}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <ui:SymbolIcon Style="{StaticResource ActionIcon}" Symbol="FolderArrowRight20" />
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Style="{StaticResource OptionTitle}" Text="{loc:Loc Settings_MoveVault}" />
+                                            <TextBlock Style="{StaticResource OptionHint}" Text="{loc:Loc Settings_MoveVaultHint}" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Button>
+                                <Border Style="{StaticResource RowDivider}" />
+                                <Button Command="{Binding MigrateCommand}" IsEnabled="{Binding HasVault}" Style="{StaticResource ActionRow}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <ui:SymbolIcon Style="{StaticResource ActionIcon}" Symbol="ArrowDownload20" />
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Style="{StaticResource OptionTitle}" Text="{loc:Loc Settings_Migrate}" />
+                                            <TextBlock Style="{StaticResource OptionHint}" Text="{loc:Loc Settings_MigrateHint}" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Backups -->
+                        <TextBlock Style="{StaticResource GroupTitle}" Text="{loc:Loc Settings_Backups}" />
+                        <Border Style="{StaticResource Group}">
+                            <StackPanel>
+                                <Button Command="{Binding CreateBackupCommand}" IsEnabled="{Binding HasVault}" Style="{StaticResource ActionRow}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <ui:SymbolIcon Style="{StaticResource ActionIcon}" Symbol="Archive20" />
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Style="{StaticResource OptionTitle}" Text="{loc:Loc Settings_Backup}" />
+                                            <TextBlock Style="{StaticResource OptionHint}" Text="{loc:Loc Settings_BackupHint}" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Button>
+                                <Border Style="{StaticResource RowDivider}" />
+                                <Button Command="{Binding RestoreCommand}" Style="{StaticResource ActionRow}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <ui:SymbolIcon Style="{StaticResource ActionIcon}" Symbol="ArchiveArrowBack20" />
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Style="{StaticResource OptionTitle}" Text="{loc:Loc Settings_Restore}" />
+                                            <TextBlock Style="{StaticResource OptionHint}" Text="{loc:Loc Settings_RestoreHint}" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Adding files -->
+                    <StackPanel Style="{StaticResource SectionPanel}" Visibility="{Binding SelectedSection.Key, Converter={StaticResource EqualsToVisibility}, ConverterParameter=adding}">
+                        <TextBlock Style="{StaticResource GroupTitle}" Text="{loc:Loc Settings_DefaultMode}" />
+                        <Border Style="{StaticResource Group}">
+                            <StackPanel>
+                                <RadioButton GroupName="AddMode" IsChecked="{Binding DefaultAddMode, Converter={StaticResource EnumEquals}, ConverterParameter=Copy}" Style="{StaticResource Shell.RadioOption}">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource OptionTitle}" Text="{loc:Loc Settings_ModeCopy}" />
+                                        <TextBlock Style="{StaticResource OptionHint}" Text="{loc:Loc Settings_ModeCopyHint}" />
+                                    </StackPanel>
+                                </RadioButton>
+                                <RadioButton GroupName="AddMode" IsChecked="{Binding DefaultAddMode, Converter={StaticResource EnumEquals}, ConverterParameter=Pointer}" Style="{StaticResource Shell.RadioOption}">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource OptionTitle}" Text="{loc:Loc Settings_ModePointer}" />
+                                        <TextBlock Style="{StaticResource OptionHint}" Text="{loc:Loc Settings_ModePointerHint}" />
+                                    </StackPanel>
+                                </RadioButton>
+                            </StackPanel>
+                        </Border>
+                        <TextBlock Style="{StaticResource GroupTitle}" Text="{loc:Loc Settings_SortByTypeGroup}" />
+                        <Border Style="{StaticResource Group}">
+                            <CheckBox IsChecked="{Binding SortFilesByTypeInTypeCategories}" Style="{StaticResource Shell.ToggleSwitch}">
+                                <StackPanel>
+                                    <TextBlock Style="{StaticResource OptionTitle}" Text="{loc:Loc Settings_SortByType}" />
+                                    <TextBlock Style="{StaticResource OptionHint}" Text="{loc:Loc Settings_SortByTypeHint}" />
+                                </StackPanel>
+                            </CheckBox>
+                        </Border>
+                        <TextBlock Style="{StaticResource GroupTitle}" Text="{loc:Loc Settings_FolderOptions}" />
+                        <Border Style="{StaticResource Group}">
+                            <StackPanel>
+                                <CheckBox IsChecked="{Binding FolderSubfoldersAsSubcategories}" Style="{StaticResource Shell.ToggleSwitch}">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource OptionTitle}" Text="{loc:Loc Settings_SubfoldersAsSub}" />
+                                        <TextBlock Style="{StaticResource OptionHint}" Text="{loc:Loc Settings_SubfoldersAsSubHint}" />
+                                    </StackPanel>
+                                </CheckBox>
+                                <Border Height="1" Margin="12,0" Background="{DynamicResource Cab.Divider}" />
+                                <CheckBox IsChecked="{Binding FolderAlsoAddToTypeCategories}" Style="{StaticResource Shell.ToggleSwitch}">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource OptionTitle}" Text="{loc:Loc Settings_AlsoTypeCategories}" />
+                                        <TextBlock Style="{StaticResource OptionHint}" Text="{loc:Loc Settings_AlsoTypeCategoriesHint}" />
+                                    </StackPanel>
+                                </CheckBox>
+                            </StackPanel>
+                        </Border>
+                        <TextBlock Style="{StaticResource GroupTitle}" Text="{loc:Loc Settings_DownloadsGroup}" />
+                        <Border Style="{StaticResource Group}">
+                            <CheckBox IsChecked="{Binding CleanMyDownloads}" Style="{StaticResource Shell.ToggleSwitch}">
+                                <StackPanel>
+                                    <TextBlock Style="{StaticResource OptionTitle}" Text="{loc:Loc Settings_CleanDownloads}" />
+                                    <TextBlock Style="{StaticResource OptionHint}" Text="{loc:Loc Settings_CleanDownloadsHint}" />
+                                </StackPanel>
+                            </CheckBox>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Deleting -->
+                    <StackPanel Style="{StaticResource SectionPanel}" Visibility="{Binding SelectedSection.Key, Converter={StaticResource EqualsToVisibility}, ConverterParameter=deleting}">
+                        <TextBlock Style="{StaticResource GroupTitle}" Text="{loc:Loc Settings_DeleteVaultFiles}" />
+                        <Border Style="{StaticResource Group}">
+                            <StackPanel>
+                                <RadioButton GroupName="VaultDelete" IsChecked="{Binding RecycleVaultFiles, Converter={StaticResource BoolEquals}, ConverterParameter=True}" Style="{StaticResource Shell.RadioOption}">
+                                    <TextBlock Style="{StaticResource OptionTitle}" Text="{loc:Loc Settings_RecycleVault}" />
+                                </RadioButton>
+                                <RadioButton GroupName="VaultDelete" IsChecked="{Binding RecycleVaultFiles, Converter={StaticResource BoolEquals}, ConverterParameter=False}" Style="{StaticResource Shell.RadioOption}">
+                                    <TextBlock Style="{StaticResource OptionTitle}" Text="{loc:Loc Settings_PermanentVault}" />
+                                </RadioButton>
+                            </StackPanel>
+                        </Border>
+                        <TextBlock Style="{StaticResource GroupTitle}" Text="{loc:Loc Settings_DeletePointer}" />
+                        <Border Style="{StaticResource Group}">
+                            <StackPanel>
+                                <RadioButton GroupName="PointerDelete" IsChecked="{Binding DeleteRealPointerFiles, Converter={StaticResource BoolEquals}, ConverterParameter=True}" Style="{StaticResource Shell.RadioOption}">
+                                    <TextBlock Style="{StaticResource OptionTitle}" Text="{loc:Loc Settings_PointerDeleteReal}" />
+                                </RadioButton>
+                                <RadioButton GroupName="PointerDelete" IsChecked="{Binding DeleteRealPointerFiles, Converter={StaticResource BoolEquals}, ConverterParameter=False}" Style="{StaticResource Shell.RadioOption}">
+                                    <TextBlock Style="{StaticResource OptionTitle}" Text="{loc:Loc Settings_PointerLibraryOnly}" />
+                                </RadioButton>
+                            </StackPanel>
+                        </Border>
+                        <TextBlock Style="{StaticResource GroupTitle}" Text="{loc:Loc Settings_DeleteCategory}" />
+                        <Border Style="{StaticResource Group}">
+                            <StackPanel>
+                                <RadioButton GroupName="CategoryDelete" IsChecked="{Binding CategoryDeletePolicy, Converter={StaticResource EnumEquals}, ConverterParameter=MoveToDeleted}" Style="{StaticResource Shell.RadioOption}">
+                                    <TextBlock Style="{StaticResource OptionTitle}" Text="{loc:Loc Settings_CategoryMove}" />
+                                </RadioButton>
+                                <RadioButton GroupName="CategoryDelete" IsChecked="{Binding CategoryDeletePolicy, Converter={StaticResource EnumEquals}, ConverterParameter=RecycleFiles}" Style="{StaticResource Shell.RadioOption}">
+                                    <TextBlock Style="{StaticResource OptionTitle}" Text="{loc:Loc Settings_CategoryRecycle}" />
+                                </RadioButton>
+                                <RadioButton GroupName="CategoryDelete" IsChecked="{Binding CategoryDeletePolicy, Converter={StaticResource EnumEquals}, ConverterParameter=Ask}" Style="{StaticResource Shell.RadioOption}">
+                                    <TextBlock Style="{StaticResource OptionTitle}" Text="{loc:Loc Settings_CategoryAsk}" />
+                                </RadioButton>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Chat list -->
+                    <StackPanel Style="{StaticResource SectionPanel}" Visibility="{Binding SelectedSection.Key, Converter={StaticResource EqualsToVisibility}, ConverterParameter=chatlist}">
+                        <TextBlock Style="{StaticResource GroupTitle}" Text="{loc:Loc Settings_Sort}" />
+                        <Border Style="{StaticResource Group}">
+                            <StackPanel>
+                                <RadioButton GroupName="Sort" IsChecked="{Binding ChatListSort, Converter={StaticResource EnumEquals}, ConverterParameter=LastUpload}" Style="{StaticResource Shell.RadioOption}">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource OptionTitle}" Text="{loc:Loc Settings_SortLastUpload}" />
+                                        <TextBlock Style="{StaticResource OptionHint}" Text="{loc:Loc Settings_SortLastUploadHint}" />
+                                    </StackPanel>
+                                </RadioButton>
+                                <RadioButton GroupName="Sort" IsChecked="{Binding ChatListSort, Converter={StaticResource EnumEquals}, ConverterParameter=Alphabetical}" Style="{StaticResource Shell.RadioOption}">
+                                    <TextBlock Style="{StaticResource OptionTitle}" Text="{loc:Loc Settings_SortAlpha}" />
+                                </RadioButton>
+                            </StackPanel>
+                        </Border>
+                        <TextBlock Margin="2,-10,0,0" Style="{StaticResource Shell.Text.Secondary}" Text="{loc:Loc Settings_PinnedHint}" />
+                    </StackPanel>
+
+                    <!-- Windows -->
+                    <StackPanel Style="{StaticResource SectionPanel}" Visibility="{Binding SelectedSection.Key, Converter={StaticResource EqualsToVisibility}, ConverterParameter=windows}">
+                        <TextBlock Style="{StaticResource GroupTitle}" Text="{loc:Loc Settings_TrayGroup}" />
+                        <Border Style="{StaticResource Group}">
+                            <StackPanel>
+                                <CheckBox IsChecked="{Binding StartWithWindows}" Style="{StaticResource Shell.ToggleSwitch}">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource OptionTitle}" Text="{loc:Loc Settings_StartWithWindows}" />
+                                        <TextBlock Style="{StaticResource OptionHint}" Text="{loc:Loc Settings_StartWithWindowsHint}" />
+                                    </StackPanel>
+                                </CheckBox>
+                                <Border Style="{StaticResource RowDivider}" />
+                                <CheckBox IsChecked="{Binding CloseToTray}" Style="{StaticResource Shell.ToggleSwitch}">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource OptionTitle}" Text="{loc:Loc Settings_CloseToTray}" />
+                                        <TextBlock Style="{StaticResource OptionHint}" Text="{loc:Loc Settings_CloseToTrayHint}" />
+                                    </StackPanel>
+                                </CheckBox>
+                            </StackPanel>
+                        </Border>
+                        <TextBlock Style="{StaticResource GroupTitle}" Text="{loc:Loc Settings_NotificationsGroup}" />
+                        <Border Style="{StaticResource Group}">
+                            <CheckBox IsChecked="{Binding NotifyOnVaultChanges}" Style="{StaticResource Shell.ToggleSwitch}">
+                                <StackPanel>
+                                    <TextBlock Style="{StaticResource OptionTitle}" Text="{loc:Loc Settings_Notifications}" />
+                                    <TextBlock Style="{StaticResource OptionHint}" Text="{loc:Loc Settings_NotificationsHint}" />
+                                </StackPanel>
+                            </CheckBox>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- AI (stage 4): connecting Claude Code and Codex, and the activity log -->
+                    <StackPanel Visibility="{Binding SelectedSection.Key, Converter={StaticResource EqualsToVisibility}, ConverterParameter=ai}">
+                        <StackPanel x:Name="AiSection" DataContext="{Binding Ai}" Style="{StaticResource SectionPanel}">
+                            <TextBlock Style="{StaticResource GroupTitle}" Text="{loc:Loc SettingsAi_ConnectGroup}" />
+                            <Border Style="{StaticResource Group}" Padding="16,14">
+                                <StackPanel>
+                                    <TextBlock Margin="0" Style="{StaticResource OptionHint}" FontSize="13" Text="{loc:Loc SettingsAi_ConnectHint}" />
+                                    <ContentControl Margin="0,14,0,0" Content="{Binding ClaudeCode}" ContentTemplate="{StaticResource CommandLine}" Focusable="False" />
+                                    <ContentControl Margin="0,14,0,0" Content="{Binding Codex}" ContentTemplate="{StaticResource CommandLine}" Focusable="False" />
+                                    <Grid Margin="0,14,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Margin="0,0,10,0" Style="{StaticResource OptionHint}" FontSize="12" Text="{loc:Loc SettingsAi_RemoveLabel}" />
+                                        <StackPanel Grid.Column="1">
+                                            <TextBox AutomationProperties.Name="{loc:Loc SettingsAi_RemoveLabel}" Style="{StaticResource SmallCommand}" views:AiCommandText.Command="{Binding ClaudeRemove}" />
+                                            <TextBox Margin="0,2,0,0" AutomationProperties.Name="{loc:Loc SettingsAi_RemoveLabel}" Style="{StaticResource SmallCommand}" views:AiCommandText.Command="{Binding CodexRemove}" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <TextBlock Margin="0,12,0,0"
+                                               Style="{StaticResource OptionHint}"
+                                               Text="{Binding DevNote}"
+                                               Visibility="{Binding DevNote, Converter={StaticResource NullToVisibility}}" />
+                                    <Grid Margin="0,12,0,0" Visibility="{Binding ExeMissingText, Converter={StaticResource NullToVisibility}}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <ui:SymbolIcon Margin="0,1,8,0" VerticalAlignment="Top" FontSize="16" Foreground="{DynamicResource Cab.Danger}" Symbol="Warning20" />
+                                        <TextBlock Grid.Column="1" Style="{StaticResource Shell.Text.Error}" FontSize="13" Text="{Binding ExeMissingText}" />
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <TextBlock Style="{StaticResource GroupTitle}" Text="{loc:Loc SettingsAi_ActivityGroup}" />
+                            <TextBlock Margin="2,-4,0,10" Style="{StaticResource OptionHint}" Text="{loc:Loc SettingsAi_ActivityHint}" />
+                            <WrapPanel>
+                                <ContentControl Content="{Binding Activity.DateFilter}" ContentTemplate="{StaticResource FilterDropDown}" Focusable="False" />
+                                <ContentControl Content="{Binding Activity.ToolFilter}" ContentTemplate="{StaticResource FilterDropDown}" Focusable="False" />
+                                <ContentControl Content="{Binding Activity.ClientFilter}" ContentTemplate="{StaticResource FilterDropDown}" Focusable="False" />
+                            </WrapPanel>
+                            <Grid Margin="2,0,0,8" Visibility="{Binding Activity.Message, Converter={StaticResource NullToVisibility}}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <ui:SymbolIcon Margin="0,1,8,0" VerticalAlignment="Top" FontSize="16" Foreground="{DynamicResource Cab.TextSecondary}" Symbol="Info20" />
+                                <TextBlock Grid.Column="1" FontSize="13" Foreground="{DynamicResource Cab.TextPrimary}" Text="{Binding Activity.Message}" TextWrapping="Wrap" />
+                            </Grid>
+                            <!-- The list has its own height and scrolls by itself, so it virtualizes inside the page's scroll viewer.
+                                 Tab walks every link of every row (a ListBox's own "Once" would stop at the first link), and
+                                 a focused link scrolls into view, so the rows after it are realized for the next Tab. -->
+                            <Border Margin="0,0,0,8" Padding="0" Style="{StaticResource Group}">
+                                <Grid Height="360">
+                                    <ListBox x:Name="ActivityList"
+                                             KeyboardNavigation.TabNavigation="Local"
+                                             AutomationProperties.Name="{loc:Loc SettingsAi_ActivityGroup}"
+                                             ItemContainerStyle="{StaticResource ActivityItem}"
+                                             ItemTemplate="{StaticResource ActivityRow}"
+                                             ItemsSource="{Binding Activity.Entries}"
+                                             Padding="0,2,0,6"
+                                             Style="{StaticResource Shell.ListBox}"
+                                             VirtualizingPanel.IsVirtualizing="True"
+                                             VirtualizingPanel.ScrollUnit="Pixel"
+                                             VirtualizingPanel.VirtualizationMode="Recycling" />
+                                    <StackPanel Margin="32,0" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding Activity.IsEmpty, Converter={StaticResource BoolToVisibility}}">
+                                        <ui:SymbolIcon HorizontalAlignment="Center" FontSize="36" Foreground="{DynamicResource Cab.TextSecondary}" Symbol="Bot24" />
+                                        <TextBlock Margin="0,10,0,0" HorizontalAlignment="Center" Style="{StaticResource OptionTitle}" FontWeight="{DynamicResource Cab.FontWeight.Strong}" Text="{Binding Activity.EmptyTitle}" TextAlignment="Center" />
+                                        <TextBlock Margin="0,4,0,0" HorizontalAlignment="Center" Style="{StaticResource OptionHint}" Text="{Binding Activity.EmptyHint}" TextAlignment="Center" />
+                                    </StackPanel>
+                                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{loc:Loc AiActivity_Loading}">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock" BasedOn="{StaticResource OptionHint}">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <MultiDataTrigger>
+                                                        <MultiDataTrigger.Conditions>
+                                                            <Condition Binding="{Binding Activity.IsLoading}" Value="True" />
+                                                            <Condition Binding="{Binding Activity.Entries.Count}" Value="0" />
+                                                        </MultiDataTrigger.Conditions>
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </MultiDataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                            </Border>
+                            <Button HorizontalAlignment="Left"
+                                    Command="{Binding Activity.ShowOlderCommand}"
+                                    Content="{loc:Loc AiActivity_ShowOlder}"
+                                    Style="{StaticResource Shell.TextButton}"
+                                    Visibility="{Binding Activity.HasMore, Converter={StaticResource BoolToVisibility}}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</UserControl>

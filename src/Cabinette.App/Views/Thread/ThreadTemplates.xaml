@@ -1,0 +1,1156 @@
+<!--
+  Row, bubble, tile and details-cell templates of the thread view.
+  Bubbles: copy-mode items on the right (Cab.BubbleCopyBackground), pointers on the left (Cab.BubblePointerBackground + border),
+  all corners rounded, each pinned at its outer top corner with a colored tack (Tack.cs), with a little more space above the first bubble of a run.
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:loc="clr-namespace:Cabinette.App.Localization"
+                    xmlns:local="clr-namespace:Cabinette.App.Views.Thread"
+                    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                    xmlns:vm="clr-namespace:Cabinette.App.ViewModels.Thread">
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="pack://application:,,,/Cabinette;component/Views/Thread/ThreadResources.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+
+    <!-- ============================================================ bubble parts -->
+
+    <!-- A starred file's small star (SPEC.md section 4), in the color of the bubble's time. -->
+    <Style x:Key="Cab.Thread.StarGlyph" TargetType="ui:SymbolIcon">
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Filled" Value="True" />
+        <Setter Property="Foreground" Value="{DynamicResource Cab.BubbleMetaText}" />
+        <Setter Property="Symbol" Value="Star20" />
+        <Setter Property="ToolTip" Value="{loc:Loc Thread_StarredTooltip}" />
+    </Style>
+
+    <!-- Bottom-right meta: missing badge, Locate…, star, pointer link glyph, time. -->
+    <DataTemplate x:Key="BubbleMeta" DataType="{x:Type vm:ThreadItemViewModel}">
+        <StackPanel HorizontalAlignment="Right" VerticalAlignment="Bottom" Orientation="Horizontal">
+            <Border Margin="0,0,6,0" Style="{StaticResource Cab.Thread.MissingBadge}" Visibility="{Binding IsMissing, Converter={StaticResource BoolToVis}}">
+                <StackPanel Orientation="Horizontal">
+                    <ui:SymbolIcon Margin="0,0,3,0" FontSize="11" Symbol="Warning20" />
+                    <TextBlock Text="{loc:Loc Thread_Missing}" />
+                </StackPanel>
+            </Border>
+            <Button Margin="0,0,8,0"
+                    VerticalAlignment="Center"
+                    Command="{Binding LocateCommand}"
+                    Content="{loc:Loc Thread_Locate}"
+                    FontSize="11.5"
+                    Foreground="{DynamicResource Cab.TextPrimary}"
+                    Style="{StaticResource Cab.Thread.LinkButton}"
+                    Visibility="{Binding CanLocate, Converter={StaticResource BoolToVis}}" />
+            <ui:SymbolIcon Margin="0,0,4,0" Style="{StaticResource Cab.Thread.StarGlyph}" Visibility="{Binding IsStarred, Converter={StaticResource BoolToVis}}" />
+            <ui:SymbolIcon Margin="0,0,4,0"
+                           VerticalAlignment="Center"
+                           FontSize="12"
+                           Foreground="{DynamicResource Cab.BubbleMetaText}"
+                           Symbol="Link20"
+                           ToolTip="{loc:Loc Thread_PointerTooltip}"
+                           Visibility="{Binding IsPointer, Converter={StaticResource BoolToVis}}" />
+            <TextBlock VerticalAlignment="Center" FontSize="11" Foreground="{DynamicResource Cab.BubbleMetaText}" Text="{Binding TimeText}" />
+        </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate x:Key="BubbleTags" DataType="{x:Type vm:ThreadItemViewModel}">
+        <ItemsControl Focusable="False"
+                      ItemTemplate="{StaticResource Cab.Thread.TagChipTemplate}"
+                      ItemsPanel="{StaticResource Cab.Thread.WrapPanel}"
+                      ItemsSource="{Binding Tags}"
+                      Visibility="{Binding HasTags, Converter={StaticResource BoolToVis}}" />
+    </DataTemplate>
+
+    <!-- Fallback file glyph: type icon + extension, used until (or instead of) a shell icon. -->
+    <DataTemplate x:Key="FileGlyph" DataType="{x:Type vm:ThreadItemViewModel}">
+        <Grid>
+            <Border Background="{DynamicResource Cab.Accent}" CornerRadius="6" />
+            <ui:SymbolIcon Margin="0,0,0,9"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           FontSize="21"
+                           Foreground="{DynamicResource Cab.OnAccent}"
+                           Symbol="{Binding Converter={StaticResource TypeSymbol}, ConverterParameter=label}" />
+            <TextBlock Margin="2,0,2,4"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Bottom"
+                       FontSize="8.5"
+                       FontWeight="{DynamicResource Cab.FontWeight.Bold}"
+                       Foreground="{DynamicResource Cab.OnAccent}"
+                       Text="{Binding ExtensionLabel}"
+                       TextTrimming="CharacterEllipsis" />
+        </Grid>
+    </DataTemplate>
+
+    <!-- Round translucent play button over video thumbnails. -->
+    <Style x:Key="Cab.Thread.MediaPlayButton" TargetType="Button">
+        <Setter Property="OverridesDefaultStyle" Value="True" />
+        <Setter Property="Width" Value="52" />
+        <Setter Property="Height" Value="52" />
+        <Setter Property="Foreground" Value="{DynamicResource Cab.TextPrimary}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Ellipse x:Name="Veil" Fill="{DynamicResource Cab.SidebarBackground}" Opacity="0.82" />
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Veil" Property="Opacity" Value="0.96" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Round accent play/pause button of voice notes. -->
+    <Style x:Key="Cab.Thread.VoicePlayButton" TargetType="Button" BasedOn="{StaticResource Cab.Thread.AccentIconButton}">
+        <Setter Property="Width" Value="40" />
+        <Setter Property="Height" Value="40" />
+    </Style>
+
+    <!-- Clickable inner card (link previews). -->
+    <Style x:Key="Cab.Thread.InnerCardButton" TargetType="Button">
+        <Setter Property="OverridesDefaultStyle" Value="True" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Border x:Name="Tint" Background="{DynamicResource Cab.TextPrimary}" CornerRadius="6" Opacity="0.05" />
+                        <ContentPresenter />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Tint" Property="Opacity" Value="0.09" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Duration pill over a video thumbnail. -->
+    <DataTemplate x:Key="DurationPill" DataType="{x:Type vm:ThreadItemViewModel}">
+        <Grid Visibility="{Binding HasDuration, Converter={StaticResource BoolToVis}}">
+            <Border Background="{DynamicResource Cab.SidebarBackground}" CornerRadius="8" Opacity="0.85" />
+            <StackPanel Margin="6,2,8,3" Orientation="Horizontal">
+                <ui:SymbolIcon Margin="0,0,4,0" FontSize="12" Foreground="{DynamicResource Cab.TextPrimary}" Symbol="Video20" Filled="True" />
+                <TextBlock FontSize="11" FontWeight="{DynamicResource Cab.FontWeight.Strong}" Foreground="{DynamicResource Cab.TextPrimary}" Text="{Binding DurationText}" />
+            </StackPanel>
+        </Grid>
+    </DataTemplate>
+
+    <!-- ============================================================ bubble contents (DataContext = ThreadItemViewModel) -->
+
+    <DataTemplate x:Key="ImageContent" DataType="{x:Type vm:ThreadItemViewModel}">
+        <StackPanel Width="{Binding ThumbWidth}">
+            <local:AsyncThumbnail Width="{Binding ThumbWidth}"
+                                  Height="{Binding ThumbHeight}"
+                                  CornerRadius="6"
+                                  Item="{Binding}"
+                                  Mode="Thumbnail"
+                                  Placeholder="{DynamicResource Cab.Divider}"
+                                  RequestSize="330" />
+            <StackPanel Margin="6,5,6,1">
+                <TextBlock FontSize="13" FontWeight="{DynamicResource Cab.FontWeight.Strong}" Foreground="{DynamicResource Cab.TextPrimary}" Text="{Binding FileName}" TextTrimming="CharacterEllipsis" />
+                <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource BubbleTags}" />
+                <DockPanel Margin="0,2,0,0">
+                    <ContentPresenter Margin="8,0,0,0" Content="{Binding}" ContentTemplate="{StaticResource BubbleMeta}" DockPanel.Dock="Right" />
+                    <TextBlock VerticalAlignment="Bottom" FontSize="11.5" Foreground="{DynamicResource Cab.BubbleMetaText}" Text="{Binding TypeSizeText}" TextTrimming="CharacterEllipsis" />
+                </DockPanel>
+            </StackPanel>
+        </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate x:Key="VideoContent" DataType="{x:Type vm:ThreadItemViewModel}">
+        <StackPanel Width="{Binding ThumbWidth}">
+            <Grid Width="{Binding ThumbWidth}" Height="{Binding ThumbHeight}">
+                <Border Background="{DynamicResource Cab.Divider}" CornerRadius="6" />
+                <ui:SymbolIcon FontSize="40" Foreground="{DynamicResource Cab.TextSecondary}" Opacity="0.5" Symbol="Video24" />
+                <local:AsyncThumbnail CornerRadius="6" Item="{Binding}" Mode="Thumbnail" RequestSize="330" />
+                <Button Command="{Binding OpenInViewerCommand}" Style="{StaticResource Cab.Thread.MediaPlayButton}" ToolTip="{loc:Loc Thread_PlayVideo}">
+                    <ui:SymbolIcon Margin="3,0,0,0" FontSize="26" Filled="True" Symbol="Play24" />
+                </Button>
+                <ContentPresenter Margin="8" HorizontalAlignment="Left" VerticalAlignment="Bottom" Content="{Binding}" ContentTemplate="{StaticResource DurationPill}" />
+            </Grid>
+            <StackPanel Margin="6,5,6,1">
+                <TextBlock FontSize="13" FontWeight="{DynamicResource Cab.FontWeight.Strong}" Foreground="{DynamicResource Cab.TextPrimary}" Text="{Binding FileName}" TextTrimming="CharacterEllipsis" />
+                <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource BubbleTags}" />
+                <DockPanel Margin="0,2,0,0">
+                    <ContentPresenter Margin="8,0,0,0" Content="{Binding}" ContentTemplate="{StaticResource BubbleMeta}" DockPanel.Dock="Right" />
+                    <TextBlock VerticalAlignment="Bottom" FontSize="11.5" Foreground="{DynamicResource Cab.BubbleMetaText}" Text="{Binding TypeSizeText}" TextTrimming="CharacterEllipsis" />
+                </DockPanel>
+            </StackPanel>
+        </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate x:Key="AudioContent" DataType="{x:Type vm:ThreadItemViewModel}">
+        <StackPanel Width="296" Margin="5,5,6,1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Button VerticalAlignment="Center" Command="{Binding PlayPauseCommand}" Style="{StaticResource Cab.Thread.VoicePlayButton}">
+                    <Grid>
+                        <ui:SymbolIcon Margin="2,0,0,0" FontSize="21" Filled="True" Symbol="Play24" Visibility="{Binding IsPlaying, Converter={StaticResource InvBoolToVis}}" />
+                        <ui:SymbolIcon FontSize="21" Filled="True" Symbol="Pause24" Visibility="{Binding IsPlaying, Converter={StaticResource BoolToVis}}" />
+                    </Grid>
+                </Button>
+                <StackPanel Grid.Column="1" Margin="10,0,2,0" VerticalAlignment="Center">
+                    <TextBlock FontSize="13" FontWeight="{DynamicResource Cab.FontWeight.Strong}" Foreground="{DynamicResource Cab.TextPrimary}" Text="{Binding FileName}" TextTrimming="CharacterEllipsis" />
+                    <Slider Margin="0,3,0,0" Maximum="{Binding PlaybackDurationSeconds}" Style="{StaticResource Cab.Thread.Slider}" Value="{Binding PlaybackPosition, Mode=TwoWay}" />
+                </StackPanel>
+            </Grid>
+            <ContentPresenter Margin="50,0,0,0" Content="{Binding}" ContentTemplate="{StaticResource BubbleTags}" />
+            <DockPanel Margin="50,1,0,0">
+                <ContentPresenter Margin="8,0,0,0" Content="{Binding}" ContentTemplate="{StaticResource BubbleMeta}" DockPanel.Dock="Right" />
+                <TextBlock VerticalAlignment="Bottom" FontSize="11.5" Foreground="{DynamicResource Cab.BubbleMetaText}">
+                    <Run Text="{Binding ElapsedText, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding SizeText, Mode=OneWay}" />
+                </TextBlock>
+            </DockPanel>
+        </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate x:Key="NoteContent" DataType="{x:Type vm:ThreadItemViewModel}">
+        <StackPanel MinWidth="90" Margin="7,4,7,1">
+            <TextBlock FontSize="14" Foreground="{DynamicResource Cab.TextPrimary}" LineHeight="20" Text="{Binding NoteText}" TextWrapping="Wrap" />
+            <Button Margin="0,4,0,0"
+                    HorizontalAlignment="Left"
+                    Command="{Binding ReadMoreCommand}"
+                    Content="{loc:Loc Thread_ReadMore}"
+                    FontSize="13"
+                    Foreground="{DynamicResource Cab.BubbleMetaText}"
+                    Style="{StaticResource Cab.Thread.LinkButton}"
+                    Visibility="{Binding IsNoteTruncated, Converter={StaticResource BoolToVis}}" />
+            <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource BubbleTags}" />
+            <ContentPresenter Margin="12,3,0,0" HorizontalAlignment="Right" Content="{Binding}" ContentTemplate="{StaticResource BubbleMeta}" />
+        </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate x:Key="LinkContent" DataType="{x:Type vm:ThreadItemViewModel}">
+        <StackPanel Width="296">
+            <Button Command="{Binding OpenCommand}" Style="{StaticResource Cab.Thread.InnerCardButton}" ToolTip="{Binding LinkDisplay}">
+                <Grid Margin="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid Width="42" Height="42" VerticalAlignment="Top">
+                        <Border Background="{DynamicResource Cab.Accent}" CornerRadius="8" Opacity="0.18" />
+                        <ui:SymbolIcon FontSize="22" Foreground="{DynamicResource Cab.Accent}" Symbol="Globe24" />
+                    </Grid>
+                    <StackPanel Grid.Column="1" Margin="11,1,0,0" VerticalAlignment="Center">
+                        <TextBlock FontSize="13.5" FontWeight="{DynamicResource Cab.FontWeight.Strong}" Foreground="{DynamicResource Cab.TextPrimary}" Text="{Binding LinkHost}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock MaxHeight="34"
+                                   Margin="0,2,0,0"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource Cab.TextSecondary}"
+                                   LineHeight="17"
+                                   LineStackingStrategy="BlockLineHeight"
+                                   Text="{Binding LinkDisplay}"
+                                   TextTrimming="CharacterEllipsis"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </Grid>
+            </Button>
+            <ContentPresenter Margin="6,0" Content="{Binding}" ContentTemplate="{StaticResource BubbleTags}" />
+            <ContentPresenter Margin="6,4,6,1" HorizontalAlignment="Right" Content="{Binding}" ContentTemplate="{StaticResource BubbleMeta}" />
+        </StackPanel>
+    </DataTemplate>
+
+    <!--
+      Documents: a large first-page preview (cropped from the top) when the shell has a thumbnail,
+      then the file row (type icon, name, "64 pages · PDF · 780 KB"). Without a thumbnail only the file row shows.
+    -->
+    <DataTemplate x:Key="DocumentContent" DataType="{x:Type vm:ThreadItemViewModel}">
+        <StackPanel x:Name="Root" MinWidth="250" MaxWidth="330">
+            <local:AsyncThumbnail x:Name="Preview"
+                                  Height="180"
+                                  CornerRadius="6,6,0,0"
+                                  ImageAlignmentY="Top"
+                                  Item="{Binding}"
+                                  Mode="Thumbnail"
+                                  RequestSize="330"
+                                  Visibility="Collapsed" />
+            <Grid>
+                <Border x:Name="Card" Background="{DynamicResource Cab.TextPrimary}" CornerRadius="6" Opacity="0.05" />
+                <Grid Margin="10,10,12,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid x:Name="IconBox" Width="40" Height="48">
+                        <ContentPresenter x:Name="Glyph" Content="{Binding}" ContentTemplate="{StaticResource FileGlyph}" />
+                        <local:AsyncThumbnail x:Name="Icon" Item="{Binding}" Mode="Icon" RequestSize="48" Stretch="Uniform" />
+                    </Grid>
+                    <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                        <TextBlock MaxHeight="38"
+                                   FontSize="13.5"
+                                   FontWeight="{DynamicResource Cab.FontWeight.Strong}"
+                                   Foreground="{DynamicResource Cab.TextPrimary}"
+                                   LineHeight="19"
+                                   LineStackingStrategy="BlockLineHeight"
+                                   Text="{Binding FileName}"
+                                   TextTrimming="CharacterEllipsis"
+                                   TextWrapping="Wrap" />
+                        <TextBlock Margin="0,2,0,0" FontSize="11.5" Foreground="{DynamicResource Cab.BubbleMetaText}" Text="{Binding DocumentInfoText}" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                </Grid>
+            </Grid>
+            <ContentPresenter Margin="6,0" Content="{Binding}" ContentTemplate="{StaticResource BubbleTags}" />
+            <ContentPresenter Margin="6,4,6,1" HorizontalAlignment="Right" Content="{Binding}" ContentTemplate="{StaticResource BubbleMeta}" />
+        </StackPanel>
+        <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding HasImage, ElementName=Icon}" Value="True">
+                <Setter TargetName="Glyph" Property="Visibility" Value="Collapsed" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding HasImage, ElementName=Preview}" Value="True">
+                <Setter TargetName="Preview" Property="Visibility" Value="Visible" />
+                <Setter TargetName="Root" Property="Width" Value="330" />
+                <Setter TargetName="Card" Property="CornerRadius" Value="0,0,6,6" />
+                <Setter TargetName="IconBox" Property="Width" Value="32" />
+                <Setter TargetName="IconBox" Property="Height" Value="38" />
+            </DataTrigger>
+        </DataTemplate.Triggers>
+    </DataTemplate>
+
+    <!-- Picks the content template from the item's DisplayKind (re-evaluated when a thumbnail fails or a file goes missing). -->
+    <Style x:Key="BubbleContentStyle" TargetType="ContentControl">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="ContentTemplate" Value="{StaticResource DocumentContent}" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Content.DisplayKind, RelativeSource={RelativeSource Self}}" Value="Image">
+                <Setter Property="ContentTemplate" Value="{StaticResource ImageContent}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Content.DisplayKind, RelativeSource={RelativeSource Self}}" Value="Video">
+                <Setter Property="ContentTemplate" Value="{StaticResource VideoContent}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Content.DisplayKind, RelativeSource={RelativeSource Self}}" Value="Audio">
+                <Setter Property="ContentTemplate" Value="{StaticResource AudioContent}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Content.DisplayKind, RelativeSource={RelativeSource Self}}" Value="Note">
+                <Setter Property="ContentTemplate" Value="{StaticResource NoteContent}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Content.DisplayKind, RelativeSource={RelativeSource Self}}" Value="Link">
+                <Setter Property="ContentTemplate" Value="{StaticResource LinkContent}" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Flash used by FocusItem. -->
+    <Storyboard x:Key="FlashStoryboard">
+        <DoubleAnimationUsingKeyFrames FillBehavior="Stop" Storyboard.TargetName="Flash" Storyboard.TargetProperty="Opacity">
+            <LinearDoubleKeyFrame KeyTime="0:0:0" Value="0" />
+            <EasingDoubleKeyFrame KeyTime="0:0:0.25" Value="0.32" />
+            <EasingDoubleKeyFrame KeyTime="0:0:0.7" Value="0.08" />
+            <EasingDoubleKeyFrame KeyTime="0:0:1.0" Value="0.32" />
+            <EasingDoubleKeyFrame KeyTime="0:0:2.0" Value="0" />
+        </DoubleAnimationUsingKeyFrames>
+    </Storyboard>
+
+    <!-- ============================================================ chat rows -->
+
+    <DataTemplate DataType="{x:Type vm:DateHeaderRow}">
+        <Border Margin="0,14,0,8" Style="{StaticResource Cab.Thread.DatePill}">
+            <TextBlock Text="{Binding Text}" />
+        </Border>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:ItemRow}">
+        <Grid x:Name="Row" Background="Transparent">
+            <Rectangle Fill="{DynamicResource Cab.Accent}" Opacity="0.14" Visibility="{Binding Item.IsSelected, Converter={StaticResource BoolToVis}}" />
+            <Rectangle x:Name="Flash" Fill="{DynamicResource Cab.Accent}" Opacity="0" />
+            <Grid Margin="{Binding (local:ThreadLayout.RowPadding), RelativeSource={RelativeSource Self}}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <CheckBox Margin="0,0,14,0"
+                          VerticalAlignment="Center"
+                          IsChecked="{Binding Item.IsSelected, Mode=OneWay}"
+                          Style="{StaticResource Cab.Thread.SelectCheck}"
+                          Visibility="{Binding Item.Owner.IsSelectionActive, Converter={StaticResource BoolToVis}}" />
+                <Grid x:Name="Chrome"
+                      Grid.Column="1"
+                      Margin="0,7,0,1.5"
+                      HorizontalAlignment="Right"
+                      MaxWidth="{Binding (local:ThreadLayout.BubbleMaxWidth), RelativeSource={RelativeSource Self}}"
+                      ToolTip="{Binding Item.ToolTipText}"
+                      ToolTipService.InitialShowDelay="1000">
+                    <Border x:Name="Bubble" Padding="3" Background="{DynamicResource Cab.BubbleCopyBackground}" CornerRadius="8">
+                        <ContentControl Content="{Binding Item}" Style="{StaticResource BubbleContentStyle}" />
+                    </Border>
+                    <!-- The push pin (SPEC.md section 4): its color comes from the file's id. It pins the bubble's outer top corner
+                         (top-right here; a pointer's trigger moves it to the top-left and mirrors it, so the needle points in). -->
+                    <local:Tack x:Name="Tack"
+                                Margin="0,-6,-2,0"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Top"
+                                RenderTransformOrigin="0.5,0.5"
+                                Seed="{Binding Item.Id}" />
+                </Grid>
+            </Grid>
+        </Grid>
+        <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding IsPointer}" Value="True">
+                <Setter TargetName="Chrome" Property="HorizontalAlignment" Value="Left" />
+                <Setter TargetName="Bubble" Property="Background" Value="{DynamicResource Cab.BubblePointerBackground}" />
+                <Setter TargetName="Bubble" Property="BorderBrush" Value="{DynamicResource Cab.BubblePointerBorder}" />
+                <Setter TargetName="Bubble" Property="BorderThickness" Value="1" />
+                <Setter TargetName="Bubble" Property="Padding" Value="2" />
+                <Setter TargetName="Tack" Property="HorizontalAlignment" Value="Left" />
+                <Setter TargetName="Tack" Property="Margin" Value="-2,-6,0,0" />
+                <Setter TargetName="Tack" Property="RenderTransform">
+                    <Setter.Value>
+                        <ScaleTransform ScaleX="-1" />
+                    </Setter.Value>
+                </Setter>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding IsFirstInRun}" Value="True">
+                <Setter TargetName="Chrome" Property="Margin" Value="0,11,0,1.5" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Item.IsHighlighted}" Value="True">
+                <DataTrigger.EnterActions>
+                    <BeginStoryboard Storyboard="{StaticResource FlashStoryboard}" />
+                </DataTrigger.EnterActions>
+            </DataTrigger>
+        </DataTemplate.Triggers>
+    </DataTemplate>
+
+    <!-- One album cell (2×2 grid). -->
+    <DataTemplate x:Key="AlbumCellTemplate" DataType="{x:Type vm:AlbumCell}">
+        <Grid Width="{Binding Width}" Height="{Binding Height}" Margin="{Binding Margin}" Background="Transparent" Cursor="Hand">
+            <local:AsyncThumbnail CornerRadius="5"
+                                  Item="{Binding Item}"
+                                  Mode="Thumbnail"
+                                  Placeholder="{DynamicResource Cab.Divider}"
+                                  RequestSize="{Binding RequestSize}" />
+            <Grid x:Name="VideoBadge" Width="36" Height="36" Visibility="Collapsed">
+                <Ellipse Fill="{DynamicResource Cab.SidebarBackground}" Opacity="0.82" />
+                <ui:SymbolIcon Margin="2,0,0,0" FontSize="18" Filled="True" Foreground="{DynamicResource Cab.TextPrimary}" Symbol="Play24" />
+            </Grid>
+            <Grid Visibility="{Binding HasMore, Converter={StaticResource BoolToVis}}">
+                <Border Background="{DynamicResource Cab.SidebarBackground}" CornerRadius="5" Opacity="0.66" />
+                <TextBlock HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           FontSize="28"
+                           FontWeight="{DynamicResource Cab.FontWeight.Strong}"
+                           Foreground="{DynamicResource Cab.TextPrimary}"
+                           Text="{Binding MoreText}" />
+            </Grid>
+            <!-- FocusItem's flash on the photo itself (opening a search or quick-switcher hit that sits in an album). -->
+            <Rectangle x:Name="Flash" Fill="{DynamicResource Cab.Accent}" IsHitTestVisible="False" Opacity="0" RadiusX="5" RadiusY="5" />
+        </Grid>
+        <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding Item.VisualKind}" Value="Video">
+                <Setter TargetName="VideoBadge" Property="Visibility" Value="Visible" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding HasMore}" Value="True">
+                <Setter TargetName="VideoBadge" Property="Visibility" Value="Collapsed" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Item.IsHighlighted}" Value="True">
+                <DataTrigger.EnterActions>
+                    <BeginStoryboard Storyboard="{StaticResource FlashStoryboard}" />
+                </DataTrigger.EnterActions>
+            </DataTrigger>
+            <!-- The "+N" tile flashes for a photo behind it, which has no cell of its own (AlbumCell.IsHighlighted). -->
+            <DataTrigger Binding="{Binding IsHighlighted}" Value="True">
+                <DataTrigger.EnterActions>
+                    <BeginStoryboard Storyboard="{StaticResource FlashStoryboard}" />
+                </DataTrigger.EnterActions>
+            </DataTrigger>
+        </DataTemplate.Triggers>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:AlbumRow}">
+        <Grid x:Name="Row" Background="Transparent">
+            <Rectangle Fill="{DynamicResource Cab.Accent}" Opacity="0.14" Visibility="{Binding IsSelected, Converter={StaticResource BoolToVis}}" />
+            <Grid Margin="{Binding (local:ThreadLayout.RowPadding), RelativeSource={RelativeSource Self}}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <CheckBox Margin="0,0,14,0"
+                          VerticalAlignment="Center"
+                          IsChecked="{Binding IsSelected, Mode=OneWay}"
+                          Style="{StaticResource Cab.Thread.SelectCheck}"
+                          Visibility="{Binding Last.Owner.IsSelectionActive, Converter={StaticResource BoolToVis}}" />
+                <Grid x:Name="Chrome" Grid.Column="1" Margin="0,7,0,1.5" HorizontalAlignment="Right">
+                    <Border x:Name="Bubble" Padding="3" Background="{DynamicResource Cab.BubbleCopyBackground}" CornerRadius="8">
+                        <StackPanel Width="300">
+                            <ItemsControl Width="300"
+                                          Focusable="False"
+                                          ItemTemplate="{StaticResource AlbumCellTemplate}"
+                                          ItemsPanel="{StaticResource Cab.Thread.WrapPanel}"
+                                          ItemsSource="{Binding Cells}" />
+                            <DockPanel Margin="6,5,6,1">
+                                <ContentPresenter Margin="8,0,0,0" Content="{Binding Last}" ContentTemplate="{StaticResource BubbleMeta}" DockPanel.Dock="Right" />
+                                <!-- Another file of the album is starred (the newest file's meta shows its own star) -->
+                                <ui:SymbolIcon Margin="8,0,-4,1"
+                                               VerticalAlignment="Bottom"
+                                               DockPanel.Dock="Right"
+                                               Style="{StaticResource Cab.Thread.StarGlyph}"
+                                               Visibility="{Binding HasOtherStarred, Converter={StaticResource BoolToVis}}" />
+                                <TextBlock VerticalAlignment="Bottom" FontSize="12" Foreground="{DynamicResource Cab.BubbleMetaText}" Text="{Binding CaptionText}" />
+                            </DockPanel>
+                        </StackPanel>
+                    </Border>
+                    <!-- The push pin (SPEC.md section 4): its color comes from the file's id. It pins the bubble's outer top corner
+                         (top-right here; a pointer's trigger moves it to the top-left and mirrors it, so the needle points in). -->
+                    <local:Tack x:Name="Tack"
+                                Margin="0,-6,-2,0"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Top"
+                                RenderTransformOrigin="0.5,0.5"
+                                Seed="{Binding Last.Id}" />
+                </Grid>
+            </Grid>
+        </Grid>
+        <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding IsPointer}" Value="True">
+                <Setter TargetName="Chrome" Property="HorizontalAlignment" Value="Left" />
+                <Setter TargetName="Bubble" Property="Background" Value="{DynamicResource Cab.BubblePointerBackground}" />
+                <Setter TargetName="Bubble" Property="BorderBrush" Value="{DynamicResource Cab.BubblePointerBorder}" />
+                <Setter TargetName="Bubble" Property="BorderThickness" Value="1" />
+                <Setter TargetName="Bubble" Property="Padding" Value="2" />
+                <Setter TargetName="Tack" Property="HorizontalAlignment" Value="Left" />
+                <Setter TargetName="Tack" Property="Margin" Value="-2,-6,0,0" />
+                <Setter TargetName="Tack" Property="RenderTransform">
+                    <Setter.Value>
+                        <ScaleTransform ScaleX="-1" />
+                    </Setter.Value>
+                </Setter>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding IsFirstInRun}" Value="True">
+                <Setter TargetName="Chrome" Property="Margin" Value="0,11,0,1.5" />
+            </DataTrigger>
+        </DataTemplate.Triggers>
+    </DataTemplate>
+
+    <!-- ============================================================ grid gallery -->
+
+    <DataTemplate DataType="{x:Type vm:GridHeaderRow}">
+        <TextBlock Margin="{Binding (local:ThreadLayout.RowPadding), RelativeSource={RelativeSource Self}}"
+                   Padding="2,16,0,10"
+                   FontSize="13"
+                   FontWeight="{DynamicResource Cab.FontWeight.Strong}"
+                   Foreground="{DynamicResource Cab.TextSecondary}"
+                   Text="{Binding Text}" />
+    </DataTemplate>
+
+    <!-- Tile visuals by kind (DataContext = ThreadItemViewModel). -->
+    <DataTemplate x:Key="TileMedia" DataType="{x:Type vm:ThreadItemViewModel}">
+        <Grid>
+            <local:AsyncThumbnail CornerRadius="10"
+                                  Item="{Binding}"
+                                  Mode="Thumbnail"
+                                  Placeholder="{DynamicResource Cab.Divider}"
+                                  RequestSize="{Binding (local:ThreadLayout.TileSize), RelativeSource={RelativeSource Self}}" />
+            <Grid x:Name="Play" Width="40" Height="40" Visibility="Collapsed">
+                <Ellipse Fill="{DynamicResource Cab.SidebarBackground}" Opacity="0.82" />
+                <ui:SymbolIcon Margin="2,0,0,0" FontSize="20" Filled="True" Foreground="{DynamicResource Cab.TextPrimary}" Symbol="Play24" />
+            </Grid>
+            <ContentPresenter x:Name="Duration"
+                              Margin="8"
+                              HorizontalAlignment="Left"
+                              VerticalAlignment="Bottom"
+                              Content="{Binding}"
+                              ContentTemplate="{StaticResource DurationPill}"
+                              Visibility="Collapsed" />
+        </Grid>
+        <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding VisualKind}" Value="Video">
+                <Setter TargetName="Play" Property="Visibility" Value="Visible" />
+                <Setter TargetName="Duration" Property="Visibility" Value="Visible" />
+            </DataTrigger>
+        </DataTemplate.Triggers>
+    </DataTemplate>
+
+    <DataTemplate x:Key="TileNote" DataType="{x:Type vm:ThreadItemViewModel}">
+        <Border Padding="12,10" Background="{DynamicResource Cab.NoteTileBackground}" ClipToBounds="True" CornerRadius="10">
+            <TextBlock FontSize="12" Foreground="{DynamicResource Cab.TextPrimary}" LineHeight="17" Text="{Binding NoteText}" TextTrimming="CharacterEllipsis" TextWrapping="Wrap" />
+        </Border>
+    </DataTemplate>
+
+    <DataTemplate x:Key="TileLink" DataType="{x:Type vm:ThreadItemViewModel}">
+        <StackPanel Margin="12" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Grid Width="52" Height="52">
+                <Ellipse Fill="{DynamicResource Cab.Accent}" Opacity="0.18" />
+                <ui:SymbolIcon FontSize="26" Foreground="{DynamicResource Cab.Accent}" Symbol="Globe24" />
+            </Grid>
+            <TextBlock Margin="0,8,0,0" HorizontalAlignment="Center" FontSize="12" FontWeight="{DynamicResource Cab.FontWeight.Strong}" Foreground="{DynamicResource Cab.TextPrimary}" Text="{Binding LinkHost}" TextTrimming="CharacterEllipsis" />
+        </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate x:Key="TileAudio" DataType="{x:Type vm:ThreadItemViewModel}">
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Grid Width="56" Height="56">
+                <Ellipse Fill="{DynamicResource Cab.Accent}" />
+                <ui:SymbolIcon FontSize="26" Filled="True" Foreground="{DynamicResource Cab.OnAccent}" Symbol="MusicNote224" />
+            </Grid>
+            <TextBlock Margin="0,8,0,0" HorizontalAlignment="Center" FontSize="12" Foreground="{DynamicResource Cab.TextSecondary}" Text="{Binding DurationText}" />
+        </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate x:Key="TileDocument" DataType="{x:Type vm:ThreadItemViewModel}">
+        <Grid>
+            <ContentPresenter x:Name="Glyph" Width="52" Height="62" Content="{Binding}" ContentTemplate="{StaticResource FileGlyph}" />
+            <local:AsyncThumbnail x:Name="Icon" Width="64" Height="64" Item="{Binding}" Mode="Icon" RequestSize="64" Stretch="Uniform" />
+            <!-- A document's page sits whole on the tile (no cropping of slides or sheets). -->
+            <local:AsyncThumbnail x:Name="Thumb"
+                                  Margin="12"
+                                  CornerRadius="3"
+                                  Item="{Binding}"
+                                  Mode="Thumbnail"
+                                  RequestSize="{Binding (local:ThreadLayout.TileSize), RelativeSource={RelativeSource Self}}"
+                                  Stretch="Uniform" />
+        </Grid>
+        <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding HasImage, ElementName=Icon}" Value="True">
+                <Setter TargetName="Glyph" Property="Visibility" Value="Collapsed" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding HasImage, ElementName=Thumb}" Value="True">
+                <Setter TargetName="Glyph" Property="Visibility" Value="Collapsed" />
+                <Setter TargetName="Icon" Property="Visibility" Value="Collapsed" />
+            </DataTrigger>
+        </DataTemplate.Triggers>
+    </DataTemplate>
+
+    <Style x:Key="TileContentStyle" TargetType="ContentControl">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="ContentTemplate" Value="{StaticResource TileDocument}" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding DisplayKind}" Value="Image">
+                <Setter Property="ContentTemplate" Value="{StaticResource TileMedia}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding DisplayKind}" Value="Video">
+                <Setter Property="ContentTemplate" Value="{StaticResource TileMedia}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding DisplayKind}" Value="Note">
+                <Setter Property="ContentTemplate" Value="{StaticResource TileNote}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding DisplayKind}" Value="Link">
+                <Setter Property="ContentTemplate" Value="{StaticResource TileLink}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding DisplayKind}" Value="Audio">
+                <Setter Property="ContentTemplate" Value="{StaticResource TileAudio}" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <DataTemplate x:Key="GridTile" DataType="{x:Type vm:ThreadItemViewModel}">
+        <Grid x:Name="Tile"
+              Width="{Binding (local:ThreadLayout.TileSize), RelativeSource={RelativeSource Self}}"
+              Margin="0,0,10,14"
+              Background="Transparent"
+              ToolTip="{Binding ToolTipText}"
+              ToolTipService.InitialShowDelay="1000">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid Height="{Binding (local:ThreadLayout.TileSize), RelativeSource={RelativeSource Self}}">
+                <Border Background="{DynamicResource Cab.HeaderBackground}" BorderBrush="{DynamicResource Cab.Divider}" BorderThickness="1" CornerRadius="10" />
+                <ContentControl Content="{Binding}" Style="{StaticResource TileContentStyle}" />
+                <Border x:Name="Hover" Background="{DynamicResource Cab.TextPrimary}" CornerRadius="10" Opacity="0" />
+                <Rectangle x:Name="Flash" Fill="{DynamicResource Cab.Accent}" Opacity="0" RadiusX="10" RadiusY="10" />
+                <StackPanel Margin="8" HorizontalAlignment="Right" VerticalAlignment="Top" Orientation="Horizontal">
+                    <Grid Width="24" Height="24" Visibility="{Binding IsStarred, Converter={StaticResource BoolToVis}}" ToolTip="{loc:Loc Thread_StarredTooltip}">
+                        <Ellipse Fill="{DynamicResource Cab.SidebarBackground}" Opacity="0.9" />
+                        <ui:SymbolIcon FontSize="13" Filled="True" Foreground="{DynamicResource Cab.TextPrimary}" Symbol="Star20" />
+                    </Grid>
+                    <Grid Width="24" Height="24" Margin="4,0,0,0" Visibility="{Binding IsPointer, Converter={StaticResource BoolToVis}}" ToolTip="{loc:Loc Thread_PointerTooltip}">
+                        <Ellipse Fill="{DynamicResource Cab.SidebarBackground}" Opacity="0.9" />
+                        <ui:SymbolIcon FontSize="13" Foreground="{DynamicResource Cab.TextPrimary}" Symbol="Link20" />
+                    </Grid>
+                </StackPanel>
+                <Border Margin="8" HorizontalAlignment="Right" VerticalAlignment="Bottom" Style="{StaticResource Cab.Thread.MissingBadge}" Visibility="{Binding IsMissing, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="{loc:Loc Thread_Missing}" />
+                </Border>
+                <Border x:Name="Ring" BorderBrush="{DynamicResource Cab.Accent}" BorderThickness="3" CornerRadius="10" Visibility="{Binding IsSelected, Converter={StaticResource BoolToVis}}" />
+                <CheckBox Margin="8"
+                          HorizontalAlignment="Left"
+                          VerticalAlignment="Top"
+                          IsChecked="{Binding IsSelected, Mode=OneWay}"
+                          Style="{StaticResource Cab.Thread.SelectCheck}"
+                          Visibility="{Binding Owner.IsSelectionActive, Converter={StaticResource BoolToVis}}" />
+            </Grid>
+            <TextBlock Grid.Row="1"
+                       Margin="3,7,3,0"
+                       FontSize="12.5"
+                       Foreground="{DynamicResource Cab.TextPrimary}"
+                       Text="{Binding FileName}"
+                       TextTrimming="CharacterEllipsis" />
+        </Grid>
+        <DataTemplate.Triggers>
+            <Trigger SourceName="Tile" Property="IsMouseOver" Value="True">
+                <Setter TargetName="Hover" Property="Opacity" Value="0.07" />
+            </Trigger>
+            <DataTrigger Binding="{Binding IsHighlighted}" Value="True">
+                <DataTrigger.EnterActions>
+                    <BeginStoryboard Storyboard="{StaticResource FlashStoryboard}" />
+                </DataTrigger.EnterActions>
+            </DataTrigger>
+        </DataTemplate.Triggers>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:GridTileRow}">
+        <ItemsControl Margin="{Binding (local:ThreadLayout.RowPadding), RelativeSource={RelativeSource Self}}"
+                      Focusable="False"
+                      ItemTemplate="{StaticResource GridTile}"
+                      ItemsSource="{Binding Items}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+        </ItemsControl>
+    </DataTemplate>
+
+    <!-- ============================================================ gallery (SPEC.md section 4, "Gallery") -->
+    <!-- Same-size cells under day headers: a photo or video sits as a print (GalleryPrint: thin frame, fake shadow, no Effect)
+         on the cell's bottom line, its name centered below on two lines; other files show their type icon without a frame. -->
+
+    <!-- A sort header button: the sorted one is darker and shows its direction. -->
+    <Style x:Key="Cab.Thread.GallerySortButton" TargetType="Button">
+        <Setter Property="OverridesDefaultStyle" Value="True" />
+        <Setter Property="Height" Value="30" />
+        <Setter Property="Padding" Value="10,0" />
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="Foreground" Value="{DynamicResource Cab.TextSecondary}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource Cab.Thread.FocusVisual}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid Background="Transparent">
+                        <Border x:Name="Tint" Background="{DynamicResource Cab.TextPrimary}" CornerRadius="6" Opacity="0" />
+                        <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Tint" Property="Opacity" Value="0.07" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Tint" Property="Opacity" Value="0.12" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <DataTemplate DataType="{x:Type vm:GalleryHeaderRow}">
+        <Border Margin="{Binding (local:ThreadLayout.RowPadding), RelativeSource={RelativeSource Self}}">
+            <DockPanel Margin="{Binding (local:ThreadLayout.GalleryHeaderIndent), RelativeSource={RelativeSource Self}}">
+                <TextBlock Margin="0,16,0,8"
+                           FontSize="13"
+                           FontWeight="{DynamicResource Cab.FontWeight.Strong}"
+                           Foreground="{DynamicResource Cab.TextSecondary}"
+                           Text="{Binding Text}" />
+                <Rectangle Height="1" Margin="12,9,0,0" VerticalAlignment="Center" Fill="{DynamicResource Cab.Divider}" />
+            </DockPanel>
+        </Border>
+    </DataTemplate>
+
+    <!-- Star and pointer markers, as in the grid (a little smaller). -->
+    <DataTemplate x:Key="GalleryMarkers" DataType="{x:Type vm:ThreadItemViewModel}">
+        <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top" Orientation="Horizontal">
+            <Grid Width="20" Height="20" Visibility="{Binding IsStarred, Converter={StaticResource BoolToVis}}" ToolTip="{loc:Loc Thread_StarredTooltip}">
+                <Ellipse Fill="{DynamicResource Cab.SidebarBackground}" Opacity="0.9" />
+                <ui:SymbolIcon FontSize="11" Filled="True" Foreground="{DynamicResource Cab.TextPrimary}" Symbol="Star20" />
+            </Grid>
+            <Grid Width="20" Height="20" Margin="3,0,0,0" Visibility="{Binding IsPointer, Converter={StaticResource BoolToVis}}" ToolTip="{loc:Loc Thread_PointerTooltip}">
+                <Ellipse Fill="{DynamicResource Cab.SidebarBackground}" Opacity="0.9" />
+                <ui:SymbolIcon FontSize="11" Foreground="{DynamicResource Cab.TextPrimary}" Symbol="Link20" />
+            </Grid>
+        </StackPanel>
+    </DataTemplate>
+
+    <!-- A photo or video: a print fitted in the photo box. The thumbnail is asked for at the cell's size (the loader doubles it). -->
+    <DataTemplate x:Key="GalleryMedia" DataType="{x:Type vm:ThreadItemViewModel}">
+        <!-- The frame shows the mode: green for copies, blue for pointers (which also keep their link marker). -->
+        <local:GalleryPrint x:Name="Print"
+                            AspectRatio="{Binding AspectRatio}"
+                            FrameBrush="{DynamicResource Cab.GalleryFrameCopy}"
+                            ShadowBrush="{DynamicResource Cab.OverlayBackground}">
+            <local:AsyncThumbnail Item="{Binding}"
+                                  Mode="Thumbnail"
+                                  Placeholder="{DynamicResource Cab.Divider}"
+                                  RequestSize="{Binding (local:ThreadLayout.GalleryCellSize), RelativeSource={RelativeSource Self}}"
+                                  Stretch="Uniform" />
+            <Grid>
+                <Grid x:Name="Play" Width="30" Height="30" Visibility="Collapsed">
+                    <Ellipse Fill="{DynamicResource Cab.SidebarBackground}" Opacity="0.82" />
+                    <ui:SymbolIcon Margin="2,0,0,0" FontSize="15" Filled="True" Foreground="{DynamicResource Cab.TextPrimary}" Symbol="Play24" />
+                </Grid>
+                <ContentPresenter x:Name="Duration"
+                                  Margin="6"
+                                  HorizontalAlignment="Left"
+                                  VerticalAlignment="Bottom"
+                                  Content="{Binding}"
+                                  ContentTemplate="{StaticResource DurationPill}"
+                                  Visibility="Collapsed" />
+                <ContentPresenter Margin="5" Content="{Binding}" ContentTemplate="{StaticResource GalleryMarkers}" />
+            </Grid>
+        </local:GalleryPrint>
+        <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding VisualKind}" Value="Video">
+                <Setter TargetName="Play" Property="Visibility" Value="Visible" />
+                <Setter TargetName="Duration" Property="Visibility" Value="Visible" />
+                <!-- Videos show a 16:9 print until their shape is known; photos show nothing until theirs is. -->
+                <Setter TargetName="Print" Property="FallbackAspectRatio" Value="1.7778" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding IsPointer}" Value="True">
+                <Setter TargetName="Print" Property="FrameBrush" Value="{DynamicResource Cab.GalleryFramePointer}" />
+            </DataTrigger>
+        </DataTemplate.Triggers>
+    </DataTemplate>
+
+    <!-- Any other file (a PDF in Images, a note): its type icon, no frame, on the same bottom line. -->
+    <DataTemplate x:Key="GalleryIcon" DataType="{x:Type vm:ThreadItemViewModel}">
+        <Grid Width="{Binding (local:ThreadLayout.GalleryIconSize), RelativeSource={RelativeSource Self}}"
+              Height="{Binding (local:ThreadLayout.GalleryIconSize), RelativeSource={RelativeSource Self}}"
+              Margin="0,0,0,4"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Bottom">
+            <ContentPresenter x:Name="Glyph" Margin="6,0" Content="{Binding}" ContentTemplate="{StaticResource FileGlyph}" />
+            <local:AsyncThumbnail x:Name="Icon"
+                                  Item="{Binding}"
+                                  Mode="Icon"
+                                  RequestSize="{Binding (local:ThreadLayout.GalleryIconSize), RelativeSource={RelativeSource Self}}"
+                                  Stretch="Uniform" />
+            <ContentPresenter Margin="0,-6,-10,0" Content="{Binding}" ContentTemplate="{StaticResource GalleryMarkers}" />
+        </Grid>
+        <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding HasImage, ElementName=Icon}" Value="True">
+                <Setter TargetName="Glyph" Property="Visibility" Value="Collapsed" />
+            </DataTrigger>
+        </DataTemplate.Triggers>
+    </DataTemplate>
+
+    <Style x:Key="GalleryContentStyle" TargetType="ContentControl">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="ContentTemplate" Value="{StaticResource GalleryIcon}" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding DisplayKind}" Value="Image">
+                <Setter Property="ContentTemplate" Value="{StaticResource GalleryMedia}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding DisplayKind}" Value="Video">
+                <Setter Property="ContentTemplate" Value="{StaticResource GalleryMedia}" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- One cell: the photo box, the name centered below on up to two lines then "…". Selected: a soft accent backdrop. -->
+    <DataTemplate x:Key="GalleryCell" DataType="{x:Type vm:ThreadItemViewModel}">
+        <!-- The slot (no background: a click between cells is a click on empty space), the cell centered in it. -->
+        <Grid Width="{Binding (local:ThreadLayout.GallerySlotWidth), RelativeSource={RelativeSource Self}}">
+            <Grid x:Name="Tile"
+                  Margin="0,4,0,10"
+                  HorizontalAlignment="Center"
+                  Background="Transparent"
+                  ToolTip="{Binding GalleryToolTipText}"
+                  ToolTipService.InitialShowDelay="1000">
+                <Border x:Name="Hover" Background="{DynamicResource Cab.TextPrimary}" CornerRadius="8" Opacity="0" />
+                <Border x:Name="Selected"
+                        Background="{DynamicResource Cab.RowSelected}"
+                        BorderBrush="{DynamicResource Cab.Accent}"
+                        BorderThickness="1.5"
+                        CornerRadius="8"
+                        Visibility="{Binding IsSelected, Converter={StaticResource BoolToVis}}" />
+                <Rectangle x:Name="Flash" Fill="{DynamicResource Cab.Accent}" Opacity="0" RadiusX="8" RadiusY="8" />
+                <StackPanel Margin="5">
+                    <Grid Width="{Binding (local:ThreadLayout.GalleryCellSize), RelativeSource={RelativeSource Self}}"
+                          Height="{Binding (local:ThreadLayout.GalleryCellSize), RelativeSource={RelativeSource Self}}">
+                        <ContentControl Content="{Binding}" Style="{StaticResource GalleryContentStyle}" />
+                        <Border Margin="0,0,0,6"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Bottom"
+                                Style="{StaticResource Cab.Thread.MissingBadge}"
+                                Visibility="{Binding IsMissing, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="{loc:Loc Thread_Missing}" />
+                        </Border>
+                        <CheckBox Margin="2"
+                                  HorizontalAlignment="Left"
+                                  VerticalAlignment="Top"
+                                  IsChecked="{Binding IsSelected, Mode=OneWay}"
+                                  Style="{StaticResource Cab.Thread.SelectCheck}"
+                                  Visibility="{Binding Owner.IsSelectionActive, Converter={StaticResource BoolToVis}}" />
+                    </Grid>
+                    <TextBlock Height="32"
+                               Margin="0,7,0,0"
+                               FontSize="12"
+                               Foreground="{DynamicResource Cab.TextPrimary}"
+                               LineHeight="16"
+                               LineStackingStrategy="BlockLineHeight"
+                               Text="{Binding FileName}"
+                               TextAlignment="Center"
+                               TextTrimming="CharacterEllipsis"
+                               TextWrapping="Wrap"
+                               Width="{Binding (local:ThreadLayout.GalleryCellSize), RelativeSource={RelativeSource Self}}" />
+                </StackPanel>
+            </Grid>
+        </Grid>
+        <DataTemplate.Triggers>
+            <Trigger SourceName="Tile" Property="IsMouseOver" Value="True">
+                <Setter TargetName="Hover" Property="Opacity" Value="0.06" />
+            </Trigger>
+            <DataTrigger Binding="{Binding IsHighlighted}" Value="True">
+                <DataTrigger.EnterActions>
+                    <BeginStoryboard Storyboard="{StaticResource FlashStoryboard}" />
+                </DataTrigger.EnterActions>
+            </DataTrigger>
+        </DataTemplate.Triggers>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:GalleryCellRow}">
+        <ItemsControl Margin="{Binding (local:ThreadLayout.RowPadding), RelativeSource={RelativeSource Self}}"
+                      Focusable="False"
+                      ItemTemplate="{StaticResource GalleryCell}"
+                      ItemsSource="{Binding Items}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+        </ItemsControl>
+    </DataTemplate>
+
+    <!-- ============================================================ details view -->
+
+    <Style x:Key="Cab.Thread.HeaderGripper" TargetType="Thumb">
+        <Setter Property="OverridesDefaultStyle" Value="True" />
+        <Setter Property="Width" Value="9" />
+        <Setter Property="Cursor" Value="SizeWE" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Thumb">
+                    <Grid Background="Transparent">
+                        <Rectangle Width="1" Margin="0,10" HorizontalAlignment="Center" Fill="{DynamicResource Cab.Divider}" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="Cab.Thread.ColumnHeader" TargetType="GridViewColumnHeader">
+        <Setter Property="OverridesDefaultStyle" Value="True" />
+        <Setter Property="Foreground" Value="{DynamicResource Cab.TextSecondary}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="{DynamicResource Cab.FontWeight.Strong}" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="GridViewColumnHeader">
+                    <Grid Background="Transparent">
+                        <Border x:Name="Tint" Background="{DynamicResource Cab.TextPrimary}" Opacity="0" />
+                        <ContentPresenter Margin="12,10,10,10" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                        <Thumb x:Name="PART_HeaderGripper" Margin="0,0,-5,0" HorizontalAlignment="Right" Style="{StaticResource Cab.Thread.HeaderGripper}" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Tint" Property="Opacity" Value="0.05" />
+                        </Trigger>
+                        <Trigger Property="Role" Value="Padding">
+                            <Setter TargetName="PART_HeaderGripper" Property="Visibility" Value="Collapsed" />
+                            <Setter TargetName="Tint" Property="Visibility" Value="Collapsed" />
+                            <Setter Property="Cursor" Value="Arrow" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <DataTemplate x:Key="ColumnHeaderTemplate" DataType="{x:Type vm:DetailsColumnHeader}">
+        <StackPanel Orientation="Horizontal">
+            <TextBlock Text="{Binding Title}" />
+            <Grid Margin="6,0,0,0" Visibility="{Binding IsSorted, Converter={StaticResource BoolToVis}}">
+                <ui:SymbolIcon FontSize="12" Foreground="{DynamicResource Cab.Accent}" Symbol="ArrowUp16" Visibility="{Binding IsAscending, Converter={StaticResource BoolToVis}}" />
+                <ui:SymbolIcon FontSize="12" Foreground="{DynamicResource Cab.Accent}" Symbol="ArrowDown16" Visibility="{Binding IsAscending, Converter={StaticResource InvBoolToVis}}" />
+            </Grid>
+        </StackPanel>
+    </DataTemplate>
+
+    <!-- Header row + rows container for the ListView's GridView (replaces the default Aero look). -->
+    <Style x:Key="{x:Static GridView.GridViewScrollViewerStyleKey}" TargetType="ScrollViewer">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ScrollViewer">
+                    <Grid Background="{TemplateBinding Background}">
+                        <DockPanel>
+                            <Border Background="{DynamicResource Cab.HeaderBackground}" BorderBrush="{DynamicResource Cab.Divider}" BorderThickness="0,0,0,1" DockPanel.Dock="Top">
+                                <ScrollViewer Focusable="False" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden">
+                                    <GridViewHeaderRowPresenter Margin="{Binding (local:ThreadLayout.RowPadding), RelativeSource={RelativeSource Self}}"
+                                                                AllowsColumnReorder="{Binding TemplatedParent.View.AllowsColumnReorder, RelativeSource={RelativeSource TemplatedParent}}"
+                                                                ColumnHeaderContainerStyle="{Binding TemplatedParent.View.ColumnHeaderContainerStyle, RelativeSource={RelativeSource TemplatedParent}}"
+                                                                ColumnHeaderTemplate="{Binding TemplatedParent.View.ColumnHeaderTemplate, RelativeSource={RelativeSource TemplatedParent}}"
+                                                                Columns="{Binding TemplatedParent.View.Columns, RelativeSource={RelativeSource TemplatedParent}}"
+                                                                SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                                </ScrollViewer>
+                            </Border>
+                            <ScrollContentPresenter x:Name="PART_ScrollContentPresenter"
+                                                    CanContentScroll="{TemplateBinding CanContentScroll}"
+                                                    CanHorizontallyScroll="False"
+                                                    CanVerticallyScroll="False"
+                                                    KeyboardNavigation.DirectionalNavigation="Local" />
+                        </DockPanel>
+                        <ScrollBar x:Name="PART_VerticalScrollBar"
+                                   Margin="0,38,0,0"
+                                   HorizontalAlignment="Right"
+                                   Cursor="Arrow"
+                                   Maximum="{TemplateBinding ScrollableHeight}"
+                                   Orientation="Vertical"
+                                   ViewportSize="{TemplateBinding ViewportHeight}"
+                                   Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"
+                                   Value="{Binding VerticalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}" />
+                        <ScrollBar x:Name="PART_HorizontalScrollBar"
+                                   VerticalAlignment="Bottom"
+                                   Cursor="Arrow"
+                                   Maximum="{TemplateBinding ScrollableWidth}"
+                                   Orientation="Horizontal"
+                                   ViewportSize="{TemplateBinding ViewportWidth}"
+                                   Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}"
+                                   Value="{Binding HorizontalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="Cab.Thread.DetailsList" TargetType="ListView">
+        <Setter Property="OverridesDefaultStyle" Value="True" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource Cab.TextPrimary}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="ScrollViewer.CanContentScroll" Value="True" />
+        <Setter Property="VirtualizingPanel.IsVirtualizing" Value="True" />
+        <Setter Property="VirtualizingPanel.VirtualizationMode" Value="Recycling" />
+        <Setter Property="VirtualizingPanel.ScrollUnit" Value="Pixel" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListView">
+                    <ScrollViewer Background="{TemplateBinding Background}" Focusable="False" Style="{DynamicResource {x:Static GridView.GridViewScrollViewerStyleKey}}">
+                        <ItemsPresenter />
+                    </ScrollViewer>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ItemsPanel">
+            <Setter.Value>
+                <ItemsPanelTemplate>
+                    <VirtualizingStackPanel />
+                </ItemsPanelTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="Cab.Thread.DetailsRow" TargetType="ListViewItem">
+        <Setter Property="OverridesDefaultStyle" Value="True" />
+        <Setter Property="Foreground" Value="{DynamicResource Cab.TextPrimary}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="ToolTip" Value="{Binding ToolTipText}" />
+        <Setter Property="ToolTipService.InitialShowDelay" Value="1000" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListViewItem">
+                    <Grid Height="42" Background="Transparent">
+                        <Border x:Name="Selected" Background="{DynamicResource Cab.Accent}" Opacity="0.15" Visibility="Collapsed" />
+                        <Border x:Name="Hover" Background="{DynamicResource Cab.TextPrimary}" Opacity="0" />
+                        <Rectangle x:Name="Flash" Fill="{DynamicResource Cab.Accent}" Opacity="0" />
+                        <Border BorderBrush="{DynamicResource Cab.Divider}" BorderThickness="0,0,0,1" Opacity="0.7" />
+                        <GridViewRowPresenter Margin="{Binding (local:ThreadLayout.RowPadding), RelativeSource={RelativeSource Self}}"
+                                              VerticalAlignment="Center"
+                                              Columns="{TemplateBinding GridView.ColumnCollection}"
+                                              Content="{TemplateBinding Content}" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Hover" Property="Opacity" Value="0.05" />
+                        </Trigger>
+                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                            <Setter TargetName="Selected" Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding IsHighlighted}" Value="True">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard Storyboard="{StaticResource FlashStoryboard}" />
+                            </DataTrigger.EnterActions>
+                        </DataTrigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <DataTemplate x:Key="DetailsNameCell" DataType="{x:Type vm:ThreadItemViewModel}">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <CheckBox Margin="0,0,10,0"
+                      VerticalAlignment="Center"
+                      IsChecked="{Binding IsSelected, Mode=OneWay}"
+                      Style="{StaticResource Cab.Thread.SelectCheck}"
+                      Visibility="{Binding Owner.IsSelectionActive, Converter={StaticResource BoolToVis}}" />
+            <Grid Grid.Column="1" Width="24" Height="24" Margin="0,0,10,0">
+                <ui:SymbolIcon x:Name="Glyph" FontSize="18" Foreground="{DynamicResource Cab.Accent}" Symbol="{Binding Converter={StaticResource TypeSymbol}}" />
+                <local:AsyncThumbnail x:Name="Icon" Item="{Binding}" Mode="Icon" RequestSize="24" Stretch="Uniform" />
+            </Grid>
+            <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="{Binding FileName}" TextTrimming="CharacterEllipsis" />
+            <StackPanel Grid.Column="3" VerticalAlignment="Center" Orientation="Horizontal">
+                <ui:SymbolIcon Margin="6,0,0,0"
+                               Foreground="{DynamicResource Cab.TextSecondary}"
+                               Style="{StaticResource Cab.Thread.StarGlyph}"
+                               Visibility="{Binding IsStarred, Converter={StaticResource BoolToVis}}" />
+                <ui:SymbolIcon Margin="6,0,0,0"
+                               FontSize="12"
+                               Foreground="{DynamicResource Cab.TextSecondary}"
+                               Symbol="Link20"
+                               ToolTip="{loc:Loc Thread_PointerTooltip}"
+                               Visibility="{Binding IsPointer, Converter={StaticResource BoolToVis}}" />
+            </StackPanel>
+            <Border Grid.Column="4" Margin="8,0,0,0" Style="{StaticResource Cab.Thread.MissingBadge}" Visibility="{Binding IsMissing, Converter={StaticResource BoolToVis}}">
+                <TextBlock Text="{loc:Loc Thread_Missing}" />
+            </Border>
+        </Grid>
+        <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding HasImage, ElementName=Icon}" Value="True">
+                <Setter TargetName="Glyph" Property="Visibility" Value="Collapsed" />
+            </DataTrigger>
+        </DataTemplate.Triggers>
+    </DataTemplate>
+
+    <DataTemplate x:Key="DetailsTagsCell" DataType="{x:Type vm:ThreadItemViewModel}">
+        <ItemsControl Margin="0,-4,0,0" Focusable="False" ItemTemplate="{StaticResource Cab.Thread.TagChipTemplate}" ItemsSource="{Binding Tags}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+        </ItemsControl>
+    </DataTemplate>
+
+</ResourceDictionary>

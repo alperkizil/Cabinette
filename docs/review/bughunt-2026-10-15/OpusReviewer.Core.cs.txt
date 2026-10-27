@@ -1,0 +1,226 @@
+using Cabinette.Core.Models;
+using Cabinette.Core.Services;
+using Cabinette.Core.Tests.Infrastructure;
+
+namespace Cabinette.Core.Tests;
+
+/// <summary>
+/// Throwaway repro tests for the Opus bug hunt. Each test asserts the OBSERVED (buggy) behavior, so a passing test confirms
+/// the finding with the same number in the report.
+/// </summary>
+public sealed class BugHuntOpusReproTests
+{
+    /// <summary>
+    /// Finding 1: a copy-mode add that is copying while "Move vault" runs stores its file in the OLD vault (the vault path was
+    /// captured before the copy), but the item resolves into the NEW vault. The next rescan of the new vault drops the item.
+    /// </summary>
+    [Fact]
+    public async Task F1_MoveVaultDuringCopyAdd_FileLandsInOldVault_AndRescanDropsTheItem()
+    {
+        await using var t = await TestLibrary.CreateAsync();
+        var docs = await t.BuiltInAsync("documents");
+        var source = t.CreateFile("big.pdf", "the content of a big file that is still being copied");
+        var newVault = Path.Combine(t.Root, "new vault");
+        var moved = false;
+
+        // Runs while the add is copying into its hidden temp file (outside the write lock), like a user moving the vault
+        // from Settings while a large drop is still in progress (the add's progress card is not modal).
+        t.Service.DuringAddCopy = _ =>
+        {
+            t.Library.MoveVaultAsync(newVault).GetAwaiter().GetResult();
+            moved = true;
+        };
+
+        var added = await t.AddOneAsync(docs.Id, source);
+
+        Assert.True(moved);
+        Assert.Equal(newVault, t.Library.VaultPath);
+
+        // The item says it lives in the new vault, but its file is not there...
+        Assert.StartsWith(newVault, added.FullPath, StringComparison.OrdinalIgnoreCase);
+        Assert.False(File.Exists(added.FullPath));
+
+        // ...it was committed into the old vault (the one the user is then offered to send to the Recycle Bin).
+        var inOldVault = Path.Combine(t.Vault, "Documents", "big.pdf");
+        Assert.True(File.Exists(inOldVault));
+
+        // The vault monitor's rescan of the new vault (startup, resume after the move) removes the item from the library.
+        var summary = await t.RescanAsync();
+        Assert.Equal(1, summary.Removed);
+        Assert.Null(await t.Library.GetItemAsync(added.Id));
+    }
+
+    /// <summary>
+    /// Finding 2 (relates to old #5): when the Recycle Bin refuses a file only after the commit (too large for it), the rows are
+    /// already gone. The app then asks "Delete permanently?" and repeats the SAME call with PermanentWhenNoRecycleBin
+    /// (RecycleBinFallback.RunAsync), which finds no rows and silently does nothing: the file stays, and comes back as a brand
+    /// new item (tags and categories lost) at the next rescan.
+    /// </summary>
+    [Fact]
+    public async Task F2_RecycleRefusedAfterCommit_ConfirmedPermanentRetryDeletesNothing_FileReturnsAsNewItem()
+    {
+        await using var t = await TestLibrary.CreateAsync();
+        var docs = await t.BuiltInAsync("documents");
+        var big = await t.AddOneAsync(docs.Id, t.CreateFile("big.iso", "too large for the Recycle Bin"));
+        await t.Library.SetItemTagsAsync(big.Id, ["keep"]);
+        t.RecycleBin.Refused.Add(big.FullPath);
+        var ids = new[] { big.Id };
+
+        // First attempt (what ThreadViewModel.DeleteEverywhereAsync does through RecycleBinFallback.RunAsync).
+        var ex = await Assert.ThrowsAsync<LibraryException>(() => t.Library.DeleteItemsAsync(ids));
+        Assert.Equal(LibraryErrorCode.RecycleBinUnavailable, ex.Code);
+        Assert.Null(await t.Library.GetItemAsync(big.Id)); // the row is already deleted
+        Assert.True(File.Exists(big.FullPath));
+
+        // The user confirms "Delete permanently": the same delegate runs again with the same ids.
+        await t.Library.DeleteItemsAsync(ids, new DeleteItemsOptions { PermanentWhenNoRecycleBin = true });
+
+        // No error, but nothing was deleted.
+        Assert.True(File.Exists(big.FullPath));
+
+        // The next rescan (e.g. the next start) imports it again as a new, untagged item added by the vault monitor.
+        var summary = await t.RescanAsync();
+        Assert.Equal(1, summary.AddedByCategory["Documents"]);
+        var back = Assert.Single(await t.Library.GetThreadItemsAsync(docs.Id));
+        Assert.Empty(back.Tags);
+        Assert.Equal(AddedBy.VaultMonitor, back.AddedBy);
+    }
+
+    /// <summary>
+    /// Finding 4: a vault file opened while the vault is unavailable (disconnected drive) is marked missing. When the drive is
+    /// back the monitor's rescan matches the file but never clears the mark, so the item stays "missing" (badge, Missing
+    /// filter). Because FindByHash trusts that mark for vault files, adding the same content again "re-links" the item to a
+    /// second copy and leaves its real file orphaned; the next rescan imports that orphan as a duplicate item.
+    /// </summary>
+    [Fact]
+    public async Task F4_MissingMarkOnVaultFile_SurvivesRescan_AndReAddDuplicatesTheFile()
+    {
+        await using var t = await TestLibrary.CreateAsync();
+        var docs = await t.BuiltInAsync("documents");
+        var item = await t.AddOneAsync(docs.Id, t.CreateFile("report.pdf", "report content"));
+
+        // The drive with the vault is disconnected; the user double-clicks the bubble (OpenItemAsync → VerifyExistsAsync).
+        var offline = t.Vault + ".offline";
+        Directory.Move(t.Vault, offline);
+        Assert.False(await t.Library.VerifyExistsAsync(item.Id));
+        Directory.Move(offline, t.Vault);
+
+        // Drive back: the monitor's rescan finds everything in place and changes nothing...
+        var summary = await t.RescanAsync();
+        Assert.True(summary.IsEmpty);
+        Assert.True(File.Exists(item.FullPath));
+
+        // ...but the item is still marked missing.
+        Assert.True((await t.ItemAsync(item.Id)).IsMissing);
+
+        // Adding the same content again is treated as "found again": the item moves to a second copy.
+        var again = await t.AddOneAsync(docs.Id, t.CreateFile(@"other\report.pdf", "report content"));
+        Assert.Equal(item.Id, again.Id);
+        Assert.Equal("report (1).pdf", again.FileName);
+        Assert.True(File.Exists(item.FullPath)); // the original file is now orphaned in the vault
+
+        // The orphan comes back as a separate, duplicate item.
+        var rescan = await t.RescanAsync();
+        Assert.Equal(1, rescan.AddedByCategory["Documents"]);
+        Assert.Equal(2, (await t.Library.GetThreadItemsAsync(docs.Id)).Count);
+    }
+
+    /// <summary>
+    /// Finding 5: the hidden temp file of a copy that was cut off (the app quit or crashed mid-copy; quitting doesn't wait for
+    /// adds) is never cleaned up: not at the next start, not by the monitor's rescan, not by Move vault (which leaves it in
+    /// the old vault). It stays hidden in the category folder for good.
+    /// </summary>
+    [Fact]
+    public async Task F5_OrphanedCopyTempFile_IsNeverCleanedUp()
+    {
+        await using var t = await TestLibrary.CreateAsync();
+        await t.BuiltInAsync("video");
+
+        // What an interrupted AddCopyAsync leaves behind: ".cabinette-<guid>.tmp", hidden, in the target category folder.
+        var orphan = t.WriteVaultFile(@"Video\.cabinette-0123456789abcdef0123456789abcdef.tmp", new string('x', 4096));
+        File.SetAttributes(orphan, FileAttributes.Hidden);
+
+        await t.ReopenAsync();
+        var summary = await t.RescanAsync();
+
+        Assert.True(summary.IsEmpty);
+        Assert.True(File.Exists(orphan));
+        Assert.Empty(await t.Library.GetThreadItemsAsync((await t.BuiltInAsync("video")).Id));
+    }
+
+    /// <summary>
+    /// Finding 6: backup/restore drops the Hidden/System attributes of vault files and folders. Hidden things the vault monitor
+    /// deliberately ignores (a ".git" folder, a hidden file) come back visible, so the first rescan after a restore turns the
+    /// hidden folder into a new category and imports everything in it as library items.
+    /// </summary>
+    [Fact]
+    public async Task F6_RestoreUnhidesHiddenVaultEntries_AndTheMonitorImportsThem()
+    {
+        await using var source = await TestLibrary.CreateAsync();
+        await source.BuiltInAsync("code");
+        source.WriteVaultFile(@"Code\.git\HEAD", "ref: refs/heads/main");
+        source.WriteVaultFile(@"Code\.git\config", "[core]");
+        File.SetAttributes(source.VaultPath(@"Code\.git"), FileAttributes.Directory | FileAttributes.Hidden);
+        var hiddenFile = source.WriteVaultFile(@"Code\private.txt", "hidden on purpose");
+        File.SetAttributes(hiddenFile, FileAttributes.Hidden);
+
+        // Before the backup the monitor leaves both alone.
+        Assert.True((await source.RescanAsync()).IsEmpty);
+
+        var zip = Path.Combine(source.Root, "backups", "cabinette.zip");
+        await source.Library.CreateBackupAsync(zip);
+
+        await using var target = await TestLibrary.CreateAsync();
+        await target.Library.DisposeAsync();
+        var restoredVault = Path.Combine(target.Root, "restored vault");
+        target.Use(await LibraryFactory.RestoreAsync(zip, restoredVault, target.Options, target.RecycleBin));
+
+        Assert.False(File.GetAttributes(Path.Combine(restoredVault, "Code", ".git")).HasFlag(FileAttributes.Hidden));
+        Assert.False(File.GetAttributes(Path.Combine(restoredVault, "Code", "private.txt")).HasFlag(FileAttributes.Hidden));
+
+        // The startup rescan after the restart: ".git" becomes a category, its files and the hidden file become items.
+        var summary = await target.RescanAsync();
+        Assert.Contains(".git", summary.CategoriesCreated);
+        Assert.Equal(2, summary.AddedByCategory[".git"]);
+        Assert.Equal(1, summary.AddedByCategory["Code"]);
+    }
+
+    /// <summary>Finding 6, Move vault variant: file attributes are copied, but folders are re-created without theirs.</summary>
+    [Fact]
+    public async Task F6b_MoveVaultUnhidesHiddenFolders_AndTheMonitorImportsThem()
+    {
+        await using var t = await TestLibrary.CreateAsync();
+        await t.BuiltInAsync("code");
+        t.WriteVaultFile(@"Code\.git\HEAD", "ref: refs/heads/main");
+        File.SetAttributes(t.VaultPath(@"Code\.git"), FileAttributes.Directory | FileAttributes.Hidden);
+        Assert.True((await t.RescanAsync()).IsEmpty);
+
+        var target = Path.Combine(t.Root, "new vault");
+        await t.Library.MoveVaultAsync(target);
+
+        Assert.False(File.GetAttributes(Path.Combine(target, "Code", ".git")).HasFlag(FileAttributes.Hidden));
+        var summary = await t.RescanAsync();
+        Assert.Contains(".git", summary.CategoriesCreated);
+        Assert.Equal(1, summary.AddedByCategory[".git"]);
+    }
+
+    /// <summary>Finding 2, category variant: the confirmed retry of a category delete fails with "no longer exists".</summary>
+    [Fact]
+    public async Task F2b_CategoryDeleteRecycleRefusedAfterCommit_ConfirmedRetryFailsAndFileStays()
+    {
+        await using var t = await TestLibrary.CreateAsync();
+        var project = await t.Library.CreateCategoryAsync("Project", null);
+        var big = await t.AddOneAsync(project.Id, t.CreateFile("big.iso", "too large for the Recycle Bin"));
+        t.RecycleBin.Refused.Add(big.FullPath);
+
+        var ex = await Assert.ThrowsAsync<LibraryException>(
+            () => t.Library.DeleteCategoryAsync(project.Id, CategoryDeletePolicy.RecycleFiles));
+        Assert.Equal(LibraryErrorCode.RecycleBinUnavailable, ex.Code);
+        Assert.Null(await t.Library.GetCategoryAsync(project.Id)); // already committed
+
+        var retry = await Assert.ThrowsAsync<LibraryException>(() => t.Library.DeleteCategoryAsync(
+            project.Id, CategoryDeletePolicy.RecycleFiles, new DeleteItemsOptions { PermanentWhenNoRecycleBin = true }));
+        Assert.Equal(LibraryErrorCode.NotFound, retry.Code);
+        Assert.True(File.Exists(big.FullPath));
+    }
+}

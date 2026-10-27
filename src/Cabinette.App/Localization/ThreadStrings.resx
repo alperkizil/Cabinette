@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- ================================================================ formats -->
+  <data name="Thread_SizeBytes" xml:space="preserve"><value>{0} B</value></data>
+  <data name="Thread_SizeKB" xml:space="preserve"><value>{0:0} KB</value></data>
+  <data name="Thread_SizeMB" xml:space="preserve"><value>{0:0.#} MB</value></data>
+  <data name="Thread_SizeGB" xml:space="preserve"><value>{0:0.##} GB</value></data>
+  <data name="Thread_TimeFormat" xml:space="preserve"><value>HH:mm</value></data>
+  <data name="Thread_DateTimeFormat" xml:space="preserve"><value>d MMM yyyy, HH:mm</value></data>
+  <data name="Thread_LongDateFormat" xml:space="preserve"><value>d MMMM yyyy</value></data>
+  <data name="Thread_MonthFormat" xml:space="preserve"><value>MMMM yyyy</value></data>
+  <data name="Thread_Today" xml:space="preserve"><value>Today</value></data>
+  <data name="Thread_Yesterday" xml:space="preserve"><value>Yesterday</value></data>
+  <data name="Thread_ThisMonth" xml:space="preserve"><value>This month</value></data>
+  <data name="Thread_FileCountOne" xml:space="preserve"><value>1 file</value></data>
+  <data name="Thread_FileCountMany" xml:space="preserve"><value>{0:N0} files</value></data>
+  <data name="Thread_PageCountOne" xml:space="preserve"><value>1 page</value></data>
+  <data name="Thread_PageCountMany" xml:space="preserve"><value>{0:N0} pages</value></data>
+  <data name="Thread_ResultCount" xml:space="preserve"><value>{0:N0} of {1:N0} files</value></data>
+  <!-- The banner's second line: the file count ({0}: "12 files" or "3 of 12 files"), then the total size of the category's files. -->
+  <data name="Thread_BannerCountAndSize" xml:space="preserve"><value>{0} · {1}</value></data>
+
+  <!-- ================================================================ types and modes -->
+  <data name="Thread_ModeCopy" xml:space="preserve"><value>Copy</value></data>
+  <data name="Thread_ModePointer" xml:space="preserve"><value>Pointer</value></data>
+  <data name="Thread_Type_audio" xml:space="preserve"><value>Audio</value></data>
+  <data name="Thread_Type_video" xml:space="preserve"><value>Video</value></data>
+  <data name="Thread_Type_images" xml:space="preserve"><value>Image</value></data>
+  <data name="Thread_Type_text" xml:space="preserve"><value>Text</value></data>
+  <data name="Thread_Type_documents" xml:space="preserve"><value>Document</value></data>
+  <data name="Thread_Type_spreadsheets" xml:space="preserve"><value>Spreadsheet</value></data>
+  <data name="Thread_Type_presentations" xml:space="preserve"><value>Presentation</value></data>
+  <data name="Thread_Type_code" xml:space="preserve"><value>Code</value></data>
+  <data name="Thread_Type_executable" xml:space="preserve"><value>Program</value></data>
+  <data name="Thread_Type_archives" xml:space="preserve"><value>Archive</value></data>
+  <data name="Thread_Type_ebooks" xml:space="preserve"><value>E-book</value></data>
+  <data name="Thread_Type_fonts" xml:space="preserve"><value>Font</value></data>
+  <data name="Thread_Type_design" xml:space="preserve"><value>Design</value></data>
+  <data name="Thread_Type_models3d" xml:space="preserve"><value>3D model</value></data>
+  <data name="Thread_Type_diskimages" xml:space="preserve"><value>Disk image</value></data>
+  <data name="Thread_Type_links" xml:space="preserve"><value>Link</value></data>
+  <data name="Thread_Type_notes" xml:space="preserve"><value>Note</value></data>
+  <data name="Thread_Type_note" xml:space="preserve"><value>Note</value></data>
+  <data name="Thread_Type_other" xml:space="preserve"><value>Other</value></data>
+  <data name="Thread_Link" xml:space="preserve"><value>Link</value></data>
+
+  <!-- ================================================================ header -->
+  <data name="Thread_SearchPlaceholder" xml:space="preserve"><value>Search this thread or #tag</value></data>
+  <data name="Thread_SearchTooltip" xml:space="preserve"><value>Search in this thread (Ctrl+F)</value></data>
+  <data name="Thread_ClearSearch" xml:space="preserve"><value>Clear</value></data>
+  <data name="Thread_FilterTooltip" xml:space="preserve"><value>Filters</value></data>
+  <data name="Thread_ViewChat" xml:space="preserve"><value>Chat view</value></data>
+  <data name="Thread_ViewGrid" xml:space="preserve"><value>Grid view</value></data>
+  <data name="Thread_ViewGallery" xml:space="preserve"><value>Gallery view</value></data>
+  <data name="Thread_ViewDetails" xml:space="preserve"><value>Details view</value></data>
+  <data name="Thread_SelectTooltip" xml:space="preserve"><value>Select files</value></data>
+
+  <!-- ================================================================ bubbles -->
+  <data name="Thread_Missing" xml:space="preserve"><value>Missing</value></data>
+  <data name="Thread_MissingTooltip" xml:space="preserve"><value>This file can't be found. Double-click to locate it.</value></data>
+  <data name="Thread_Locate" xml:space="preserve"><value>Locate…</value></data>
+  <data name="Thread_PointerTooltip" xml:space="preserve"><value>Linked file: it stays in its original location</value></data>
+  <data name="Thread_StarredTooltip" xml:space="preserve"><value>Starred</value></data>
+  <data name="Thread_PlayVideo" xml:space="preserve"><value>Play</value></data>
+  <data name="Thread_ReadMore" xml:space="preserve"><value>Read more</value></data>
+  <data name="Thread_AlbumPhotos" xml:space="preserve"><value>{0} photos</value></data>
+  <data name="Thread_AlbumVideos" xml:space="preserve"><value>{0} videos</value></data>
+  <data name="Thread_AlbumItems" xml:space="preserve"><value>{0} items</value></data>
+  <data name="Thread_CannotPlay" xml:space="preserve"><value>Can't play “{0}” here.</value></data>
+  <data name="Thread_OpenAction" xml:space="preserve"><value>Open</value></data>
+
+  <!-- ================================================================ details columns -->
+  <data name="Thread_ColumnName" xml:space="preserve"><value>Name</value></data>
+  <data name="Thread_ColumnType" xml:space="preserve"><value>Type</value></data>
+  <data name="Thread_ColumnSize" xml:space="preserve"><value>Size</value></data>
+  <data name="Thread_ColumnDateAdded" xml:space="preserve"><value>Date added</value></data>
+  <data name="Thread_ColumnStarred" xml:space="preserve"><value>Starred</value></data>
+  <data name="Thread_ColumnMode" xml:space="preserve"><value>Mode</value></data>
+  <data name="Thread_ColumnTags" xml:space="preserve"><value>Tags</value></data>
+
+  <!-- ================================================================ empty states, composer, drop -->
+  <data name="Thread_EmptyTitle" xml:space="preserve"><value>No files yet</value></data>
+  <data name="Thread_EmptyHint" xml:space="preserve"><value>Drop files here or paste with Ctrl+V. Type below to add a note.</value></data>
+  <data name="Thread_DeletedEmptyHint" xml:space="preserve"><value>Files of deleted categories end up here.</value></data>
+  <data name="Thread_StarredTitle" xml:space="preserve"><value>Starred</value></data>
+  <data name="Thread_StarredEmptyTitle" xml:space="preserve"><value>No starred files</value></data>
+  <data name="Thread_StarredEmptyHint" xml:space="preserve"><value>Star files from their right-click menu or the selection bar to find them here, from every category.</value></data>
+  <data name="Thread_AddFiles" xml:space="preserve"><value>Add files</value></data>
+  <data name="Thread_NoResultsTitle" xml:space="preserve"><value>No matching files</value></data>
+  <data name="Thread_ClearSearchAndFilters" xml:space="preserve"><value>Clear search and filters</value></data>
+  <data name="Thread_TypeANote" xml:space="preserve"><value>Type a note</value></data>
+  <data name="Thread_AttachTooltip" xml:space="preserve"><value>Add files</value></data>
+  <data name="Thread_SendTooltip" xml:space="preserve"><value>Save the note (Enter)</value></data>
+  <data name="Thread_SaveNote" xml:space="preserve"><value>Save note</value></data>
+  <data name="Thread_ScrollToBottom" xml:space="preserve"><value>Scroll to the newest files</value></data>
+  <data name="Thread_DropToAdd" xml:space="preserve"><value>Drop to add to {0}</value></data>
+  <data name="Thread_DropHint" xml:space="preserve"><value>Files and folders are added to this category</value></data>
+
+  <!-- ================================================================ selection bar -->
+  <data name="Thread_SelectedOne" xml:space="preserve"><value>1 selected</value></data>
+  <data name="Thread_SelectedMany" xml:space="preserve"><value>{0:N0} selected</value></data>
+  <data name="Thread_SelectAll" xml:space="preserve"><value>Select all</value></data>
+  <data name="Thread_SelectAllShort" xml:space="preserve"><value>All</value></data>
+  <data name="Thread_CancelSelection" xml:space="preserve"><value>Cancel (Esc)</value></data>
+  <data name="Thread_BulkTags" xml:space="preserve"><value>Tags</value></data>
+  <data name="Thread_BulkCopy" xml:space="preserve"><value>Copy</value></data>
+  <data name="Thread_BulkStar" xml:space="preserve"><value>Star</value></data>
+  <data name="Thread_BulkUnstar" xml:space="preserve"><value>Unstar</value></data>
+  <data name="Thread_BulkMoveTo" xml:space="preserve"><value>Move to…</value></data>
+  <data name="Thread_BulkAddTo" xml:space="preserve"><value>Add to…</value></data>
+  <data name="Thread_BulkRemove" xml:space="preserve"><value>Remove</value></data>
+  <data name="Thread_BulkDelete" xml:space="preserve"><value>Delete</value></data>
+
+  <!-- ================================================================ context menu -->
+  <data name="Thread_MenuOpen" xml:space="preserve"><value>Open</value></data>
+  <data name="Thread_MenuMoreOptions" xml:space="preserve"><value>Show more options</value></data>
+  <data name="Thread_MenuShowInFolder" xml:space="preserve"><value>Show in folder</value></data>
+  <data name="Thread_MenuRename" xml:space="preserve"><value>Rename…</value></data>
+  <data name="Thread_MenuCopy" xml:space="preserve"><value>Copy</value></data>
+  <data name="Thread_MenuTags" xml:space="preserve"><value>Tags…</value></data>
+  <data name="Thread_MenuStar" xml:space="preserve"><value>Star</value></data>
+  <data name="Thread_MenuUnstar" xml:space="preserve"><value>Unstar</value></data>
+  <data name="Thread_MenuMoveToCategory" xml:space="preserve"><value>Move to category…</value></data>
+  <data name="Thread_MenuAddToCategory" xml:space="preserve"><value>Add to category…</value></data>
+  <data name="Thread_MenuRemoveFromCategory" xml:space="preserve"><value>Remove from this category</value></data>
+  <data name="Thread_MenuDelete" xml:space="preserve"><value>Delete…</value></data>
+
+  <!-- ================================================================ actions -->
+  <data name="Thread_MissingTitle" xml:space="preserve"><value>File not found</value></data>
+  <data name="Thread_MissingMessage" xml:space="preserve"><value>“{0}” was moved or deleted. Locate it to link it again.</value></data>
+  <data name="Thread_LocateButton" xml:space="preserve"><value>Locate…</value></data>
+  <data name="Thread_VaultFileMissing" xml:space="preserve"><value>“{0}” is missing from the vault.</value></data>
+  <data name="Thread_HashMismatchTitle" xml:space="preserve"><value>Different file</value></data>
+  <data name="Thread_HashMismatchMessage" xml:space="preserve"><value>The file's content is different from the original “{0}”. Link it anyway?</value></data>
+  <data name="Thread_HashMismatchConfirm" xml:space="preserve"><value>Link anyway</value></data>
+  <data name="Thread_Relocated" xml:space="preserve"><value>“{0}” is linked again.</value></data>
+  <data name="Thread_RelocateNotFound" xml:space="preserve"><value>That file could not be found.</value></data>
+  <data name="Thread_RenameTitle" xml:space="preserve"><value>Rename</value></data>
+  <data name="Thread_RenameLabel" xml:space="preserve"><value>New name</value></data>
+  <data name="Thread_NameEmpty" xml:space="preserve"><value>Enter a name.</value></data>
+  <data name="Thread_NameInvalid" xml:space="preserve"><value>A file name can't contain \ / : * ? " &lt; &gt; | and can't end with a dot.</value></data>
+  <data name="Thread_CopyNothing" xml:space="preserve"><value>Nothing to copy: the files are missing.</value></data>
+  <data name="Thread_CopiedOne" xml:space="preserve"><value>Copied. Paste it in File Explorer.</value></data>
+  <data name="Thread_CopiedMany" xml:space="preserve"><value>{0} files copied. Paste them in File Explorer.</value></data>
+  <data name="Thread_DeleteTitleOne" xml:space="preserve"><value>Delete “{0}”?</value></data>
+  <data name="Thread_DeleteTitleMany" xml:space="preserve"><value>Delete {0} files?</value></data>
+  <data name="Thread_DeleteButton" xml:space="preserve"><value>Delete</value></data>
+  <data name="Thread_DeleteInOtherCategoriesOne" xml:space="preserve"><value>This file is also in other categories.</value></data>
+  <data name="Thread_DeleteInOtherCategoriesMany" xml:space="preserve"><value>Some of these files are also in other categories.</value></data>
+  <data name="Thread_DeleteEverywhereMeans" xml:space="preserve"><value>Deleting everywhere: {0}</value></data>
+  <data name="Thread_RemoveFromThisCategory" xml:space="preserve"><value>Remove from this category</value></data>
+  <data name="Thread_DeleteEverywhere" xml:space="preserve"><value>Delete everywhere</value></data>
+  <data name="Thread_DeleteVaultRecycleOne" xml:space="preserve"><value>The file will be moved to the Recycle Bin.</value></data>
+  <data name="Thread_DeleteVaultRecycleMany" xml:space="preserve"><value>Files stored in the vault will be moved to the Recycle Bin.</value></data>
+  <data name="Thread_DeleteVaultPermanentOne" xml:space="preserve"><value>The file will be permanently deleted. This can't be undone.</value></data>
+  <data name="Thread_DeleteVaultPermanentMany" xml:space="preserve"><value>Files stored in the vault will be permanently deleted. This can't be undone.</value></data>
+  <data name="Thread_DeletePointerRecycleOne" xml:space="preserve"><value>This is a linked file: the original on your disk will also be moved to the Recycle Bin.</value></data>
+  <data name="Thread_DeletePointerRecycleMany" xml:space="preserve"><value>Linked files: the originals on your disk will also be moved to the Recycle Bin.</value></data>
+  <data name="Thread_DeletePointerLibraryOnlyOne" xml:space="preserve"><value>This is a linked file: it is only removed from Cabinette. The original stays on your disk.</value></data>
+  <data name="Thread_DeletePointerLibraryOnlyMany" xml:space="preserve"><value>Linked files are only removed from Cabinette. The originals stay on your disk.</value></data>
+  <data name="Thread_RemoveTitle" xml:space="preserve"><value>Remove from this category?</value></data>
+  <data name="Thread_RemoveButton" xml:space="preserve"><value>Remove</value></data>
+  <data name="Thread_RemoveOnlyHereOne" xml:space="preserve"><value>“{0}” isn't in any other category, so it will move to Deleted.</value></data>
+  <data name="Thread_RemoveOnlyHereMany" xml:space="preserve"><value>{0} of these files aren't in any other category, so they will move to Deleted.</value></data>
+  <data name="Thread_RemoveOnlyHereOneOfMany" xml:space="preserve"><value>1 of these files isn't in any other category, so it will move to Deleted.</value></data>
+  <data name="Thread_RemoveMeansOnlyHereOne" xml:space="preserve"><value>Removing from this category: 1 of these files is only in this category and will move to Deleted.</value></data>
+  <data name="Thread_RemoveMeansOnlyHereMany" xml:space="preserve"><value>Removing from this category: {0} of these files are only in this category and will move to Deleted.</value></data>
+  <data name="Thread_AddToCategoryTitle" xml:space="preserve"><value>Add to category</value></data>
+  <data name="Thread_AddedToCategoryOne" xml:space="preserve"><value>Added to {0}.</value></data>
+  <data name="Thread_AddedToCategoryMany" xml:space="preserve"><value>{0} files added to {1}.</value></data>
+  <data name="Thread_MoveToCategoryTitle" xml:space="preserve"><value>Move to category</value></data>
+  <data name="Thread_MovedToCategoryOne" xml:space="preserve"><value>Moved 1 file to {0}</value></data>
+  <data name="Thread_MovedToCategoryMany" xml:space="preserve"><value>Moved {0} files to {1}</value></data>
+  <data name="Thread_ShowAction" xml:space="preserve"><value>Show</value></data>
+  <data name="Thread_UnexpectedError" xml:space="preserve"><value>Something went wrong: {0}</value></data>
+
+  <!-- ================================================================ tags dialog -->
+  <data name="Thread_TagsTitle" xml:space="preserve"><value>Tags</value></data>
+  <data name="Thread_TagsSubtitleMany" xml:space="preserve"><value>{0} files</value></data>
+  <data name="Thread_TagsPlaceholder" xml:space="preserve"><value>Add a tag…</value></data>
+  <data name="Thread_TagsHint" xml:space="preserve"><value>Press Enter or comma to add a tag. Backspace removes the last one.</value></data>
+  <data name="Thread_TagsPartialHint" xml:space="preserve"><value>Faded tags are only on some of the files. Click one to add it to all.</value></data>
+  <data name="Thread_TagsPartialTooltip" xml:space="preserve"><value>Only some of the files have this tag. Click to add it to all.</value></data>
+  <data name="Thread_TagsRemove" xml:space="preserve"><value>Remove tag</value></data>
+  <data name="Thread_TagsExisting" xml:space="preserve"><value>Existing tags</value></data>
+  <data name="Thread_Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Thread_Save" xml:space="preserve"><value>Save</value></data>
+
+  <!-- ================================================================ filter flyout -->
+  <data name="Thread_FilterTitle" xml:space="preserve"><value>Filters</value></data>
+  <data name="Thread_FilterReset" xml:space="preserve"><value>Reset</value></data>
+  <data name="Thread_FilterType" xml:space="preserve"><value>Type</value></data>
+  <data name="Thread_FilterDateAdded" xml:space="preserve"><value>Date added</value></data>
+  <data name="Thread_FilterAnyTime" xml:space="preserve"><value>Any time</value></data>
+  <data name="Thread_FilterLast7Days" xml:space="preserve"><value>Last 7 days</value></data>
+  <data name="Thread_FilterLast30Days" xml:space="preserve"><value>Last 30 days</value></data>
+  <data name="Thread_FilterThisYear" xml:space="preserve"><value>This year</value></data>
+  <data name="Thread_FilterCustom" xml:space="preserve"><value>Custom…</value></data>
+  <data name="Thread_FilterFrom" xml:space="preserve"><value>From</value></data>
+  <data name="Thread_FilterTo" xml:space="preserve"><value>To</value></data>
+  <data name="Thread_FilterSize" xml:space="preserve"><value>Size</value></data>
+  <data name="Thread_FilterAnySize" xml:space="preserve"><value>Any size</value></data>
+  <data name="Thread_FilterSmall" xml:space="preserve"><value>Under 1 MB</value></data>
+  <data name="Thread_FilterMedium" xml:space="preserve"><value>1–100 MB</value></data>
+  <data name="Thread_FilterLarge" xml:space="preserve"><value>Over 100 MB</value></data>
+  <data name="Thread_FilterStorage" xml:space="preserve"><value>Storage</value></data>
+  <data name="Thread_FilterAllFiles" xml:space="preserve"><value>All</value></data>
+  <data name="Thread_FilterCopies" xml:space="preserve"><value>Copies in the vault</value></data>
+  <data name="Thread_FilterPointers" xml:space="preserve"><value>Linked (pointers)</value></data>
+  <data name="Thread_FilterExtension" xml:space="preserve"><value>Extension</value></data>
+  <data name="Thread_FilterExtensionPlaceholder" xml:space="preserve"><value>e.g. pdf, docx</value></data>
+  <data name="Thread_FilterMissingOnly" xml:space="preserve"><value>Missing files only</value></data>
+
+  <!-- ================================================================ viewer -->
+  <data name="Thread_ViewerTitle" xml:space="preserve"><value>Viewer</value></data>
+  <data name="Thread_ViewerCounter" xml:space="preserve"><value>{0} of {1}</value></data>
+  <data name="Thread_ViewerOpenInPlayer" xml:space="preserve"><value>Open in default player</value></data>
+  <data name="Thread_ViewerOpenInApp" xml:space="preserve"><value>Open in default app</value></data>
+  <data name="Thread_ViewerCannotPlay" xml:space="preserve"><value>This video can't be played here. Try the default player.</value></data>
+  <data name="Thread_ViewerCannotShow" xml:space="preserve"><value>This image can't be shown.</value></data>
+  <data name="Thread_ViewerClose" xml:space="preserve"><value>Close (Esc)</value></data>
+  <data name="Thread_ViewerPrevious" xml:space="preserve"><value>Previous (Left arrow)</value></data>
+  <data name="Thread_ViewerNext" xml:space="preserve"><value>Next (Right arrow)</value></data>
+  <data name="Thread_ViewerPlayPause" xml:space="preserve"><value>Play or pause (Space)</value></data>
+  <data name="Thread_ViewerMute" xml:space="preserve"><value>Mute</value></data>
+
+  <!-- ================================================================ gallery (SPEC.md section 4, "Gallery") -->
+  <data name="Thread_GalleryDateTaken" xml:space="preserve"><value>Date taken</value></data>
+  <data name="Thread_GalleryDateMenu" xml:space="preserve"><value>Date added or date taken</value></data>
+  <data name="Thread_GallerySortTooltip" xml:space="preserve"><value>Sort by this. Click again to reverse.</value></data>
+  <data name="Thread_GalleryTipAdded" xml:space="preserve"><value>Date added: {0}</value></data>
+  <data name="Thread_GalleryTipTaken" xml:space="preserve"><value>Date taken: {0}</value></data>
+  <data name="Thread_GalleryTipTakenModified" xml:space="preserve"><value>Date taken: not in the file (modified {0})</value></data>
+  <data name="Thread_GalleryTipTakenNone" xml:space="preserve"><value>Date taken: not in the file</value></data>
+  <data name="Thread_GallerySmaller" xml:space="preserve"><value>Smaller (Ctrl+mouse wheel)</value></data>
+  <data name="Thread_GalleryLarger" xml:space="preserve"><value>Larger (Ctrl+mouse wheel)</value></data>
+</root>

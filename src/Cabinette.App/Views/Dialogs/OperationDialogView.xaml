@@ -1,0 +1,175 @@
+<UserControl x:Class="Cabinette.App.Views.Dialogs.OperationDialogView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
+    <!-- DataContext: OperationDialogViewModel -->
+    <Grid Margin="24,22,24,20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Icon + title -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid Width="40" Height="40" Margin="0,0,14,0" VerticalAlignment="Center">
+                <Ellipse x:Name="Badge">
+                    <Ellipse.Style>
+                        <Style TargetType="Ellipse">
+                            <Setter Property="Fill" Value="{DynamicResource Cab.TagChipBackground}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Tone}" Value="Danger">
+                                    <Setter Property="Fill" Value="{DynamicResource Cab.MissingBadgeBackground}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Ellipse.Style>
+                </Ellipse>
+                <ui:SymbolIcon HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="20" Symbol="{Binding Symbol}">
+                    <ui:SymbolIcon.Style>
+                        <Style TargetType="ui:SymbolIcon">
+                            <Setter Property="Foreground" Value="{DynamicResource Cab.TagChipText}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Tone}" Value="Success">
+                                    <Setter Property="Foreground" Value="{DynamicResource Cab.SelectionBorder}" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Tone}" Value="Danger">
+                                    <Setter Property="Foreground" Value="{DynamicResource Cab.MissingBadgeText}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ui:SymbolIcon.Style>
+                </ui:SymbolIcon>
+            </Grid>
+            <TextBlock Grid.Column="1" VerticalAlignment="Center" Style="{StaticResource Shell.Text.DialogTitle}" Text="{Binding Title}" />
+        </Grid>
+
+        <!-- Message -->
+        <TextBlock Grid.Row="1"
+                   Margin="0,14,0,0"
+                   Foreground="{DynamicResource Cab.TextSecondary}"
+                   Style="{StaticResource Shell.Text.Body}"
+                   Text="{Binding Message}"
+                   Visibility="{Binding Message, Converter={StaticResource NullToVisibility}}" />
+
+        <!-- Facts -->
+        <Border Grid.Row="2"
+                Margin="0,16,0,0"
+                Padding="14,9"
+                Background="{DynamicResource Cab.WindowBackground}"
+                BorderBrush="{DynamicResource Cab.Divider}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Visibility="{Binding HasFacts, Converter={StaticResource BoolToVisibility}}">
+            <ItemsControl Grid.IsSharedSizeScope="True" Focusable="False" ItemsSource="{Binding Facts}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Margin="0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="FactLabel" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Margin="0,0,18,0" FontSize="13" Foreground="{DynamicResource Cab.TextSecondary}" Text="{Binding Label}" />
+                            <TextBlock Grid.Column="1" FontSize="13" Foreground="{DynamicResource Cab.TextPrimary}" Text="{Binding Value}" TextWrapping="Wrap" />
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Border>
+
+        <!-- Warning note -->
+        <Border Grid.Row="3"
+                Margin="0,12,0,0"
+                Padding="12,9"
+                Background="{DynamicResource Cab.MissingBadgeBackground}"
+                CornerRadius="8"
+                Visibility="{Binding HasNote, Converter={StaticResource BoolToVisibility}}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <ui:SymbolIcon Margin="0,0,10,0" VerticalAlignment="Top" FontSize="16" Foreground="{DynamicResource Cab.MissingBadgeText}" Symbol="Warning16" />
+                <TextBlock Grid.Column="1" FontSize="13" Foreground="{DynamicResource Cab.MissingBadgeText}" Text="{Binding Note}" TextWrapping="Wrap" />
+            </Grid>
+        </Border>
+
+        <!-- Details (e.g. skipped files) -->
+        <StackPanel Grid.Row="4" Margin="0,14,0,0" Visibility="{Binding HasDetails, Converter={StaticResource BoolToVisibility}}">
+            <TextBlock Margin="2,0,0,6"
+                       FontSize="13"
+                       FontWeight="{DynamicResource Cab.FontWeight.Strong}"
+                       Foreground="{DynamicResource Cab.TextPrimary}"
+                       Text="{Binding DetailsTitle}"
+                       Visibility="{Binding DetailsTitle, Converter={StaticResource NullToVisibility}}" />
+            <Border Padding="12,6"
+                    Background="{DynamicResource Cab.WindowBackground}"
+                    BorderBrush="{DynamicResource Cab.Divider}"
+                    BorderThickness="1"
+                    CornerRadius="8">
+                <ScrollViewer MaxHeight="150" VerticalScrollBarVisibility="Auto">
+                    <ItemsControl Focusable="False" ItemsSource="{Binding Details}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Margin="0,3" FontSize="12.5" Foreground="{DynamicResource Cab.TextPrimary}" Text="{Binding}" TextWrapping="Wrap" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Border>
+        </StackPanel>
+
+        <!-- Option switch -->
+        <Border Grid.Row="5"
+                Margin="0,14,0,0"
+                Padding="2"
+                Background="{DynamicResource Cab.WindowBackground}"
+                BorderBrush="{DynamicResource Cab.Divider}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Visibility="{Binding HasCheck, Converter={StaticResource BoolToVisibility}}">
+            <CheckBox IsChecked="{Binding IsChecked}" Style="{StaticResource Shell.ToggleSwitch}">
+                <StackPanel>
+                    <TextBlock FontSize="14" Foreground="{DynamicResource Cab.TextPrimary}" Text="{Binding CheckText}" TextWrapping="Wrap" />
+                    <TextBlock Margin="0,2,0,0"
+                               Style="{StaticResource Shell.Text.Secondary}"
+                               FontSize="12.5"
+                               Text="{Binding CheckHint}"
+                               Visibility="{Binding CheckHint, Converter={StaticResource NullToVisibility}}" />
+                </StackPanel>
+            </CheckBox>
+        </Border>
+
+        <!-- Buttons -->
+        <WrapPanel Grid.Row="6" Margin="0,22,0,0" HorizontalAlignment="Right">
+            <Button Margin="0,0,8,0"
+                    Command="{Binding CancelCommand}"
+                    Content="{Binding CancelText}"
+                    Style="{StaticResource Shell.SecondaryButton}"
+                    Visibility="{Binding ShowCancel, Converter={StaticResource BoolToVisibility}}" />
+            <Button Margin="0,0,8,0"
+                    Command="{Binding SecondaryCommand}"
+                    Content="{Binding SecondaryText}"
+                    Style="{StaticResource Shell.SecondaryButton}"
+                    Visibility="{Binding HasSecondary, Converter={StaticResource BoolToVisibility}}" />
+            <Button MinWidth="96"
+                    Command="{Binding PrimaryCommand}"
+                    Content="{Binding PrimaryText}"
+                    Style="{StaticResource Shell.AccentButton}"
+                    Visibility="{Binding IsPrimaryDestructive, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}" />
+            <Button MinWidth="96"
+                    Command="{Binding PrimaryCommand}"
+                    Content="{Binding PrimaryText}"
+                    Style="{StaticResource Shell.DangerButton}"
+                    Visibility="{Binding IsPrimaryDestructive, Converter={StaticResource BoolToVisibility}}" />
+        </WrapPanel>
+    </Grid>
+</UserControl>

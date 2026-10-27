@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The local channel between Cabinette processes (SPEC.md sections 8–10): pipe names, the line format and the messages,
+    including the AI commands that cabinette-mcp.exe sends. No UI, no SQLite, no other Cabinette project, so the MCP
+    server stays small.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Cabinette.App.Tests" />
+    <InternalsVisibleTo Include="Cabinette.Mcp.Tests" />
+  </ItemGroup>
+
+</Project>

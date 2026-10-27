@@ -1,0 +1,161 @@
+using Cabinette.Core.Models;
+using Cabinette.Core.Services;
+using Cabinette.Core.Tests.Infrastructure;
+using Cabinette.Core.Vault;
+
+namespace Cabinette.Core.Tests;
+
+/// <summary>
+/// Repro tests of the stage 1 + 2 bug hunt (Fable reviewer). Every test asserts the OBSERVED buggy behavior, so a passing
+/// test confirms the finding. Turn the assertions around when fixing.
+/// </summary>
+public sealed class BugHuntFableReproTests
+{
+    // ================================================================ 1: a copy in flight while the vault moves
+
+    [Fact]
+    public async Task Finding1_CopyInFlightWhileTheVaultMoves_StoresTheFileInTheOldVault_AndTheLibraryRowPointsIntoTheNewOne()
+    {
+        await using var t = await TestLibrary.CreateAsync();
+        var docs = await t.BuiltInAsync("documents");
+        var oldVault = t.Vault;
+        var newVault = Path.Combine(t.Root, "new vault");
+        var big = t.CreateFile("big.bin", new byte[4 * 1024 * 1024]);
+
+        // While the file is being copied (outside the write lock), the user moves the vault; the move completes first.
+        t.Service.DuringAddCopy = _ => t.Library.MoveVaultAsync(newVault).GetAwaiter().GetResult();
+
+        var result = await t.Library.AddPathsAsync([big], new AddRequest { TargetCategoryId = docs.Id, Mode = ItemMode.Copy });
+
+        Assert.Equal(newVault, t.Library.VaultPath);
+        Assert.Empty(result.Failures);
+        var item = Assert.Single(result.Added);
+
+        // The library reports the file inside the new vault ...
+        Assert.Equal(Path.Combine(newVault, "Documents", "big.bin"), item.FullPath);
+        Assert.False(File.Exists(item.FullPath));
+
+        // ... but AddCopyAsync wrote it into the OLD vault (the folder the UI then offers to send to the Recycle Bin).
+        Assert.True(File.Exists(Path.Combine(oldVault, "Documents", "big.bin")));
+
+        // The next rescan of the new vault removes the row: the add is silently lost from the library.
+        var summary = await t.RescanAsync();
+        Assert.Equal(1, summary.Removed);
+        Assert.Null(await t.Library.GetItemAsync(item.Id));
+    }
+
+    // ================================================================ 2: "missing" of vault files is trusted but never kept in sync
+
+    [Fact]
+    public async Task Finding2a_VaultFileMarkedMissing_IsNeverClearedByARescan_AndTheNextAddOfItsContentRelinksAndOrphansIt()
+    {
+        await using var t = await TestLibrary.CreateAsync();
+        var docs = await t.BuiltInAsync("documents");
+        var item = await t.AddOneAsync(docs.Id, t.CreateFile("report.pdf", "the report"));
+        await t.Library.SetItemTagsAsync(item.Id, ["keep"]);
+
+        // The vault is briefly unavailable (drive unplugged) while the user double-clicks the file: VerifyExistsAsync marks it.
+        var away = t.Vault + "-away";
+        Directory.Move(t.Vault, away);
+        Assert.False(await t.Library.VerifyExistsAsync(item.Id));
+        Directory.Move(away, t.Vault);
+
+        // The monitor's rescan sees the file back, unchanged, and leaves the mark alone.
+        Assert.True((await t.RescanAsync()).IsEmpty);
+        Assert.True((await t.ItemAsync(item.Id)).IsMissing);
+        Assert.True(File.Exists(item.FullPath));
+
+        // Adding the same content again is treated as "found again" (SPEC: only when the file is missing) instead of
+        // "already in Cabinette": the live item is renamed to the numbered copy ...
+        var again = await t.AddAsync(docs.Id, ItemMode.Copy, t.CreateFile(@"copy\report.pdf", "the report"));
+        var relinked = Assert.Single(again.Added);
+        Assert.Empty(again.Duplicates);
+        Assert.Equal(item.Id, relinked.Id);
+        Assert.Equal("report (1).pdf", relinked.FileName);
+
+        // ... and its original file is now unknown to the library, so the next rescan imports it as a second, untagged item.
+        Assert.True(File.Exists(item.FullPath));
+        var summary = await t.RescanAsync();
+        Assert.Equal(1, summary.AddedByCategory["Documents"]);
+        var items = await t.Library.GetThreadItemsAsync(docs.Id);
+        Assert.Equal(2, items.Count);
+        Assert.Contains(items, i => i.Id != item.Id && i.FileName == "report.pdf" && i.Tags.Count == 0);
+    }
+
+    [Fact]
+    public async Task Finding2b_VaultFileGoneWhileTheMonitorIsNotLooking_ReAddingItsContentIsDroppedAsADuplicate_ThenTheRescanRemovesIt()
+    {
+        await using var t = await TestLibrary.CreateAsync();
+        var docs = await t.BuiltInAsync("documents");
+        var item = await t.AddOneAsync(docs.Id, t.CreateFile("notes.txt", "important notes"));
+
+        // Deleted in Explorer while the monitor is paused (or the vault was unavailable): is_missing stays 0.
+        File.Delete(item.FullPath);
+        Assert.False((await t.ItemAsync(item.Id)).IsMissing);
+
+        // The user adds the same content again: SPEC says a missing item is re-linked ("found again").
+        var again = await t.AddAsync(docs.Id, ItemMode.Copy, t.CreateFile(@"again\notes.txt", "important notes"));
+
+        // Observed: reported as "Already in Cabinette", nothing stored, the temp copy deleted.
+        Assert.Empty(again.Added);
+        Assert.Equal(item.Id, Assert.Single(again.Duplicates).Existing.Id);
+        Assert.Empty(Directory.GetFiles(Path.Combine(t.Vault, "Documents")));
+
+        // And the next rescan removes the row: the content is no longer in the library at all.
+        Assert.Equal(1, (await t.RescanAsync()).Removed);
+        Assert.Null(await t.Library.GetItemAsync(item.Id));
+        Assert.Empty(await t.AllItemsAsync());
+    }
+
+    // ================================================================ 3: renaming a category while a copy into it is in flight
+
+    [Fact]
+    public async Task Finding3_RenamingACategoryWhileACopyIntoItIsInFlight_FailsWithAccessDenied()
+    {
+        await using var t = await TestLibrary.CreateAsync();
+        var trip = await t.Library.CreateCategoryAsync("Trip", null);
+        var big = t.CreateFile("big.bin", new byte[4 * 1024 * 1024]);
+        LibraryException? renameError = null;
+        t.Service.DuringAddCopy = _ =>
+        {
+            try
+            {
+                t.Library.RenameCategoryAsync(trip.Id, "Journey").GetAwaiter().GetResult();
+            }
+            catch (LibraryException ex)
+            {
+                renameError = ex;
+            }
+        };
+
+        var result = await t.Library.AddPathsAsync([big], new AddRequest { TargetCategoryId = trip.Id, Mode = ItemMode.Copy });
+
+        // The add succeeds, but the rename the user asked for meanwhile was refused by Windows (the open temp file pins the folder).
+        Assert.Single(result.Added);
+        Assert.NotNull(renameError);
+        Assert.Equal(LibraryErrorCode.AccessDenied, renameError!.Code);
+        Assert.Equal("Trip", (await t.CategoryAsync(trip.Id)).Name);
+        Assert.True(Directory.Exists(t.VaultPath("Trip")));
+    }
+
+    // ================================================================ 4: no guard against a vault that contains the data folder
+
+    [Fact]
+    public async Task Finding4_VaultThatContainsTheDataFolder_IsAccepted_AndTheRescanImportsCabinettesOwnFiles()
+    {
+        await using var t = await TestLibrary.CreateAsync(initializeVault: false);
+
+        // t.Root holds the data folder (cabinette.db). Restore refuses such a vault; first run and move vault do not.
+        await t.Library.InitializeVaultAsync(t.Root);
+        Assert.Equal(t.Root, t.Library.VaultPath);
+
+        var outcome = await t.Service.ReconcileAsync(ReconcileRequest.Rescan(), CancellationToken.None);
+
+        Assert.False(outcome.VaultUnavailable, outcome.Message);
+        Assert.Contains("data", outcome.Summary.CategoriesCreated);
+        var dbPath = Path.Combine(t.DataDirectory, "cabinette.db");
+        var imported = (await t.Library.SearchAsync("cabinette")).Items.Any(i => i.FileName == "cabinette.db");
+        Assert.True(imported || outcome.DeferredFiles.Contains(dbPath, StringComparer.OrdinalIgnoreCase),
+            "The library's own database is treated as a vault file (imported, or put off because SQLite holds it open).");
+    }
+}

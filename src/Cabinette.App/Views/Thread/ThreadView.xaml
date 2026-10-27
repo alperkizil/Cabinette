@@ -1,0 +1,841 @@
+<UserControl x:Class="Cabinette.App.Views.Thread.ThreadView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="clr-namespace:Cabinette.App.Localization"
+             xmlns:local="clr-namespace:Cabinette.App.Views.Thread"
+             xmlns:motion="clr-namespace:Cabinette.App.Views.Motion"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:vm="clr-namespace:Cabinette.App.ViewModels.Thread"
+             x:Name="Root"
+             AllowDrop="True"
+             Background="{DynamicResource Cab.ChatBackground}"
+             Focusable="False"
+             SnapsToDevicePixels="True"
+             UseLayoutRounding="True">
+    <!-- The thread pane (DataContext = ThreadViewModel). Hosted by the shell as <ThreadView DataContext="{Binding CurrentThread}"/>. -->
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/Cabinette;component/Views/Thread/ThreadTemplates.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid x:Name="LayoutRoot">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- ============================================================ header: the banner (SPEC.md section 4) -->
+        <!--
+            One band in the category's avatar color (data from the view model; the theme's banner color for a category with the
+            user's own picture; the accent for Starred), with the name and "12 files · 11 MB" in the old header's text styles, a
+            large faint picture of what the category holds, and the thread's tools on the right. The band is darkened just enough
+            for its text to reach 4.5:1 (ReadableBandBrushConverter); the avatar keeps its color. ThreadBannerPanel moves the
+            tools to a second row when the pane is too narrow for both (large text sizes at the minimum window width).
+        -->
+        <Border x:Name="Banner"
+                Grid.Row="0"
+                MinHeight="60"
+                Padding="20,4,10,4"
+                ClipToBounds="True">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="local:ThreadBannerBand.BaseBackground" Value="{DynamicResource Cab.BannerFallbackBackground}" />
+                    <Setter Property="TextElement.Foreground" Value="{DynamicResource Cab.BannerText}" />
+                    <Setter Property="Background">
+                        <Setter.Value>
+                            <MultiBinding Converter="{x:Static local:ReadableBandBrushConverter.Instance}">
+                                <Binding Path="(local:ThreadBannerBand.BaseBackground)" RelativeSource="{RelativeSource Self}" />
+                                <Binding Path="(TextElement.Foreground)" RelativeSource="{RelativeSource Self}" />
+                            </MultiBinding>
+                        </Setter.Value>
+                    </Setter>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Banner.Kind}" Value="Avatar">
+                            <Setter Property="local:ThreadBannerBand.BaseBackground" Value="{Binding Banner.Brush}" />
+                        </DataTrigger>
+                        <!-- The look of the Starred row's avatar: the accent with the text-on-accent color (white is hard to read on the light theme's gold). -->
+                        <DataTrigger Binding="{Binding Banner.Kind}" Value="Starred">
+                            <Setter Property="local:ThreadBannerBand.BaseBackground" Value="{DynamicResource Cab.Accent}" />
+                            <Setter Property="TextElement.Foreground" Value="{DynamicResource Cab.OnAccent}" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <Border.Resources>
+                <!--
+                    On the band, the tools' toggle styles draw in the band's text color (the inherited Foreground) instead of the
+                    theme's text and accent colors, so they read on any band color. Same keys, so the buttons keep their style names.
+                -->
+                <!--
+                    The focus ring on the band: white inside a thin dark outline, as Windows draws focus, so it reads on every band
+                    color, the accent-colored Starred band included (the theme's accent ring vanished there; banner bug hunt F1).
+                -->
+                <Style x:Key="Cab.Thread.BandFocusVisual">
+                    <Setter Property="Control.Template">
+                        <Setter.Value>
+                            <ControlTemplate>
+                                <Border Margin="-3" BorderBrush="{DynamicResource Cab.OnAccent}" BorderThickness="1" CornerRadius="11">
+                                    <Border BorderBrush="{DynamicResource Cab.BannerText}" BorderThickness="2" CornerRadius="10" />
+                                </Border>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+
+                <Style x:Key="Cab.Thread.IconToggleButton" TargetType="ToggleButton">
+                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                    <Setter Property="Width" Value="38" />
+                    <Setter Property="Height" Value="38" />
+                    <Setter Property="Cursor" Value="Hand" />
+                    <Setter Property="FocusVisualStyle" Value="{StaticResource Cab.Thread.BandFocusVisual}" />
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ToggleButton">
+                                <Grid Background="Transparent">
+                                    <Border x:Name="Tint" Background="{TemplateBinding Foreground}" CornerRadius="19" Opacity="0" />
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Grid>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="Tint" Property="Opacity" Value="0.14" />
+                                    </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter TargetName="Tint" Property="Opacity" Value="0.22" />
+                                    </Trigger>
+                                    <Trigger Property="IsChecked" Value="True">
+                                        <Setter TargetName="Tint" Property="Opacity" Value="0.26" />
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+                <Style x:Key="Cab.Thread.SegmentRadio" TargetType="RadioButton">
+                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                    <Setter Property="Width" Value="36" />
+                    <Setter Property="Height" Value="30" />
+                    <Setter Property="Cursor" Value="Hand" />
+                    <Setter Property="FocusVisualStyle" Value="{StaticResource Cab.Thread.BandFocusVisual}" />
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="RadioButton">
+                                <Grid Background="Transparent">
+                                    <Border x:Name="Raised" Background="{TemplateBinding Foreground}" CornerRadius="6" Opacity="0.3" Visibility="Collapsed" />
+                                    <Border x:Name="Tint" Background="{TemplateBinding Foreground}" CornerRadius="6" Opacity="0" />
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Grid>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="Tint" Property="Opacity" Value="0.14" />
+                                    </Trigger>
+                                    <Trigger Property="IsChecked" Value="True">
+                                        <Setter TargetName="Raised" Property="Visibility" Value="Visible" />
+                                        <Setter TargetName="Tint" Property="Opacity" Value="0" />
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </Border.Resources>
+            <local:ThreadBannerPanel WatermarkSize="100" WatermarkDrop="6">
+                <!-- Watermark: what the category holds, or the picture a user category has as its icon; faint, behind the rest. -->
+                <Viewbox local:ThreadBannerPanel.Slot="Watermark" IsHitTestVisible="False" Opacity="0.22" Stretch="Uniform">
+                    <Grid Width="96" Height="96">
+                        <ui:SymbolIcon FontSize="96"
+                                       Symbol="{Binding Banner.Watermark}"
+                                       Visibility="{Binding Banner.HasWatermarkPicture, Converter={StaticResource InvBoolToVis}}" />
+                        <Image RenderOptions.BitmapScalingMode="HighQuality"
+                               Source="{Binding Banner.WatermarkPicture}"
+                               Stretch="UniformToFill"
+                               Visibility="{Binding Banner.HasWatermarkPicture, Converter={StaticResource BoolToVis}}">
+                            <Image.Clip>
+                                <EllipseGeometry Center="48,48" RadiusX="48" RadiusY="48" />
+                            </Image.Clip>
+                        </Image>
+                    </Grid>
+                </Viewbox>
+
+                <!-- The old header's two text styles (title and secondary line), in the band's text color. -->
+                <TextBlock local:ThreadBannerPanel.Slot="Title"
+                           FontSize="15.5"
+                           FontWeight="{DynamicResource Cab.FontWeight.Strong}"
+                           Text="{Binding Banner.Title}"
+                           TextTrimming="CharacterEllipsis"
+                           ToolTip="{Binding Banner.ToolTipText}" />
+                <TextBlock local:ThreadBannerPanel.Slot="Subtitle"
+                           Margin="0,1,0,0"
+                           FontSize="12.5"
+                           Text="{Binding Banner.Subtitle}"
+                           TextTrimming="CharacterEllipsis" />
+
+                <local:BannerToolsPanel local:ThreadBannerPanel.Slot="Tools" VerticalAlignment="Center">
+                    <!-- Thread search (gives up width, down to its MinWidth, when the band is narrow) -->
+                    <Border x:Name="SearchBoxHost"
+                            MinWidth="150"
+                            MaxWidth="250"
+                            Height="36"
+                            Margin="0,0,6,0"
+                            Padding="10,0,4,0"
+                            Background="{DynamicResource Cab.InputBackground}"
+                            CornerRadius="8"
+                            Visibility="{Binding IsSearchOpen, Converter={StaticResource BoolToVis}}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ui:SymbolIcon Margin="0,0,8,0" FontSize="16" Foreground="{DynamicResource Cab.TextSecondary}" Symbol="Search20" />
+                            <TextBox x:Name="SearchBox"
+                                     Grid.Column="1"
+                                     PreviewKeyDown="SearchBox_PreviewKeyDown"
+                                     Style="{StaticResource Cab.Thread.BareTextBox}"
+                                     Tag="{loc:Loc Thread_SearchPlaceholder}"
+                                     Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
+                            <Button Grid.Column="2"
+                                    Click="ClearSearch_Click"
+                                    Style="{StaticResource Cab.Thread.SmallIconButton}"
+                                    AutomationProperties.Name="{loc:Loc Thread_ClearSearch}" ToolTip="{loc:Loc Thread_ClearSearch}"
+                                    Visibility="{Binding Text, ElementName=SearchBox, Converter={StaticResource NullToVis}}">
+                                <ui:SymbolIcon FontSize="14" Symbol="Dismiss20" />
+                            </Button>
+                        </Grid>
+                    </Border>
+                    <ToggleButton x:Name="SearchToggle" IsChecked="{Binding IsSearchOpen}" Style="{StaticResource Cab.Thread.IconToggleButton}" AutomationProperties.Name="{loc:Loc Thread_SearchTooltip}" ToolTip="{loc:Loc Thread_SearchTooltip}">
+                        <ui:SymbolIcon FontSize="20" Symbol="Search24" />
+                    </ToggleButton>
+
+                    <!-- Filters -->
+                    <Grid>
+                        <ToggleButton x:Name="FilterButton"
+                                      IsChecked="{Binding IsFilterOpen}"
+                                      IsHitTestVisible="{Binding IsOpen, ElementName=FilterPopup, Converter={StaticResource InverseBool}}"
+                                      Style="{StaticResource Cab.Thread.IconToggleButton}"
+                                      AutomationProperties.Name="{loc:Loc Thread_FilterTooltip}" ToolTip="{loc:Loc Thread_FilterTooltip}">
+                            <ui:SymbolIcon FontSize="20" Symbol="Filter24" />
+                        </ToggleButton>
+                        <Ellipse Width="8"
+                                 Height="8"
+                                 Margin="0,7,7,0"
+                                 HorizontalAlignment="Right"
+                                 VerticalAlignment="Top"
+                                 Fill="{Binding (TextElement.Foreground), RelativeSource={RelativeSource Self}}"
+                                 IsHitTestVisible="False"
+                                 Visibility="{Binding IsFilterActive, Converter={StaticResource BoolToVis}}" />
+                        <Popup x:Name="FilterPopup"
+                               AllowsTransparency="True"
+                               HorizontalOffset="-300"
+                               IsOpen="{Binding IsFilterOpen}"
+                               Placement="Bottom"
+                               PlacementTarget="{Binding ElementName=FilterButton}"
+                               PopupAnimation="Fade"
+                               StaysOpen="False">
+                            <local:ThreadFilterPanel DataContext="{Binding Filter}" LayoutTransform="{DynamicResource Cab.UiScaleTransform}" />
+                        </Popup>
+                    </Grid>
+
+                    <!-- View switch -->
+                    <Grid Margin="8,0,6,0" VerticalAlignment="Center">
+                        <Border Background="{Binding (TextElement.Foreground), RelativeSource={RelativeSource Self}}" CornerRadius="8" Opacity="0.14" />
+                        <StackPanel Margin="3" Orientation="Horizontal">
+                            <RadioButton IsChecked="{Binding IsChatView}" Style="{StaticResource Cab.Thread.SegmentRadio}" AutomationProperties.Name="{loc:Loc Thread_ViewChat}" ToolTip="{loc:Loc Thread_ViewChat}">
+                                <ui:SymbolIcon FontSize="18" Symbol="Chat24" />
+                            </RadioButton>
+                            <RadioButton IsChecked="{Binding IsGridView}" Style="{StaticResource Cab.Thread.SegmentRadio}" AutomationProperties.Name="{loc:Loc Thread_ViewGrid}" ToolTip="{loc:Loc Thread_ViewGrid}">
+                                <ui:SymbolIcon FontSize="18" Symbol="Grid24" />
+                            </RadioButton>
+                            <!-- The Gallery: only in Images and its subcategories -->
+                            <RadioButton IsChecked="{Binding IsGalleryView}"
+                                         Style="{StaticResource Cab.Thread.SegmentRadio}"
+                                         Visibility="{Binding IsGalleryOffered, Converter={StaticResource BoolToVis}}"
+                                         AutomationProperties.Name="{loc:Loc Thread_ViewGallery}" ToolTip="{loc:Loc Thread_ViewGallery}">
+                                <ui:SymbolIcon FontSize="18" Symbol="ImageMultiple24" />
+                            </RadioButton>
+                            <RadioButton IsChecked="{Binding IsDetailsView}" Style="{StaticResource Cab.Thread.SegmentRadio}" AutomationProperties.Name="{loc:Loc Thread_ViewDetails}" ToolTip="{loc:Loc Thread_ViewDetails}">
+                                <ui:SymbolIcon FontSize="18" Symbol="TextBulletListLtr24" />
+                            </RadioButton>
+                        </StackPanel>
+                    </Grid>
+
+                    <ToggleButton IsChecked="{Binding IsSelectMode}" Style="{StaticResource Cab.Thread.IconToggleButton}" AutomationProperties.Name="{loc:Loc Thread_SelectTooltip}" ToolTip="{loc:Loc Thread_SelectTooltip}">
+                        <ui:SymbolIcon FontSize="20" Symbol="CheckmarkCircle24" />
+                    </ToggleButton>
+                </local:BannerToolsPanel>
+            </local:ThreadBannerPanel>
+        </Border>
+
+        <!-- ============================================================ subcategories -->
+        <Border Grid.Row="1"
+                Background="{DynamicResource Cab.HeaderBackground}"
+                BorderBrush="{DynamicResource Cab.Divider}"
+                BorderThickness="0,0,0,1"
+                Visibility="{Binding HasSubcategories, Converter={StaticResource BoolToVis}}">
+            <ScrollViewer Padding="14,8,14,9"
+                          HorizontalScrollBarVisibility="Hidden"
+                          PreviewMouseWheel="Subcategories_PreviewMouseWheel"
+                          VerticalScrollBarVisibility="Disabled">
+                <ItemsControl Focusable="False" ItemsSource="{Binding Subcategories}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:SubcategoryChip}">
+                            <Button Command="{Binding DataContext.OpenSubcategoryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    CommandParameter="{Binding}"
+                                    Style="{StaticResource Cab.Thread.SubcategoryChip}">
+                                <StackPanel Orientation="Horizontal">
+                                    <Grid Width="24" Height="24">
+                                        <Ellipse Fill="{DynamicResource Cab.Accent}" />
+                                        <TextBlock HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   FontSize="11"
+                                                   FontWeight="{DynamicResource Cab.FontWeight.Strong}"
+                                                   Foreground="{DynamicResource Cab.OnAccent}"
+                                                   Text="{Binding Initial}" />
+                                        <!-- Image + clip instead of an ImageBrush: a brush in a template logs a binding warning. -->
+                                        <Image RenderOptions.BitmapScalingMode="HighQuality"
+                                               Source="{Binding Icon}"
+                                               Stretch="UniformToFill"
+                                               Visibility="{Binding Icon, Converter={StaticResource NullToVis}}">
+                                            <Image.Clip>
+                                                <EllipseGeometry Center="12,12" RadiusX="12" RadiusY="12" />
+                                            </Image.Clip>
+                                        </Image>
+                                    </Grid>
+                                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" Text="{Binding Name}" />
+                                    <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource Cab.TextSecondary}" Text="{Binding CountText}" />
+                                    <Border Margin="6,0,0,0"
+                                            Padding="6,0,6,1"
+                                            VerticalAlignment="Center"
+                                            Background="{DynamicResource Cab.Accent}"
+                                            CornerRadius="8"
+                                            Visibility="{Binding HasUnread, Converter={StaticResource BoolToVis}}">
+                                        <TextBlock FontSize="11" FontWeight="{DynamicResource Cab.FontWeight.Strong}" Foreground="{DynamicResource Cab.OnAccent}" Text="{Binding UnreadCount}" />
+                                    </Border>
+                                </StackPanel>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Border>
+
+        <!-- ============================================================ content -->
+        <Grid x:Name="ContentHost"
+              Grid.Row="2"
+              PreviewMouseLeftButtonDown="Content_PreviewMouseLeftButtonDown"
+              PreviewMouseLeftButtonUp="Content_PreviewMouseLeftButtonUp"
+              PreviewMouseMove="Content_PreviewMouseMove"
+              PreviewMouseRightButtonDown="Content_PreviewMouseRightButtonDown"
+              PreviewMouseRightButtonUp="Content_PreviewMouseRightButtonUp"
+              SizeChanged="ContentHost_SizeChanged">
+
+            <!-- Chat -->
+            <ItemsControl x:Name="ChatList"
+                          Focusable="True"
+                          FocusVisualStyle="{x:Null}"
+                          ItemsSource="{Binding ChatRows}"
+                          KeyboardNavigation.DirectionalNavigation="None"
+                          PreviewMouseWheel="ChatList_PreviewMouseWheel"
+                          ScrollViewer.CanContentScroll="True"
+                          VirtualizingPanel.CacheLength="1,1"
+                          VirtualizingPanel.CacheLengthUnit="Page"
+                          VirtualizingPanel.IsVirtualizing="True"
+                          VirtualizingPanel.ScrollUnit="Pixel"
+                          VirtualizingPanel.VirtualizationMode="Recycling"
+                          Visibility="{Binding IsChatView, Converter={StaticResource BoolToVis}}">
+                <ItemsControl.Template>
+                    <ControlTemplate TargetType="ItemsControl">
+                        <ScrollViewer x:Name="PART_Scroll"
+                                      Padding="0,0,0,10"
+                                      CanContentScroll="True"
+                                      Focusable="False"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      VerticalScrollBarVisibility="Auto">
+                            <!-- Bottom-aligned: a short thread sits just above the composer, like a chat. -->
+                            <ItemsPresenter VerticalAlignment="Bottom" />
+                        </ScrollViewer>
+                    </ControlTemplate>
+                </ItemsControl.Template>
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+
+            <!-- Grid gallery -->
+            <ItemsControl x:Name="GridList"
+                          Focusable="True"
+                          FocusVisualStyle="{x:Null}"
+                          ItemsSource="{Binding GridRows}"
+                          ScrollViewer.CanContentScroll="True"
+                          VirtualizingPanel.IsVirtualizing="True"
+                          VirtualizingPanel.ScrollUnit="Pixel"
+                          VirtualizingPanel.VirtualizationMode="Recycling"
+                          Visibility="{Binding IsGridView, Converter={StaticResource BoolToVis}}">
+                <ItemsControl.Template>
+                    <ControlTemplate TargetType="ItemsControl">
+                        <ScrollViewer Padding="0,0,0,10"
+                                      CanContentScroll="True"
+                                      Focusable="False"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      VerticalScrollBarVisibility="Auto">
+                            <ItemsPresenter />
+                        </ScrollViewer>
+                    </ControlTemplate>
+                </ItemsControl.Template>
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+
+            <!-- Gallery (Images): the sort header over same-size cells under day headers -->
+            <Grid Visibility="{Binding IsGalleryView, Converter={StaticResource BoolToVis}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Border BorderBrush="{DynamicResource Cab.Divider}" BorderThickness="0,0,0,1" Visibility="{Binding HasItems, Converter={StaticResource BoolToVis}}">
+                    <DockPanel x:Name="GallerySortBar"
+                               Height="42"
+                               Margin="{Binding (local:ThreadLayout.RowPadding), RelativeSource={RelativeSource Self}}"
+                               SizeChanged="GallerySortBar_SizeChanged">
+                        <!-- Cell size buttons; they step aside in a narrow pane (Ctrl+mouse wheel and Ctrl+plus/minus still work). -->
+                        <StackPanel x:Name="GalleryZoom" VerticalAlignment="Center" DockPanel.Dock="Right" Orientation="Horizontal">
+                            <Button Command="{Binding ShrinkGalleryCellsCommand}" Style="{StaticResource Cab.Thread.SmallIconButton}" AutomationProperties.Name="{loc:Loc Thread_GallerySmaller}" ToolTip="{loc:Loc Thread_GallerySmaller}">
+                                <ui:SymbolIcon FontSize="16" Symbol="ZoomOut20" />
+                            </Button>
+                            <Button Command="{Binding GrowGalleryCellsCommand}" Style="{StaticResource Cab.Thread.SmallIconButton}" AutomationProperties.Name="{loc:Loc Thread_GalleryLarger}" ToolTip="{loc:Loc Thread_GalleryLarger}">
+                                <ui:SymbolIcon FontSize="16" Symbol="ZoomIn20" />
+                            </Button>
+                        </StackPanel>
+                        <ItemsControl x:Name="GallerySortButtons" VerticalAlignment="Center" Focusable="False" ItemsSource="{Binding GallerySortHeaders}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:GallerySortHeader}">
+                                    <StackPanel Margin="0,0,2,0" Orientation="Horizontal">
+                                        <Button x:Name="Sort"
+                                                Command="{Binding DataContext.SortGalleryByCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding Key}"
+                                                Style="{StaticResource Cab.Thread.GallerySortButton}"
+                                                AutomationProperties.Name="{Binding Title}"
+                                                ToolTip="{loc:Loc Thread_GallerySortTooltip}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock x:Name="Title" Text="{Binding Title}" />
+                                                <Grid Margin="5,1,0,0" VerticalAlignment="Center" Visibility="{Binding IsSorted, Converter={StaticResource BoolToVis}}">
+                                                    <ui:SymbolIcon FontSize="12" Foreground="{DynamicResource Cab.Accent}" Symbol="ArrowUp16" Visibility="{Binding IsAscending, Converter={StaticResource BoolToVis}}" />
+                                                    <ui:SymbolIcon FontSize="12" Foreground="{DynamicResource Cab.Accent}" Symbol="ArrowDown16" Visibility="{Binding IsAscending, Converter={StaticResource InvBoolToVis}}" />
+                                                </Grid>
+                                            </StackPanel>
+                                        </Button>
+                                        <!-- Date: date added or date taken -->
+                                        <Button Margin="-4,0,0,0"
+                                                Padding="5,0"
+                                                Click="GalleryDateMenu_Click"
+                                                Style="{StaticResource Cab.Thread.GallerySortButton}"
+                                                Visibility="{Binding HasDateMenu, Converter={StaticResource BoolToVis}}"
+                                                AutomationProperties.Name="{loc:Loc Thread_GalleryDateMenu}"
+                                                ToolTip="{loc:Loc Thread_GalleryDateMenu}">
+                                            <ui:SymbolIcon FontSize="12" Symbol="ChevronDown12" />
+                                        </Button>
+                                    </StackPanel>
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding IsSorted}" Value="True">
+                                            <Setter TargetName="Title" Property="Foreground" Value="{DynamicResource Cab.TextPrimary}" />
+                                            <Setter TargetName="Title" Property="FontWeight" Value="{DynamicResource Cab.FontWeight.Strong}" />
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </DockPanel>
+                </Border>
+                <ItemsControl x:Name="GalleryList"
+                              Grid.Row="1"
+                              Focusable="True"
+                              FocusVisualStyle="{x:Null}"
+                              ItemsSource="{Binding GalleryRows}"
+                              PreviewMouseWheel="GalleryList_PreviewMouseWheel"
+                              ScrollViewer.CanContentScroll="True"
+                              VirtualizingPanel.CacheLength="1,1"
+                              VirtualizingPanel.CacheLengthUnit="Page"
+                              VirtualizingPanel.IsVirtualizing="True"
+                              VirtualizingPanel.ScrollUnit="Pixel"
+                              VirtualizingPanel.VirtualizationMode="Recycling">
+                    <ItemsControl.Template>
+                        <ControlTemplate TargetType="ItemsControl">
+                            <ScrollViewer Padding="0,0,0,10"
+                                          CanContentScroll="True"
+                                          Focusable="False"
+                                          HorizontalScrollBarVisibility="Disabled"
+                                          VerticalScrollBarVisibility="Auto">
+                                <ItemsPresenter />
+                            </ScrollViewer>
+                        </ControlTemplate>
+                    </ItemsControl.Template>
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+            </Grid>
+
+            <!-- Details -->
+            <ListView x:Name="DetailsList"
+                      ItemContainerStyle="{StaticResource Cab.Thread.DetailsRow}"
+                      ItemsSource="{Binding DetailsItems}"
+                      SelectionMode="Single"
+                      Style="{StaticResource Cab.Thread.DetailsList}"
+                      Visibility="{Binding IsDetailsView, Converter={StaticResource BoolToVis}}">
+                <ListView.View>
+                    <GridView ColumnHeaderContainerStyle="{StaticResource Cab.Thread.ColumnHeader}" ColumnHeaderTemplate="{StaticResource ColumnHeaderTemplate}">
+                        <GridViewColumn x:Name="NameColumn" Width="360" CellTemplate="{StaticResource DetailsNameCell}" />
+                        <GridViewColumn x:Name="TypeColumn" Width="120">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate DataType="{x:Type vm:ThreadItemViewModel}">
+                                    <TextBlock Foreground="{DynamicResource Cab.TextSecondary}" Text="{Binding TypeText}" TextTrimming="CharacterEllipsis" />
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn x:Name="SizeColumn" Width="90">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate DataType="{x:Type vm:ThreadItemViewModel}">
+                                    <TextBlock Foreground="{DynamicResource Cab.TextSecondary}" Text="{Binding SizeText}" TextTrimming="CharacterEllipsis" />
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn x:Name="DateColumn" Width="150">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate DataType="{x:Type vm:ThreadItemViewModel}">
+                                    <TextBlock Foreground="{DynamicResource Cab.TextSecondary}" Text="{Binding DateAddedText}" TextTrimming="CharacterEllipsis" />
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn x:Name="ModeColumn" Width="84">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate DataType="{x:Type vm:ThreadItemViewModel}">
+                                    <TextBlock Foreground="{DynamicResource Cab.TextSecondary}" Text="{Binding ModeText}" TextTrimming="CharacterEllipsis" />
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn x:Name="TagsColumn" Width="190" CellTemplate="{StaticResource DetailsTagsCell}" />
+                    </GridView>
+                </ListView.View>
+            </ListView>
+
+            <!-- Floating date of the topmost visible row while scrolling (fades out when scrolling stops). -->
+            <Border x:Name="StickyDate"
+                    Margin="0,10,0,0"
+                    VerticalAlignment="Top"
+                    IsHitTestVisible="False"
+                    Opacity="0"
+                    Style="{StaticResource Cab.Thread.DatePill}"
+                    Visibility="{Binding IsChatView, Converter={StaticResource BoolToVis}}">
+                <TextBlock x:Name="StickyDateText" />
+            </Border>
+
+            <!-- Jump to the newest items (chat view, when scrolled up), with a count of items that arrived meanwhile. -->
+            <Grid x:Name="JumpHost"
+                  Margin="0,0,22,16"
+                  HorizontalAlignment="Right"
+                  VerticalAlignment="Bottom"
+                  Visibility="Collapsed">
+                <Button x:Name="ScrollDownButton"
+                        AutomationProperties.Name="{loc:Loc Thread_ScrollToBottom}"
+                        Click="ScrollDown_Click"
+                        Style="{StaticResource Cab.Thread.FloatingButton}"
+                        ToolTip="{loc:Loc Thread_ScrollToBottom}">
+                    <ui:SymbolIcon FontSize="20" Symbol="ChevronDown24" />
+                </Button>
+                <Border x:Name="UnseenBadge"
+                        MinWidth="20"
+                        Height="20"
+                        Margin="0,-11,0,0"
+                        Padding="6,0"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Top"
+                        Background="{DynamicResource Cab.Accent}"
+                        CornerRadius="10"
+                        IsHitTestVisible="False"
+                        Visibility="Collapsed">
+                    <TextBlock x:Name="UnseenText"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               FontSize="11"
+                               FontWeight="{DynamicResource Cab.FontWeight.Strong}"
+                               Foreground="{DynamicResource Cab.OnAccent}" />
+                </Border>
+            </Grid>
+
+            <!-- Empty thread -->
+            <StackPanel MaxWidth="360"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}">
+                <Grid Width="88" Height="88" HorizontalAlignment="Center">
+                    <Ellipse Fill="{DynamicResource Cab.HeaderBackground}" />
+                    <Ellipse Margin="10" Fill="{DynamicResource Cab.Accent}" Opacity="0.16" />
+                    <ui:SymbolIcon FontSize="36" Foreground="{DynamicResource Cab.Accent}">
+                        <ui:SymbolIcon.Style>
+                            <Style TargetType="ui:SymbolIcon">
+                                <Setter Property="Symbol" Value="DocumentAdd24" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsStarredView}" Value="True">
+                                        <Setter Property="Symbol" Value="Star24" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ui:SymbolIcon.Style>
+                    </ui:SymbolIcon>
+                </Grid>
+                <TextBlock Margin="0,18,0,0"
+                           HorizontalAlignment="Center"
+                           FontSize="17"
+                           FontWeight="{DynamicResource Cab.FontWeight.Strong}"
+                           Foreground="{DynamicResource Cab.TextPrimary}">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Text" Value="{loc:Loc Thread_EmptyTitle}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsStarredView}" Value="True">
+                                    <Setter Property="Text" Value="{loc:Loc Thread_StarredEmptyTitle}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+                <TextBlock Margin="0,6,0,0"
+                           HorizontalAlignment="Center"
+                           FontSize="13.5"
+                           Foreground="{DynamicResource Cab.TextSecondary}"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Text" Value="{loc:Loc Thread_EmptyHint}" />
+                            <Style.Triggers>
+                                <!-- "Deleted" takes no files -->
+                                <DataTrigger Binding="{Binding CanAddFiles}" Value="False">
+                                    <Setter Property="Text" Value="{loc:Loc Thread_DeletedEmptyHint}" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsStarredView}" Value="True">
+                                    <Setter Property="Text" Value="{loc:Loc Thread_StarredEmptyHint}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+                <Button Margin="0,18,0,0"
+                        HorizontalAlignment="Center"
+                        Command="{Binding AttachCommand}"
+                        Style="{StaticResource Cab.Thread.PrimaryButton}"
+                        Visibility="{Binding CanAddFiles, Converter={StaticResource BoolToVis}}">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Margin="0,0,8,0" FontSize="16" Symbol="Attach24" />
+                        <TextBlock Text="{loc:Loc Thread_AddFiles}" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+
+            <!-- No search/filter results -->
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding IsNoResults, Converter={StaticResource BoolToVis}}">
+                <Grid Width="72" Height="72" HorizontalAlignment="Center">
+                    <Ellipse Fill="{DynamicResource Cab.HeaderBackground}" />
+                    <ui:SymbolIcon FontSize="30" Foreground="{DynamicResource Cab.TextSecondary}" Symbol="SearchInfo24" />
+                </Grid>
+                <TextBlock Margin="0,14,0,0"
+                           HorizontalAlignment="Center"
+                           FontSize="15"
+                           FontWeight="{DynamicResource Cab.FontWeight.Strong}"
+                           Foreground="{DynamicResource Cab.TextPrimary}"
+                           Text="{loc:Loc Thread_NoResultsTitle}" />
+                <Button Margin="0,10,0,0"
+                        HorizontalAlignment="Center"
+                        Command="{Binding ClearQueryCommand}"
+                        Content="{loc:Loc Thread_ClearSearchAndFilters}"
+                        FontSize="13"
+                        Style="{StaticResource Cab.Thread.LinkButton}" />
+            </StackPanel>
+        </Grid>
+
+        <!-- ============================================================ composer / bulk actions -->
+        <Grid Grid.Row="3">
+            <!-- The composer (paperclip, note box, "Save note"). "Deleted" takes no files, so it has none. -->
+            <Grid Visibility="{Binding CanAddFiles, Converter={StaticResource BoolToVis}}">
+                <Border Padding="10,9,12,9"
+                        Background="{DynamicResource Cab.HeaderBackground}"
+                        BorderBrush="{DynamicResource Cab.Divider}"
+                        BorderThickness="0,1,0,0"
+                        Visibility="{Binding IsSelectionActive, Converter={StaticResource InvBoolToVis}}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Button VerticalAlignment="Bottom" Command="{Binding AttachCommand}" Style="{StaticResource Cab.Thread.IconButton}" AutomationProperties.Name="{loc:Loc Thread_AttachTooltip}" ToolTip="{loc:Loc Thread_AttachTooltip}">
+                            <ui:SymbolIcon FontSize="22" Symbol="Attach24" />
+                        </Button>
+                        <Border Grid.Column="1" Margin="6,0,10,0" Padding="14,10,10,10" Background="{DynamicResource Cab.InputBackground}" CornerRadius="10">
+                            <TextBox x:Name="NoteBox"
+                                     PreviewKeyDown="NoteBox_PreviewKeyDown"
+                                     Style="{StaticResource Cab.Thread.ComposerTextBox}"
+                                     Tag="{loc:Loc Thread_TypeANote}"
+                                     Text="{Binding ComposerText, UpdateSourceTrigger=PropertyChanged}" />
+                        </Border>
+                        <Button Grid.Column="2"
+                                Height="42"
+                                MinWidth="0"
+                                Padding="16,0"
+                                VerticalAlignment="Bottom"
+                                Command="{Binding SendNoteCommand}"
+                                Style="{StaticResource Cab.Thread.PrimaryButton}"
+                                AutomationProperties.Name="{loc:Loc Thread_SaveNote}"
+                                ToolTip="{loc:Loc Thread_SendTooltip}">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Margin="0,0,6,0" FontSize="18" Symbol="Save24" />
+                                <TextBlock VerticalAlignment="Center" Text="{loc:Loc Thread_SaveNote}" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <Border Padding="8,9,12,9"
+                    Background="{DynamicResource Cab.HeaderBackground}"
+                    BorderBrush="{DynamicResource Cab.Divider}"
+                    BorderThickness="0,1,0,0"
+                    Visibility="{Binding IsSelectionActive, Converter={StaticResource BoolToVis}}">
+                <DockPanel x:Name="SelectionBar" MinHeight="42" SizeChanged="SelectionBar_SizeChanged">
+                    <Button VerticalAlignment="Center" Command="{Binding CancelSelectionCommand}" Style="{StaticResource Cab.Thread.IconButton}" AutomationProperties.Name="{loc:Loc Thread_CancelSelection}" ToolTip="{loc:Loc Thread_CancelSelection}">
+                        <ui:SymbolIcon FontSize="20" Symbol="Dismiss24" />
+                    </Button>
+                    <TextBlock x:Name="SelectionCount"
+                               Margin="8,0,12,0"
+                               AutomationProperties.Name="{Binding SelectionText}"
+                               VerticalAlignment="Center"
+                               FontSize="14.5"
+                               FontWeight="{DynamicResource Cab.FontWeight.Strong}"
+                               Foreground="{DynamicResource Cab.TextPrimary}"
+                               SizeChanged="SelectionBar_SizeChanged"
+                               Text="{Binding SelectionText}" />
+                    <Button x:Name="SelectAllButton" VerticalAlignment="Center" Command="{Binding SelectAllCommand}" Content="{loc:Loc Thread_SelectAll}" FontSize="13" Style="{StaticResource Cab.Thread.LinkButton}" />
+                    <StackPanel x:Name="SelectionActions" HorizontalAlignment="Right" VerticalAlignment="Center" Orientation="Horizontal">
+                        <Button Command="{Binding EditTagsCommand}" IsEnabled="{Binding HasSelection}" Style="{StaticResource Cab.Thread.PillButton}" AutomationProperties.Name="{loc:Loc Thread_MenuTags}" ToolTip="{loc:Loc Thread_MenuTags}">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Margin="0,0,6,0" FontSize="17" Symbol="Tag24" />
+                                <TextBlock Text="{loc:Loc Thread_BulkTags}" />
+                            </StackPanel>
+                        </Button>
+                        <Button Command="{Binding CopySelectedCommand}" IsEnabled="{Binding HasSelection}" Style="{StaticResource Cab.Thread.PillButton}" AutomationProperties.Name="{loc:Loc Thread_MenuCopy}" ToolTip="{loc:Loc Thread_MenuCopy}">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Margin="0,0,6,0" FontSize="17" Symbol="Copy24" />
+                                <TextBlock Text="{loc:Loc Thread_BulkCopy}" />
+                            </StackPanel>
+                        </Button>
+                        <!-- Star, or Unstar when every selected file is starred -->
+                        <Button Command="{Binding ToggleStarSelectedCommand}"
+                                IsEnabled="{Binding HasSelection}"
+                                Style="{StaticResource Cab.Thread.PillButton}"
+                                AutomationProperties.Name="{Binding StarActionText}"
+                                ToolTip="{Binding StarActionText}">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Margin="0,0,6,0" FontSize="17">
+                                    <ui:SymbolIcon.Style>
+                                        <Style TargetType="ui:SymbolIcon">
+                                            <Setter Property="Symbol" Value="Star24" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsSelectionStarred}" Value="True">
+                                                    <Setter Property="Symbol" Value="StarOff24" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ui:SymbolIcon.Style>
+                                </ui:SymbolIcon>
+                                <TextBlock Text="{Binding StarActionText}" />
+                            </StackPanel>
+                        </Button>
+                        <!-- The Starred view is no category: nothing to move out of or remove from -->
+                        <Button Command="{Binding MoveSelectedToCategoryCommand}"
+                                IsEnabled="{Binding HasSelection}"
+                                Style="{StaticResource Cab.Thread.PillButton}"
+                                Visibility="{Binding IsStarredView, Converter={StaticResource InvBoolToVis}}"
+                                AutomationProperties.Name="{loc:Loc Thread_MenuMoveToCategory}" ToolTip="{loc:Loc Thread_MenuMoveToCategory}">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Margin="0,0,6,0" FontSize="17" Symbol="FolderArrowRight24" />
+                                <TextBlock Text="{loc:Loc Thread_BulkMoveTo}" />
+                            </StackPanel>
+                        </Button>
+                        <Button Command="{Binding AddSelectedToCategoryCommand}" IsEnabled="{Binding HasSelection}" Style="{StaticResource Cab.Thread.PillButton}" AutomationProperties.Name="{loc:Loc Thread_MenuAddToCategory}" ToolTip="{loc:Loc Thread_MenuAddToCategory}">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Margin="0,0,6,0" FontSize="17" Symbol="FolderAdd24" />
+                                <TextBlock Text="{loc:Loc Thread_BulkAddTo}" />
+                            </StackPanel>
+                        </Button>
+                        <Button Command="{Binding RemoveSelectedFromCategoryCommand}"
+                                IsEnabled="{Binding HasSelection}"
+                                Style="{StaticResource Cab.Thread.PillButton}"
+                                Visibility="{Binding IsStarredView, Converter={StaticResource InvBoolToVis}}"
+                                AutomationProperties.Name="{loc:Loc Thread_MenuRemoveFromCategory}" ToolTip="{loc:Loc Thread_MenuRemoveFromCategory}">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Margin="0,0,6,0" FontSize="17" Symbol="SubtractCircle24" />
+                                <TextBlock Text="{loc:Loc Thread_BulkRemove}" />
+                            </StackPanel>
+                        </Button>
+                        <Button Command="{Binding DeleteSelectedCommand}" IsEnabled="{Binding HasSelection}" Style="{StaticResource Cab.Thread.DangerPillButton}" AutomationProperties.Name="{loc:Loc Thread_MenuDelete}" ToolTip="{loc:Loc Thread_MenuDelete}">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Margin="0,0,6,0" FontSize="17" Symbol="Delete24" />
+                                <TextBlock Text="{loc:Loc Thread_BulkDelete}" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+        </Grid>
+
+        <!-- ============================================================ drop overlay (shown, hidden and "received" by DropZone) -->
+        <Grid x:Name="DropOverlay" Grid.RowSpan="4" IsHitTestVisible="False" Visibility="Collapsed">
+            <Rectangle Fill="{DynamicResource Cab.OverlayBackground}" />
+            <Rectangle Margin="18"
+                       RadiusX="16"
+                       RadiusY="16"
+                       Stroke="{DynamicResource Cab.Accent}"
+                       StrokeDashArray="5 4"
+                       StrokeThickness="2.5"
+                       motion:DropZone.Part="Frame" />
+            <Border Padding="36,28" HorizontalAlignment="Center" VerticalAlignment="Center" Style="{StaticResource Cab.Thread.Card}" motion:DropZone.Part="Card">
+                <StackPanel>
+                    <Grid Width="68" Height="68" HorizontalAlignment="Center">
+                        <Ellipse Fill="{DynamicResource Cab.Accent}" Opacity="0.16" />
+                        <ui:SymbolIcon FontSize="32" Foreground="{DynamicResource Cab.Accent}" Symbol="ArrowDownload24" motion:DropZone.Part="Icon" />
+                        <!-- After a drop the icon turns into this ring, which fills and shows a check (cosmetic) -->
+                        <motion:DropRing Stroke="{DynamicResource Cab.Accent}" StrokeThickness="3.5" motion:DropZone.Part="Ring" />
+                    </Grid>
+                    <TextBlock Margin="0,14,0,0"
+                               HorizontalAlignment="Center"
+                               FontSize="17"
+                               FontWeight="{DynamicResource Cab.FontWeight.Strong}"
+                               Foreground="{DynamicResource Cab.TextPrimary}"
+                               Text="{Binding DropText}" />
+                    <TextBlock Margin="0,4,0,0" HorizontalAlignment="Center" FontSize="13" Foreground="{DynamicResource Cab.TextSecondary}" Text="{loc:Loc Thread_DropHint}" />
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

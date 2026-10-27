@@ -1,0 +1,43 @@
+<!-- Maps each dialog view model to its view. Merged into App.xaml so the dialog host finds them implicitly. -->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:vm="clr-namespace:Cabinette.App.ViewModels.Dialogs"
+                    xmlns:views="clr-namespace:Cabinette.App.Views.Dialogs">
+
+    <DataTemplate DataType="{x:Type vm:PromptDialogViewModel}">
+        <views:PromptDialogView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:ConfirmDialogViewModel}">
+        <views:ConfirmDialogView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:ChooseDialogViewModel}">
+        <views:ChooseDialogView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:CategoryPickerViewModel}">
+        <views:CategoryPickerView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:NewCategoryDialogViewModel}">
+        <views:NewCategoryDialogView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+        <views:SettingsView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:ProgressDialogViewModel}">
+        <views:ProgressDialogView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:OperationDialogViewModel}">
+        <views:OperationDialogView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:QuickSwitcherViewModel}">
+        <views:QuickSwitcherView />
+    </DataTemplate>
+
+</ResourceDictionary>

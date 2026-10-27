@@ -1,0 +1,52 @@
+<UserControl x:Class="Cabinette.App.Views.Dialogs.DialogHost"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Name="Root"
+             Focusable="False">
+    <!-- DataContext: DialogService. Each open dialog is a layer: scrim + centered card. -->
+    <ItemsControl x:Name="Layers" Focusable="False" ItemsSource="{Binding OpenDialogs}">
+        <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+                <Grid />
+            </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+            <DataTemplate>
+                <Grid KeyboardNavigation.ControlTabNavigation="Cycle"
+                      KeyboardNavigation.DirectionalNavigation="Contained"
+                      KeyboardNavigation.TabNavigation="Cycle"
+                      Loaded="OnLayerLoaded"
+                      Unloaded="OnLayerUnloaded">
+                    <Border x:Name="Scrim" Background="{DynamicResource Cab.OverlayBackground}" />
+                    <Border x:Name="Card"
+                            Width="{Binding Width}"
+                            Height="{Binding Height}"
+                            MaxWidth="{Binding ActualWidth, ElementName=Root, Converter={StaticResource Add}, ConverterParameter=-48}"
+                            HorizontalAlignment="Center"
+                            RenderTransformOrigin="0.5,0.5">
+                        <Border.Style>
+                            <Style TargetType="Border" BasedOn="{StaticResource Shell.Card}">
+                                <Setter Property="VerticalAlignment" Value="Center" />
+                                <Setter Property="MaxHeight" Value="{Binding ActualHeight, ElementName=Root, Converter={StaticResource Add}, ConverterParameter=-48}" />
+                                <Style.Triggers>
+                                    <!-- A card that changes height as you type (the quick switcher) stays put near the top. -->
+                                    <DataTrigger Binding="{Binding IsTopAligned}" Value="True">
+                                        <Setter Property="VerticalAlignment" Value="Top" />
+                                        <Setter Property="Margin" Value="0,56,0,0" />
+                                        <Setter Property="MaxHeight" Value="{Binding ActualHeight, ElementName=Root, Converter={StaticResource Add}, ConverterParameter=-80}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <Border.RenderTransform>
+                            <ScaleTransform x:Name="CardScale" ScaleX="1" ScaleY="1" />
+                        </Border.RenderTransform>
+                        <Border ClipToBounds="True" CornerRadius="12">
+                            <ContentPresenter Content="{Binding}" />
+                        </Border>
+                    </Border>
+                </Grid>
+            </DataTemplate>
+        </ItemsControl.ItemTemplate>
+    </ItemsControl>
+</UserControl>
