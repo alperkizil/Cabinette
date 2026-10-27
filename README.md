@@ -8,7 +8,7 @@
 </p>
 
 <p align="center">
-  <b>Windows 10 and 11 (x64)</b> · <b>.NET 10, WPF</b> · <b>GPL-3.0</b> · <b>Version 0.1.2</b>
+  <b>Windows 10 and 11 (x64)</b> · <b>.NET 10, WPF</b> · <b>GPL-3.0</b> · <b>Version 0.1.4</b>
 </p>
 
 <p align="center">
@@ -704,7 +704,7 @@ It publishes the app and `cabinette-mcp.exe`, compiles `installer\Cabinette.iss`
 
 ## Project status
 
-Cabinette is a personal hobby project, at version 0.1.2. It's in English; every string lives in resource files, so a translation means translating those files. Searching inside file contents and a custom date range for the filter aren't there yet.
+Cabinette is a personal hobby project, at version 0.1.4. It's in English; every string lives in resource files, so a translation means translating those files. Searching inside file contents and a custom date range for the filter aren't there yet.
 
 Most of the code was written with Claude Code. Every feature was checked by an independent AI reviewer before it was merged, each finding was fixed with a regression test, and the installed build was tested on a real desktop. The records are in [`docs/review`](docs/review).
 
